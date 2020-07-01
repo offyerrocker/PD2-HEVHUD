@@ -1,11 +1,11 @@
 <mod name="Half-Life 2 HUD" author="Offyerrocker" global_key="HEVHUD" color="Color(0.6,0.9,1)" core_class="hevhud_core.lua">
-	<AssetUpdates id="000000" version="0.01" provider="modworkshop" install_directory = "mods/" version_is_number="false"/>
+	<AssetUpdates id="27955" version="0.02" provider="modworkshop" install_directory = "mods/" version_is_number="false"/>
 	<AddFiles directory="assets">
-		<font path="fonts/hl2" load="true" unload="false" />
-		<texture path="fonts/hl2" />
-		<font path="fonts/myriad_pro" load="true" unload="false" />
-		<texture path="fonts/myriad_pro" />
-		<texture path="guis/textures/waypoint_chevron"/>
-		<texture path="guis/textures/waypoint_circle"/>
+		<font path="fonts/halflife2" load="true" unload="false" />
+		<texture path="fonts/halflife2" />
+		<font path="fonts/trebuchet" load="true" unload="false" />
+		<texture path="fonts/trebuchet" />
+		<font path="fonts/tahoma_bold" load="true" unload="false" />
+		<texture path="fonts/tahoma_bold" />
 	</AddFiles>
 </mod>
