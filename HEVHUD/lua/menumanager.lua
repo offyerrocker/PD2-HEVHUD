@@ -1,9 +1,7 @@
 --[[
 todo:
 
-fix weapon count problem (two separate panels)
 sprint meter + sprint hud animation
-adjust aux alignment
 
 --]]
 
@@ -194,7 +192,12 @@ HEVHUD.default_settings = {
 	CROSSHAIR_INDICATOR_SIZE = 48,
 	crosshair_indicator_left_tracker = 1,
 	crosshair_indicator_right_tracker = 3,
-	STAMINA_UPDATE_INTERVAL = 0.05
+	STAMINA_UPDATE_INTERVAL = 0.025,
+	STAMINA_UPDATE_RATE_DECAY = 0.8, --lower is faster decay
+	STAMINA_UPDATE_RATE_BUILD = 1.3, --higher is faster build
+	STAMINA_THRESHOLD_LOW = 0.3,
+	STAMINA_INACTIVE_ALPHA = 0.2,
+	STAMINA_ACTIVE_ALPHA = 1
 }
 
 
@@ -211,6 +214,7 @@ Hooks:Add("HEVHUD_Crosshair_Listener","HEVHUD_OnCrosshairListenerEvent",function
 	7: reserve (primary)
 	8: reserve (secondary)
 	9: perk-deck-specific (stored health, absorption, etc)
+	10: detection
 --]]
 	local source_types = {
 		[1] = "health",
@@ -222,6 +226,7 @@ Hooks:Add("HEVHUD_Crosshair_Listener","HEVHUD_OnCrosshairListenerEvent",function
 		[7] = "weapon",
 		[8] = "weapon",
 		[9] = "perk",
+		[10] = "detection" --maybe? or separate toggle overriding during stealth?
 	}
 	
 	local function check_listener(setting)		
@@ -748,7 +753,6 @@ function HEVHUD:SetRevives(id,revives)
 	
 end
 
-
 --[[
 --todo lines for health/armor damage from various sources
 --todo flag so that the line doesn't play every single time you're injured at x health
@@ -1242,19 +1246,32 @@ function HEVHUD:Update(t,dt)
 	if player and self._cache.stamina_update_t > self.settings.STAMINA_UPDATE_INTERVAL then 
 		self._cache.stamina_update_t = self._cache.stamina_update_t - self.settings.STAMINA_UPDATE_INTERVAL
 		
-		for i = 1,self._DATA.NUM_POWER_TICKS do 
+		local stamina_ratio = player:movement():stamina() / player:movement():_max_stamina()
+		for i = self._DATA.NUM_POWER_TICKS,1,-1 do 
 			local tick = self._panel:child("power"):child("power_tick_" .. tostring(i))
-			local stamina_ratio = player:movement():stamina() / player:movement():_max_stamina()
-			--todo fade alpha to 2/3 instead of 0
-			--todo set entire bar + label to red when below stamina threshold
-			--todo off-by-one error
-			--floor() stamina, except for exactly equal to max?
-			if ((i - 1) / (self._DATA.NUM_POWER_TICKS - 1)) >= (stamina_ratio) then 
-				tick:set_alpha(tick:alpha() * 0.5)
+			local a = tick:alpha()
+			if stamina_ratio >= (i/self._DATA.NUM_POWER_TICKS) then 
+				if a < self.settings.STAMINA_ACTIVE_ALPHA then 
+					tick:set_alpha(math.min(a * self.settings.STAMINA_UPDATE_RATE_BUILD,self.settings.STAMINA_ACTIVE_ALPHA))
+				end
 			else
-				tick:set_alpha(math.max(0.01,tick:alpha()) * 1.5) --todo include dt in decay 
+				if a > self.settings.STAMINA_INACTIVE_ALPHA then 
+					tick:set_alpha(math.max(a * self.settings.STAMINA_UPDATE_RATE_DECAY,self.settings.STAMINA_INACTIVE_ALPHA))
+				end
 			end
-		end		
+			--chose to use custom STAMINA_THRESHOLD_LOW value instead of tweak_data.player.movement_state.stamina.MIN_STAMINA_THRESHOLD
+			--since at this low level (4 out of ~100 base), there are no stamina ticks visually remaining 
+			if stamina_ratio < self.settings.STAMINA_THRESHOLD_LOW then
+				tick:set_color(self.color_data.hl2_red)
+			else
+				tick:set_color(self.color_data.hl2_yellow)			
+			end
+		end
+		if stamina_ratio < self.settings.STAMINA_THRESHOLD_LOW then 
+			self._panel:child("power"):child("power_name"):set_color(self.color_data.hl2_red)
+		else
+			self._panel:child("power"):child("power_name"):set_color(self.color_data.hl2_yellow)	
+		end
 	end
 	self._cache.stamina_update_t = self._cache.stamina_update_t + dt
 	
