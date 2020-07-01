@@ -5,25 +5,6 @@ fix weapon count problem (two separate panels)
 sprint meter + sprint hud animation
 adjust aux alignment
 
-
-
-
-
---HL2 font characters:
-	--health: *
-	--energy: +
-	--crosshair (): O
-	--crosshair dots: Q 
-	--crosshair ( fill: [
-	--crouch: \
-	--crosshair ) fill: ]
-	--crosshair ( empty: {
-	--crosshair ) empty:}
-	--flashlight on: copyright
-	--flashlight off: (r)
-	
-
-
 --]]
 
 HEVHUD = HEVHUD or {}
@@ -35,6 +16,9 @@ HEVHUD._AUDIO_FILE_FORMAT = ".ogg"
 HEVHUD._audio_sources = HEVHUD._audio_sources or {}
 HEVHUD._audio_buffers = HEVHUD._audio_buffers or {}
 HEVHUD._audio_queue = HEVHUD._audio_queue or {}
+HEVHUD._DATA = {
+	CROSSHAIR_IMAGE_SIZE = 96
+}
 HEVHUD._suit_number_vox = HEVHUD._suit_number_vox or {
 	["0"] = "_comma",
 	["1"] = "one",
@@ -76,6 +60,14 @@ HEVHUD._fonts = {
 }
 HEVHUD._animate_targets = {}
 HEVHUD._panel = HEVHUD._panel or nil --for name reference 
+
+HEVHUD.color_data = {
+	hl2_yellow = Color("FFD040"),
+	hl2_yellow_bright = Color("F0D210"),
+	hl2_red = Color("800000"),
+	hl2_red_bright = Color("BB0200"),
+	hl2_orange = Color("FFA000")
+}
 
 HEVHUD._font_icons = {
 	physgun_fill = "!",
@@ -192,25 +184,101 @@ HEVHUD.default_settings = {
 	HEALTH_THRESHOLD_DOOMED = 0.01,
 	HEALTH_THRESHOLD_CRITICAL = 0.3,
 	HEALTH_THRESHOLD_MINOR = 0.5,
+	ARMOR_THRESHOLD_CRITICAL = 0.3,
+	ARMOR_THRESHOLD_MINOR = 0.5,
 	AMMO_THRESHOLD_LOW = 1/3,
 	WEAPON_INACTIVE_ALPHA = 2/3,
-	WEAPON_ACTIVE_ALPHA = 1
+	WEAPON_ACTIVE_ALPHA = 1,
+	CROSSHAIR_INDICATOR_SIZE = 48,
+	crosshair_indicator_left_tracker = 1,
+	crosshair_indicator_right_tracker = 3
 }
+
+
+Hooks:Register("HEVHUD_Crosshair_Listener")
+Hooks:Add("HEVHUD_Crosshair_Listener","HEVHUD_OnCrosshairListenerEvent",function(source,params)
+--[[
+	crosshair indicator trackers:
+	1: health
+	2: armor
+	3: magazine (current)
+	4: magazine (primary)
+	5: magazine (secondary)
+	6: reserve (current)
+	7: reserve (primary)
+	8: reserve (secondary)
+	9: perk-deck-specific (stored health, absorption, etc)
+--]]
+	local source_types = {
+		[1] = "health",
+		[2] = "armor",
+		[3] = "weapon",
+		[4] = "weapon",
+		[5] = "weapon",
+		[6] = "weapon",
+		[7] = "weapon",
+		[8] = "weapon",
+		[9] = "perk",
+	}
+	
+	local function check_listener(setting)		
+		if source_types[setting] == source then 
+			if setting == 1 then 
+				if source == "health" then 
+					return true
+				end
+			elseif setting == 2 then 
+				if source == "armor" then 
+					return true
+				end
+			elseif source == "weapon" then 
+				if setting == 3 then 
+					if params.is_equipped and params.variant == "magazine" then 
+						return true
+					end
+				elseif setting == 4 then 
+					if params.slot_name == "primary" and params.variant == "magazine" then 
+						return true
+					end
+				elseif setting == 5 then 
+					if params.slot_name == "secondary" and params.variant == "magazine" then 
+						return true
+					end
+				elseif setting == 6 then 
+					if params.is_equipped and params.variant == "reserve" then 
+						return true
+					end
+				elseif setting == 7 then 
+					if params.slot_name == "primary" and params.variant == "reserve" then 
+						return true
+					end
+				elseif setting == 8 then 
+					if params.slot_name == "secondary" and params.variant == "reserve" then 
+						return true
+					end
+				end
+			elseif setting == 9 then
+				if source == "perk" then 
+					local equipped_perk_deck --blackmarket equipped specialization blah blah blah
+				end
+			end
+		end
+	end
+	
+	if check_listener(HEVHUD.settings.crosshair_indicator_left_tracker) then 
+		HEVHUD:SetLeftCrosshair(params.value,params.color)
+	end
+	if check_listener(HEVHUD.settings.crosshair_indicator_right_tracker) then 
+		HEVHUD:SetRightCrosshair(params.value,params.color)
+	end
+end)
+
 HEVHUD.settings = HEVHUD.settings or {}
 for k,v in pairs(HEVHUD.default_settings) do 
 	if HEVHUD.settings[k] == nil then 
 		HEVHUD.settings[k] = v
 	end
 end
-
-
-HEVHUD.color_data = {
-	hl2_yellow = Color("FFD040"),
-	hl2_yellow_bright = Color("F0D210"),
-	hl2_red_bright = Color("FF0000"),
-	hl2_red = Color("BB0200"),
-	hl2_orange = Color("FFA000")
-}
 
 function HEVHUD:log(...)
 	if Console then 
@@ -220,7 +288,7 @@ function HEVHUD:log(...)
 	end
 end
 
-function HEVHUD:CreateHUD()
+	function HEVHUD:CreateHUD()
 	if true or Utils:IsInHeist() then 
 		self._ws = managers.gui_data:create_fullscreen_workspace()
 		local hl2 = self._ws:panel()
@@ -240,8 +308,54 @@ function HEVHUD:CreateHUD()
 			align = "center",
 			y = 0,
 			font = self._fonts.hl2_icons,
-			font_size = crosshair_font_size
+			font_size = crosshair_font_size,
+			color = self.color_data.hl2_yellow,
+			layer = 3
 		})
+		
+		local crosshair_size = self.settings.CROSSHAIR_INDICATOR_SIZE
+		local crosshair_distance = 32
+		local crosshair_empty_left = crosshairs:bitmap({
+			name = "crosshair_empty_left",
+			texture = "textures/hl2_crosshair_empty_left",
+			w = crosshair_size,
+			h = crosshair_size,
+			x = -crosshair_distance + (crosshairs:w() - crosshair_size) / 2,
+			y = (crosshairs:h() - crosshair_size) / 2,
+			color = self.color_data.hl2_yellow,
+			layer = 2
+		})
+		local crosshair_empty_right = crosshairs:bitmap({
+			name = "crosshair_empty_right",
+			texture = "textures/hl2_crosshair_empty_right",
+			w = crosshair_size,
+			h = crosshair_size,
+			x = crosshair_distance + (crosshairs:w() - crosshair_size) / 2,
+			y = (crosshairs:h() - crosshair_size) / 2,
+			color = self.color_data.hl2_yellow,
+			layer = 2
+		})
+		local crosshair_fill_left = crosshairs:bitmap({
+			name = "crosshair_fill_left",
+			texture = "textures/hl2_crosshair_fill_left",
+			w = crosshair_size,
+			h = crosshair_size,
+			x = -crosshair_distance + (crosshairs:w() - crosshair_size) / 2,
+			y = (crosshairs:h() - crosshair_size) / 2,
+			color = self.color_data.hl2_yellow,
+			layer = 3
+		})
+		local crosshair_fill_right = crosshairs:bitmap({
+			name = "crosshair_fill_right",
+			texture = "textures/hl2_crosshair_fill_right",
+			w = crosshair_size,
+			h = crosshair_size,
+			x = crosshair_distance + (crosshairs:w() - crosshair_size) / 2,
+			y = (crosshairs:h() - crosshair_size) / 2,
+			color = self.color_data.hl2_yellow,
+			layer = 3
+		})
+		--[[
 		local crosshair_left = crosshairs:text({
 			name = "crosshair_left",
 			text = self._font_icons.cross_left_empty,
@@ -250,7 +364,8 @@ function HEVHUD:CreateHUD()
 			x = -16,
 			y = -crosshair_font_size * 0.1,
 			font = self._fonts.hl2_icons,
-			font_size = crosshair_font_size
+			font_size = crosshair_font_size,
+			color = self.color_data.hl2_yellow
 		})
 		local crosshair_right = crosshairs:text({
 			name = "crosshair_right",
@@ -260,9 +375,10 @@ function HEVHUD:CreateHUD()
 			x = 16,
 			y = -crosshair_font_size * 0.1,
 			font = self._fonts.hl2_icons,
-			font_size = crosshair_font_size
+			font_size = crosshair_font_size,
+			color = self.color_data.hl2_yellow
 		})
-		
+		--]]
 	--todo
 	--SQUAD
 		local squad = self._panel:panel({
@@ -295,9 +411,9 @@ function HEVHUD:CreateHUD()
 		})
 				
 		local NUM_POWER_TICKS = 10
-		local TICK_HEIGHT = 3
-		local TICK_WIDTH = 6
-		local TICK_MARGIN = 2
+		local TICK_HEIGHT = 4
+		local TICK_WIDTH = 7
+		local TICK_MARGIN = 4
 
 		local power_h = 32
 		local power = hl2:panel({
@@ -324,8 +440,8 @@ function HEVHUD:CreateHUD()
 			y = -16 + power:h() - text_name_size,
 			font = self._fonts.hl2_vitals,
 			font_size = text_name_size,
-			color = self.color_data.hl2_yellow_bright,
-			alpha = 1,
+			color = self.color_data.hl2_yellow,
+			alpha = 2/3,
 			layer = 2
 		})
 		local TICK_OFFSET_X = (power:w() - ((NUM_POWER_TICKS - 1) * (TICK_MARGIN + (TICK_WIDTH * box_scale)))) / 2
@@ -335,7 +451,7 @@ function HEVHUD:CreateHUD()
 				name = "power_tick_" .. tostring(i),
 				color = self.color_data.hl2_yellow_bright,
 				x = 10 + ((i - 1) * (TICK_MARGIN + TICK_WIDTH)),
-				y = -8 + power:h() - (TICK_HEIGHT + TICK_MARGIN),
+				y = -4 + power:h() - (TICK_HEIGHT + TICK_MARGIN),
 				w = TICK_WIDTH,
 				h = TICK_HEIGHT,
 				alpha = 2/3,
@@ -598,34 +714,6 @@ function HEVHUD:SetUnderbarrelPanelState(slot_name,is_active,ammo_ratio)
 	end
 end
 
-function HEVHUD:SetReserveAmmoColorByRatio(slot_name,ammo_ratio)
-	local weapon_panel = self._panel:child(tostring(slot_name))
-	if alive(weapon_panel) then 
-		local ammo_panel = weapon_panel:child("ammo")
-		if ammo_ratio <= 0 then 
-			ammo_panel:child("reserve"):set_color(self.color_data.hl2_red)
-		elseif ammo_ratio <= self.settings.AMMO_THRESHOLD_LOW then 
-			ammo_panel:child("reserve"):set_color(self.color_data.hl2_orange)
-		else 
-			ammo_panel:child("reserve"):set_color(self.color_data.hl2_yellow)
-		end
-	end
-end
-
-function HEVHUD:SetMagazineAmmoColorByRatio(slot_name,ammo_ratio)
-	local weapon_panel = self._panel:child(tostring(slot_name))
-	if alive(weapon_panel) then 
-		local ammo_panel = weapon_panel:child("ammo")
-		if ammo_ratio <= 0 then 
-			ammo_panel:child("magazine"):set_color(self.color_data.hl2_red)
-		elseif ammo_ratio <= self.settings.AMMO_THRESHOLD_LOW then 
-			ammo_panel:child("magazine"):set_color(self.color_data.hl2_orange)
-		else 
-			ammo_panel:child("magazine"):set_color(self.color_data.hl2_yellow)
-		end
-	end
-end
-
 function HEVHUD:SetWeaponPanelState(slot_name,is_active)
 	local weapon_panel = self._panel:child(tostring(slot_name))
 	if alive(weapon_panel) then 
@@ -653,12 +741,83 @@ function HEVHUD:ShouldShowArmorValue()
 	return true
 end
 
-function HEVHUD:SetHealthString(text)
-	self._panel:child("health"):child("health_label"):set_text(text)
+function HEVHUD:SetRevives(id,revives)
+	
 end
 
-function HEVHUD:SetSuitString(text)
+
+--[[
+--todo lines for health/armor damage from various sources
+--todo flag so that the line doesn't play every single time you're injured at x health
+function HEVHUD:SetHealth(current,total)
+	local ratio = current / total
+	if ratio < self.HUD_VALUES.HEALTH_THRESHOLD_DOOMED then
+		self:PlaySound("suit","near_death")
+	elseif ratio < self.HUD_VALUES.HEALTH_THRESHOLD_CRITICAL then 
+		self:PlaySound("suit","health_critical")
+	elseif ratio < self.HUD_VALUES.HEALTH_THRESHOLD_MINOR then 
+--		self:PlaySound("suit","health_critical")
+	end
+end
+--]]
+
+function HEVHUD:SetHealth(data)
+	HEVHUD:SetRevives(nil,data.revives)
+
+	local health_ratio = 0
+	local text = ""
+	if data.total ~= 0 then 
+		health_ratio = data.current / data.total
+		if HEVHUD:ShouldShowHealthValue() then 
+			text = string.format("%i",data.current * 10)
+		else
+			text = string.format("%i",health_ratio * 10)
+		end
+	end
+	local color
+	if health_ratio <= self.settings.HEALTH_THRESHOLD_CRITICAL then 
+		color = self.color_data.hl2_red
+	elseif health_ratio <= self.settings.HEALTH_THRESHOLD_MINOR then 
+		color = self.color_data.hl2_orange
+	else 
+		color = self.color_data.hl2_yellow
+	end	
+	
+	Hooks:Call("HEVHUD_Crosshair_Listener","health",{
+		value = health_ratio,
+		color = color
+	})
+	self._panel:child("health"):child("health_label"):set_text(text)
+	self._panel:child("health"):child("health_label"):set_color(color)
+end
+
+function HEVHUD:SetArmor(data)
+
+	local color
+	local text = ""
+	local armor_ratio = 0
+	if data.total ~= 0 then 
+		armor_ratio = data.current / data.total
+		if HEVHUD:ShouldShowArmorValue() then 
+			text = string.format("%i",data.current * 10)
+		else
+			text = string.format("%i",armor_ratio * 10)
+		end
+	end
+	if armor_ratio <= self.settings.ARMOR_THRESHOLD_CRITICAL then 
+		color = self.color_data.hl2_red
+	elseif armor_ratio <= self.settings.ARMOR_THRESHOLD_MINOR then 
+		color = self.color_data.hl2_orange
+	else 
+		color = self.color_data.hl2_yellow
+	end	
+	
+	Hooks:Call("HEVHUD_Crosshair_Listener","armor",{
+		value = armor_ratio,
+		color = color
+	})
 	self._panel:child("suit"):child("suit_label"):set_text(text)
+	self._panel:child("suit"):child("suit_label"):set_color(color)
 end
 
 function HEVHUD:GetHLGunAmmoIcon(categories,weapon_id,fallback)
@@ -781,14 +940,34 @@ function HEVHUD:SetWeaponReserve(slot_name,current_reserve,max_reserve)
 		--hide underbarrel panel if none exists
 	end
 	
+
+	
+	self:SetWeaponPanelState(slot_name,true)
+	
+	
+	
 	local ammo_ratio = 1
 	if max_reserve > 0 then
 		ammo_ratio = current_reserve / max_reserve
 	end
-	self:SetReserveAmmoColorByRatio(slot_name,ammo_ratio)
-	self:SetWeaponPanelState(slot_name,true)
+	local color
+	if ammo_ratio <= 0 then 
+		color = self.color_data.hl2_red
+	elseif ammo_ratio <= self.settings.AMMO_THRESHOLD_LOW then 
+		color = self.color_data.hl2_orange
+	else 
+		color = self.color_data.hl2_yellow
+	end
 	
+	Hooks:Call("HEVHUD_Crosshair_Listener","weapon",{
+		variant = "reserve",
+		slot_name = slot_name,
+		is_equipped = slot == player:inventory():equipped_selection(),
+		value = ammo_ratio,
+		color = color
+	})
 	if alive(weapon_panel) then 
+		weapon_panel:child("ammo"):child("reserve"):set_color(color)
 		weapon_panel:child("ammo"):child("reserve"):set_text(current_reserve)
 	end
 end
@@ -830,17 +1009,33 @@ function HEVHUD:SetWeaponMagazine(slot_name,mag_current,mag_max)
 		self:SetUnderbarrel(slot_name,false)
 	end
 	
+	
+	local color
 	local ammo_ratio = 1
 	if mag_max > 0 then
 		ammo_ratio = mag_current / mag_max
 	end
-	self:SetMagazineAmmoColorByRatio(slot_name,ammo_ratio)
+	if ammo_ratio <= 0 then 
+		color = self.color_data.hl2_red
+	elseif ammo_ratio <= self.settings.AMMO_THRESHOLD_LOW then 
+		color = self.color_data.hl2_orange
+	else 
+		color = self.color_data.hl2_yellow
+	end	
+	
+	Hooks:Call("HEVHUD_Crosshair_Listener","weapon",{
+		variant = "magazine",
+		slot_name = slot_name,
+		is_equipped = slot == player:inventory():equipped_selection(),
+		value = ammo_ratio,
+		color = color
+	})
 	self:SetWeaponPanelState(slot_name,true)
 	
 	if alive(weapon_panel) then 
+		weapon_panel:child("ammo"):child("magazine"):set_color(color)
 		weapon_panel:child("ammo"):child("magazine"):set_text(mag_current)
 	end
-	
 end
 
 function HEVHUD:SetUnderbarrel(slot_name,text)
@@ -891,6 +1086,40 @@ function HEVHUD:SetSelectedWeapon(selection)
 			self._panel:child("primary"):show()
 			self._panel:child("secondary"):hide()
 		end
+	end
+end
+
+function HEVHUD:SetRightCrosshair(value,color)
+	local crosshair_master = self._panel:child("crosshairs")
+	local crosshair = crosshair_master:child("crosshair_fill_right")
+	local crosshair_outline = crosshair_master:child("crosshair_empty_right")
+	local IMAGE_SIZE = self._DATA.CROSSHAIR_IMAGE_SIZE
+	local INDICATOR_SIZE = self.settings.CROSSHAIR_INDICATOR_SIZE
+	if value then 
+		crosshair:set_texture_rect(0,IMAGE_SIZE * (1 - value),IMAGE_SIZE,IMAGE_SIZE * (value))
+		crosshair:set_h(self.settings.CROSSHAIR_INDICATOR_SIZE * (value))
+		crosshair:set_y(((crosshair_master:h() - INDICATOR_SIZE) / 2) + ((1 - value) * INDICATOR_SIZE))
+	end
+	if color then 
+		crosshair:set_color(color)
+		crosshair_outline:set_color(color)
+	end
+end
+
+function HEVHUD:SetLeftCrosshair(value,color)
+	local crosshair_master = self._panel:child("crosshairs")
+	local crosshair = crosshair_master:child("crosshair_fill_left")
+	local crosshair_outline = crosshair_master:child("crosshair_empty_left")
+	local IMAGE_SIZE = self._DATA.CROSSHAIR_IMAGE_SIZE
+	local INDICATOR_SIZE = self.settings.CROSSHAIR_INDICATOR_SIZE
+	if value then 
+		crosshair:set_texture_rect(0,IMAGE_SIZE * (1 - value),IMAGE_SIZE,IMAGE_SIZE * (value))
+		crosshair:set_h(INDICATOR_SIZE * (value))
+		crosshair:set_y(((crosshair_master:h() - INDICATOR_SIZE) / 2) + ((1 - value) * INDICATOR_SIZE))
+	end
+	if color then 
+		crosshair:set_color(color)
+		crosshair_outline:set_color(color)
 	end
 end
 
@@ -1070,25 +1299,6 @@ end
 Hooks:Add("BaseNetworkSessionOnLoadComplete","HEVHUD_OnLoadComplete",callback(HEVHUD,HEVHUD,"Setup"))
 
 
-
-
-
---todo flag so that the line doesn't play every single time you're injured at x health
-function HEVHUD:SetHealth(current,total)
-	self:SetHealthString(current,total)
-	local ratio = current / total
-	if ratio < self.HUD_VALUES.HEALTH_THRESHOLD_DOOMED then
-		self:PlaySound("suit","near_death")
-	elseif ratio < self.HUD_VALUES.HEALTH_THRESHOLD_CRITICAL then 
-		self:PlaySound("suit","health_critical")
-	elseif ratio < self.HUD_VALUES.HEALTH_THRESHOLD_MINOR then 
---		self:PlaySound("suit","health_critical")
-	end
-end
-
-function HEVHUD:SetArmor(current,total)
-	self:SetSuitString(current,total)
-end
 Hooks:Add("DISABLED___LocalizationManagerPostInit", "hevhud_addlocalization", function( loc )
 	local path = HEVHUD._localization_path
 	
