@@ -17,7 +17,8 @@ HEVHUD._audio_sources = HEVHUD._audio_sources or {}
 HEVHUD._audio_buffers = HEVHUD._audio_buffers or {}
 HEVHUD._audio_queue = HEVHUD._audio_queue or {}
 HEVHUD._DATA = {
-	CROSSHAIR_IMAGE_SIZE = 96
+	CROSSHAIR_IMAGE_SIZE = 96,
+	NUM_POWER_TICKS = 10
 }
 HEVHUD._suit_number_vox = HEVHUD._suit_number_vox or {
 	["0"] = "_comma",
@@ -172,7 +173,8 @@ HEVHUD._cache = {
 	underbarrel = {
 		[1] = nil,
 		[2] = nil
-	}
+	},
+	stamina_update_t = 0
 } --slight misnomer but basically intended as an unorganized bucket-style structure for random things set during in-game/in-heist
 
 
@@ -191,7 +193,8 @@ HEVHUD.default_settings = {
 	WEAPON_ACTIVE_ALPHA = 1,
 	CROSSHAIR_INDICATOR_SIZE = 48,
 	crosshair_indicator_left_tracker = 1,
-	crosshair_indicator_right_tracker = 3
+	crosshair_indicator_right_tracker = 3,
+	STAMINA_UPDATE_INTERVAL = 0.05
 }
 
 
@@ -288,7 +291,7 @@ function HEVHUD:log(...)
 	end
 end
 
-	function HEVHUD:CreateHUD()
+function HEVHUD:CreateHUD()
 	if true or Utils:IsInHeist() then 
 		self._ws = managers.gui_data:create_fullscreen_workspace()
 		local hl2 = self._ws:panel()
@@ -410,7 +413,7 @@ end
 			y = box_ver_offset + hl2:h() - box_h
 		})
 				
-		local NUM_POWER_TICKS = 10
+		local NUM_POWER_TICKS = self._DATA.NUM_POWER_TICKS
 		local TICK_HEIGHT = 4
 		local TICK_WIDTH = 7
 		local TICK_MARGIN = 4
@@ -1218,27 +1221,42 @@ function HEVHUD:Update(t,dt)
 	
 	
 	--init HEV suit sound source
-	if managers.player:local_player() then 
+	local player = managers.player:local_player()
+	if player then 
 		self._audio_sources.suit = self._audio_sources.suit or XAudio.UnitSource:new(XAudio.PLAYER)
 	else
 		return
 	end
 	for source_name,audio_queue in pairs(self._audio_queue) do 
---		Console:SetTrackerValue("trackera",source_name .. Application:time())
 		local audio_source = self._audio_sources[source_name] and self._audio_sources[source_name]
---		self:log("State is " .. audio_source:get_state())
 		if audio_source and audio_source:get_state() ~= 1 then 
---			Console:SetTrackerValue("trackerb","" .. math.random())
 			local snd_data = table.remove(audio_queue,1)
 			if snd_data and type(snd_data) == "table" then
---				Log("Playing snd data ")
---				logall(snd_data)
 				audio_source:set_buffer(snd_data.buffer)
 				audio_source:set_looping(snd_data.should_loop)
 				audio_source:play()
 			end
 		end
 	end
+	
+	if player and self._cache.stamina_update_t > self.settings.STAMINA_UPDATE_INTERVAL then 
+		self._cache.stamina_update_t = self._cache.stamina_update_t - self.settings.STAMINA_UPDATE_INTERVAL
+		
+		for i = 1,self._DATA.NUM_POWER_TICKS do 
+			local tick = self._panel:child("power"):child("power_tick_" .. tostring(i))
+			local stamina_ratio = player:movement():stamina() / player:movement():_max_stamina()
+			--todo fade alpha to 2/3 instead of 0
+			--todo set entire bar + label to red when below stamina threshold
+			--todo off-by-one error
+			--floor() stamina, except for exactly equal to max?
+			if ((i - 1) / (self._DATA.NUM_POWER_TICKS - 1)) >= (stamina_ratio) then 
+				tick:set_alpha(tick:alpha() * 0.5)
+			else
+				tick:set_alpha(math.max(0.01,tick:alpha()) * 1.5) --todo include dt in decay 
+			end
+		end		
+	end
+	self._cache.stamina_update_t = self._cache.stamina_update_t + dt
 	
 	self:UpdateAnimate(t,dt)
 end
