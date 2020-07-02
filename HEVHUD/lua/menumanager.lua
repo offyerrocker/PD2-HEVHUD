@@ -1,7 +1,21 @@
 --[[
 todo:
 
-sprint meter + sprint hud animation
+-objectives
+-teammates
+-carry bag
+-equipment
+-assault
+-hints
+
+-deployables
+-throwables/abilities
+-zipties
+-hostages
+
+
+
+globals for hud subpanels
 
 --]]
 
@@ -18,6 +32,8 @@ HEVHUD._DATA = {
 	CROSSHAIR_IMAGE_SIZE = 96,
 	NUM_POWER_TICKS = 10
 }
+HEVHUD._hints = {} --queue style structure
+
 HEVHUD._suit_number_vox = HEVHUD._suit_number_vox or {
 	["0"] = "_comma",
 	["1"] = "one",
@@ -197,7 +213,10 @@ HEVHUD.default_settings = {
 	STAMINA_UPDATE_RATE_BUILD = 1.3, --higher is faster build
 	STAMINA_THRESHOLD_LOW = 0.3,
 	STAMINA_INACTIVE_ALPHA = 0.2,
-	STAMINA_ACTIVE_ALPHA = 1
+	STAMINA_ACTIVE_ALPHA = 1,
+	HINT_FOCUS_X = 100,
+	HINT_FOCUS_Y = 100,
+	HINT_FOCUS_ADJUST_DURATION = 1 --seconds for a hint to reach focus location
 }
 
 
@@ -303,6 +322,11 @@ function HEVHUD:CreateHUD()
 		self._panel = hl2
 		
 		local scale = 1
+		
+	--HINTS
+		local hints = self._panel:panel({
+			name = "hints"
+		})
 		
 	--CROSSHAIR
 		local crosshair_font_size = 32 --TODO get from setting
@@ -751,6 +775,99 @@ end
 
 function HEVHUD:SetRevives(id,revives)
 	
+end
+
+function HEVHUD:ShowHint(params)
+	if type(params) ~= "table" then return end
+	local text = params.text
+	
+	local new_hint = self._panel:child("hints"):panel({
+		name = params.id or params.text,
+		visible = true,
+		alpha = 0,
+		x = 100,
+		y = 100, --temp
+		w = 500, --temp
+		h = 500 --temp
+	})
+	
+	local sample_sizer = new_hint:text({
+		name = "sample_sizer",
+		text = params.text,
+		align = "center",
+		vertical = "center",
+		font = self._fonts.hl2_text,
+		font_size = 16, -- default; changed in update
+		color = self.color_data.hl2_yellow,
+		layer = 3,
+		visible = false
+	})
+	
+	local HINT_MARGIN = 12
+	local tx,ty,tw,th = sample_sizer:text_rect()
+	new_hint:set_size(tw + HINT_MARGIN,th + HINT_MARGIN)
+	new_hint:set_y(self.settings.HINT_FOCUS_Y + (2 * new_hint:h()))
+	--centered text does not re-center properly after resizing its parent i guess
+	new_hint:remove(sample_sizer)
+	local hint_text = new_hint:text({
+		name = "text",
+		text = params.text,
+		vertical = "center",
+		align = "center",
+		font = self._fonts.hl2_text,
+		font_size = 16, -- default; changed in update
+		color = self.color_data.hl2_yellow,
+		layer = 3,
+		visible = true
+	})
+	local hint_bg = new_hint:bitmap({
+		name = "bg",
+		layer = 1,
+		texture = "guis/textures/pd2/hud_tabs",
+		texture_rect = {84,0,44,32},
+		w = new_hint:w(),
+		h = new_hint:h(),
+		alpha = 2/3
+	})
+	params.panel = new_hint
+	params.time = (tonumber(params.time) or 3) + self.settings.HINT_FOCUS_ADJUST_DURATION
+	params.start_y = new_hint:y()
+--	params.start_t = Application:time()
+	table.insert(self._hints,params)
+	--add to hints table
+end
+
+function HEVHUD:UpdateHints(t,dt)
+	local panel = self._panel:child("hints")
+	local queue_bottom_y = 0
+	local HINT_QUEUE_MARGIN_Y = 16
+	for i,hint_data in ipairs(self._hints) do 
+		local hint_panel = hint_data.panel
+		if queue_bottom_y < panel:h() then
+			local d_y = self.settings.HINT_FOCUS_Y - hint_data.start_y
+			if i == 1 then 
+				hint_data.start_t = hint_data.start_t or t
+				local elapsed = t - hint_data.start_t
+				local elapsed_ratio = math.clamp(math.pow(elapsed / self.settings.HINT_FOCUS_ADJUST_DURATION,3),0,1)
+				hint_panel:set_y(hint_data.start_y + (d_y * elapsed_ratio))
+				hint_panel:set_alpha(elapsed_ratio)
+				if elapsed > hint_data.time then 
+					table.remove(self._hints,i)
+					self:animate(hint_panel,"animate_fadeout",function(o) panel:remove(o) end,0.66,hint_panel:alpha(),-800)
+				end
+				--[[
+				if hint_panel:y() - self.settings.HINT_FOCUS_Y < 0.1 then 
+					hint_panel:set_y(self.settings.HINT_FOCUS_Y)
+				else
+				end
+				--]]
+			else
+				hint_panel:set_y(queue_bottom_y)
+				hint_data.start_y = hint_panel:y()
+			end
+			queue_bottom_y = queue_bottom_y + hint_panel:h() + HINT_QUEUE_MARGIN_Y
+		end
+	end
 end
 
 --[[
@@ -1275,6 +1392,7 @@ function HEVHUD:Update(t,dt)
 	end
 	self._cache.stamina_update_t = self._cache.stamina_update_t + dt
 	
+	self:UpdateHints(t,dt)
 	self:UpdateAnimate(t,dt)
 end
 
@@ -1298,6 +1416,24 @@ function HEVHUD:animate(target,func,done_cb,...)
 				}
 			}
 		end
+	end
+end
+
+function HEVHUD.animate_fadeout(o,t,dt,start_t,duration,from_alpha,exit_x,exit_y)
+	duration = duration or 1
+	from_alpha = from_alpha or 1
+	local ratio = math.pow((t - start_t) / duration,2)
+	
+	if ratio >= 1 then 
+		o:set_alpha(0)
+		return true
+	end
+	o:set_alpha(from_alpha * (1 - ratio))
+	if exit_y then 
+		o:set_y(o:y() + (exit_y * dt / duration))
+	end
+	if exit_x then 
+		o:set_x(o:x() + (exit_x * dt / duration))
 	end
 end
 
