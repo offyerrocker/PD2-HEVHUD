@@ -2,6 +2,7 @@
 todo:
 
 -objectives
+
 -teammates
 -equipment
 -assault
@@ -15,6 +16,7 @@ bag value?
 move hud into hudmanager hud 
 
 globals for hud subpanels
+init audio sources outside of update; call again on player respawn, and check for closed source
 
 --]]
 
@@ -32,6 +34,8 @@ HEVHUD._DATA = {
 	NUM_POWER_TICKS = 10
 }
 HEVHUD._hints = {} --queue style structure
+
+HEVHUD._objectives_queue = {}
 
 HEVHUD._suit_number_vox = HEVHUD._suit_number_vox or {
 	["0"] = "_comma",
@@ -78,8 +82,8 @@ HEVHUD._panel = HEVHUD._panel or nil --for name reference
 HEVHUD.color_data = {
 	hl2_yellow = Color("FFD040"),
 	hl2_yellow_bright = Color("F0D210"),
-	hl2_red = Color("800000"),
-	hl2_red_bright = Color("BB0200"),
+	hl2_red = Color("bb2d12"),
+	hl2_red_bright = Color("BB0200"), --80000?
 	hl2_orange = Color("FFA000")
 }
 
@@ -187,6 +191,7 @@ HEVHUD._cache = { --slight misnomer but basically intended as an unorganized buc
 		[1] = nil,
 		[2] = nil
 	},
+	objectives = {},
 	stamina_update_t = 0
 }
 
@@ -334,6 +339,45 @@ function HEVHUD:CreateHUD()
 		--individual panels per bag are generated separately
 		--on bag picked up, since centered text does not seem to re-center correctly when a panel's size changes
 		
+	--OBJECTIVES
+		local objective_font_size = 16
+		local objectives = self._panel:panel({
+			name = "objectives",
+			w = 100,
+			h = 100
+		})
+		--[[
+		local objective_title = objectives:text({
+			name = "objective_title",
+			text = self._font_icons.cross_dots,
+			vertical = "center",
+			align = "center",
+			y = 0,
+			font = self._fonts.hl2_text,
+			font_size = objective_font_size,
+			color = self.color_data.hl2_yellow,
+			layer = 3
+		})
+		--]]
+		local objectives_bg = objectives:bitmap({
+			name = "objectives_bg",
+			layer = 1,
+			texture = "guis/textures/pd2/hud_tabs",
+			texture_rect = {84,0,44,32},
+			w = objectives:w(),
+			h = objectives:h(),
+			alpha = 0.75
+		})
+		
+		
+	--todo	
+	--SQUAD
+		local squad = self._panel:panel({
+			name = "squad"
+		})
+		
+		
+		
 	--CROSSHAIR
 		local crosshair_font_size = 32 --TODO get from setting
 		local crosshairs = self._panel:panel({
@@ -393,35 +437,52 @@ function HEVHUD:CreateHUD()
 			color = self.color_data.hl2_yellow,
 			layer = 3
 		})
-		--[[
-		local crosshair_left = crosshairs:text({
-			name = "crosshair_left",
-			text = self._font_icons.cross_left_empty,
+		
+		
+		local hostages_margin = 12
+		local hostages_w = 72
+		local hostages_h = 36
+		local hostage_icon_size = 32
+	--HOSTAGES
+		local hostages = self._panel:panel({
+			name = "hostages",
+			w = hostages_w,
+			h = hostages_h,
+			x = self._panel:w() - (hostages_w + hostages_margin),
+			y = hostages_margin
+		})
+		local hostages_icon = hostages:bitmap({
+			name = "hostages_icon",
+			texture = "guis/textures/pd2/hud_icon_hostage",
+			x = (hostages_h - hostage_icon_size) / 2,
+			y = (hostages_h - hostage_icon_size) / 2, --hostages_h is not a typo
+			w = hostage_icon_size,
+			h = hostage_icon_size,
+			color = self.color_data.hl2_yellow,
+			layer = 2
+		})
+		local hostages_count = hostages:text({
+			name = "hostages_count",
+			text = "0",
 			vertical = "center",
-			align = "center",
-			x = -16,
-			y = -crosshair_font_size * 0.1,
+--			align = "center",
+			x = (hostages_w - 8) / 2,
 			font = self._fonts.hl2_icons,
 			font_size = crosshair_font_size,
-			color = self.color_data.hl2_yellow
+			color = self.color_data.hl2_yellow,
+			layer = 3
 		})
-		local crosshair_right = crosshairs:text({
-			name = "crosshair_right",
-			text = self._font_icons.cross_right_empty,
-			vertical = "center",
-			align = "center",
-			x = 16,
-			y = -crosshair_font_size * 0.1,
-			font = self._fonts.hl2_icons,
-			font_size = crosshair_font_size,
-			color = self.color_data.hl2_yellow
+		local hostages_bg = hostages:bitmap({
+			name = "hostages_bg",
+			layer = 1,
+			texture = "guis/textures/pd2/hud_tabs",
+			texture_rect = {84,0,44,32},
+			w = hostages_w,
+			h = hostages_h,
+			alpha = 0.75
 		})
-		--]]
-	--todo
-	--SQUAD
-		local squad = self._panel:panel({
-			name = "squad"
-		})
+		
+		
 		
 	--HEALTH/SUIT/AUX
 		local vitals = self._panel:panel({
@@ -572,9 +633,6 @@ function HEVHUD:CreateHUD()
 			layer = 2
 		})
 		
-				
-		
-		
 		
 		local function populate_weapon_panel(weapon_panel)
 			
@@ -635,9 +693,6 @@ function HEVHUD:CreateHUD()
 				alpha = 2/3,
 				layer = 2
 			})
-			
-			
-			
 			
 			
 			local ammo_w = 200 * box_scale
@@ -1355,6 +1410,251 @@ function HEVHUD:SetLeftCrosshair(value,color)
 	end
 end
 
+function HEVHUD:SetHostageCount(num)
+	self._panel:child("hostages"):child("hostages_count"):set_text(math.clamp(num,0,99))
+end
+
+function HEVHUD:ShowHostages(skip_anim)
+	self._panel:child("hostages"):child("hostages_count"):show()
+end
+
+function HEVHUD:HideHostages(skip_anim)
+	self._panel:child("hostages"):child("hostages_count"):hide()
+end
+
+function HEVHUD:AddQueuedObjective(data)
+	if not data then
+		self:log("HEVHUD:AddQueuedObjective(): What kind of idiot tries to add an objective with no data?")
+		return
+	end
+	if not data.id then 
+		self:log("HEVHUD:AddQueuedObjective(): You know, back in my day, our objectives had INTEGRITY. We always added ids to our objectives. That's what's wrong with this country." )
+		return
+	end	
+	
+	text = self._panel:child("objectives"):child(data.id)
+	if not text then 
+	--todo add to objectives queue
+		text = self._panel:text({
+			name = data.id,
+			text = data.text,
+--			align = "center",
+			font = self._fonts.hl2_text,
+			font_size = 16,
+			color = self.color_data.hl2_yellow,
+			layer = 3,
+			visible = false
+		})
+	else
+		text:set_text(data.text)
+	end
+	
+	--[[
+	
+		item = self._panel:child("objectives"):panel({
+			name = data.id
+		})
+		local item_bg = item:bitmap({
+			name = "item_bg",
+			layer = 1,
+			texture = "guis/textures/pd2/hud_tabs",
+			texture_rect = {84,0,44,32},
+			w = item:w(),
+			h = item:h(),
+			alpha = 0.75
+		})
+	--]]
+--[[
+	if data.mode == "remind" then 
+		local c = self._cache.objectives[data.id] or {text = ""}
+		data.current_amount = data.current_amount or c.current_amount
+		data.amount = data.amount or c.amount
+		data.text = data.text or c.text
+	elseif data.text then 
+		self._cache.objectives[data.id] = data
+	end
+	
+	
+	local added = false
+	
+	--search queued objectives for this objective, and replace it if it exists (and isn't already animating)
+	for i,queued in ipairs(self._objectives_queue) do 
+		if queued.id == data.id and not queued.is_animating then 
+			table.remove(self._objectives_queue,i)
+			table.insert(self._objectives_queue,data)
+			added = true
+			break
+		end
+	end
+	if not added then 		
+		table.insert(self._objectives_queue,data)
+	end
+	if self._objectives_queue[1] and not self._objectives_queue[1].is_animating then
+		self:PerformObjectiveFromQueue()
+	end
+	--]]
+end
+
+--animates the appearance of the topmost objective in the queue
+function HEVHUD:PerformObjectiveFromQueue()
+	--[[
+	local data = self._objectives_queue[1]
+	local mode = data.mode --can be activate, remind, or complete
+	if mode == "activate" then 
+		self:SetObjectiveTitle(utf8.to_upper(managers.localization:text("noblehud_hud_objective_activate")))
+	elseif mode == "remind" then 
+		self:SetObjectiveTitle(utf8.to_upper(managers.localization:text("noblehud_hud_objective_reminder")))
+	elseif mode == "update_amount" then
+		self:SetObjectiveTitle(utf8.to_upper(managers.localization:text("noblehud_hud_objective_update")))
+	elseif mode == "complete" then
+		self:SetObjectiveTitle(utf8.to_upper(managers.localization:text("noblehud_hud_objective_complete")))
+	elseif mode == "wave" then
+		self:SetObjectiveTitle(utf8.to_upper(managers.localization:text("noblehud_hud_objective_wave")))
+	else
+		self:log("If I was locked in a room with a gun, two bullets, and yourself, I would add a mode parameter to my PerformObjectiveFromQueue() calls. Also, I'd shoot the door lock.",{color=Color.red})
+		table.remove(self._objectives_queue,1)
+	end
+	self:AnimateShowObjective(data)
+--]]	
+end
+
+function HEVHUD:SetObjectiveTitle(text)
+--[[
+	if alive(self._objectives_panel) then 
+		self._objectives_panel:child("objectives_title"):set_text(label)
+		self._objectives_panel:child("objectives_title_shadow"):set_text(label)
+	end
+	--]]
+end
+
+function HEVHUD:AnimateShowObjective(data)
+--[[
+	if not self._queued_objectives[1] then
+		self:log("NobleHUD:AnimateShowObjective() ERROR: Tried to animate nonexistent objective queue",{color=Color.red})
+		return
+	end
+	self._queued_objectives[1].is_animating = true
+	local objectives_panel = NobleHUD._objectives_panel
+	local objectives_label = objectives_panel:child("objectives_label")
+	local objectives_label_shadow = objectives_panel:child("objectives_label_shadow")
+	local objectives_title = objectives_panel:child("objectives_title")
+	local objectives_title_shadow = objectives_panel:child("objectives_title_shadow")
+	local _,_,label_w,label_h = objectives_label:text_rect()
+	
+	local _,_,title_w,title_h = objectives_title:text_rect()
+
+	local blink_label = NobleHUD._objectives_panel:child("blink_label")
+	local blink_title = NobleHUD._objectives_panel:child("blink_title")
+
+	local kern = -2
+	local title_font_size = tweak_data.hud.active_objective_title_font_size
+	local label_font_size = title_font_size * 1.15
+	local in_duration = 0.2
+	local mid_x = objectives_panel:w() / 2
+	local blinkout_time = 0.25
+	local blinkout_alpha = 0.9
+	local blinkout_stretch_w_mul = 1.25
+	local display_hold_time = 3
+	
+--prep
+	blink_label:set_size(label_w,label_h)
+--	blink_label:set_alpha(1)
+	blink_title:set_size(title_w,title_h)
+	blink_title:set_alpha(1)
+	objectives_title:set_font_size(0)
+	objectives_title:set_kern(kern)
+	objectives_title:set_alpha(1)
+	objectives_title_shadow:set_font_size(0)
+	objectives_title_shadow:set_kern(kern)
+	objectives_title_shadow:set_alpha(1)
+	objectives_label:set_font_size(0)
+	objectives_label:set_kern(kern)
+	objectives_label:set_alpha(1)
+	objectives_label:set_color(data.color or self.color_data.hud_objective_label_text)
+	objectives_label_shadow:set_font_size(0)
+	objectives_label_shadow:set_kern(kern)
+	objectives_label_shadow:set_alpha(1)
+	self:animate_stop(blink_label)
+	self:animate_stop(blink_title)
+	self:animate_stop(objectives_title)
+	self:animate_stop(objectives_title_shadow)
+	self:animate_stop(objectives_label)
+	self:animate_stop(objectives_label_shadow)
+	
+	if (data.mode ~= "remind") or (data.id and data.id == managers.hud._hud_objectives._active_objective_id) then
+		local label_text = utf8.to_upper(data.text)
+		if data.amount and data.current_amount then
+			label_text = label_text .. string.gsub(" [$CURRENT/$TOTAL]","$CURRENT",data.current_amount)
+			label_text = string.gsub(label_text,"$TOTAL",data.amount)
+		elseif data.amount or data.current_amount then 
+		--i don't know under what circumstances this would trigger, probably just weirdly scripted custom heissts
+			label_text = label_text .. " [" .. tostring(data.amount or data.current_amount) .. "]"
+		end
+		objectives_label:set_text(label_text)
+		objectives_label_shadow:set_text(label_text)
+	end
+	
+	
+--build display cb sequence backwards
+
+--forward order:
+
+--animate white flash
+	-- done_cb fadein title, fadein label
+--fadein title
+	--done cb: delayed cb to fadeout title after display duration
+--fadein label
+	--done cb: delayed cb to fadeout label after display duration
+--return done
+	
+--basically, title and label are animated concurrently (after the initial flash)
+--each with their own cb tree,
+--but title is the one that calls the overall animate done callback for this objective 
+
+--
+	local function done () 
+	--remove this objective from queue, 
+	--	and display next queued objective, if one exists
+		table.remove(self._queued_objectives,1)
+		if self._queued_objectives[1] then 
+			self:PerformObjectiveFromQueue()
+		end
+	end
+	
+	
+	
+	local function fadeout_title()
+		self:AddDelayedCallback(function()
+			self:animate(objectives_title,"animate_fadeout",function(o) o:set_font_size(title_font_size) done() end,0.5)
+			self:animate(objectives_title_shadow,"animate_fadeout",function(o) o:set_font_size(title_font_size) end,0.5)		
+		end,nil,display_hold_time,"objective_title_hide")
+	end
+	local function fadeout_label()
+		self:AddDelayedCallback(function()
+			self:animate(objectives_label,"animate_fadeout",nil,0.5)
+			self:animate(objectives_label_shadow,"animate_fadeout",nil,0.5)
+		end,nil,display_hold_time,"objective_label_hide")
+	end
+	
+	local function animate_objective_label_in()		
+		self:animate(objectives_label,"animate_objective_flash",fadeout_label,in_duration,label_font_size,kern)
+		self:animate(objectives_label_shadow,"animate_objective_flash",nil,in_duration,label_font_size,kern)
+	end
+	local function animate_blink_blinkout()
+		blink_label:set_alpha(1)
+		self:animate(blink_label,"animate_objective_blinkout",animate_objective_label_in,blinkout_time,label_w,label_w * blinkout_stretch_w_mul,blinkout_alpha,mid_x)
+	end
+	
+	local function animate_objective_title_in()
+		self:animate(objectives_title,"animate_objective_flash",fadeout_title,in_duration,title_font_size,kern)
+		self:animate(objectives_title_shadow,"animate_objective_flash",nil,in_duration,title_font_size,kern)
+		animate_blink_blinkout()
+	end
+
+	self:animate(blink_title,"animate_objective_blinkout",animate_objective_title_in,blinkout_time,title_w,title_w * blinkout_stretch_w_mul,blinkout_alpha,mid_x)
+--]]
+end
+
 function HEVHUD:Setup()
 	if not self._SETUP_COMPLETE then 
 --		self._SETUP_COMPLETE = true
@@ -1449,7 +1749,7 @@ function HEVHUD:Update(t,dt)
 	--Audio sources
 	
 	
-	--init HEV suit sound source
+	--init HEV suit sound source; TODO make this init and check for closed source
 	local player = managers.player:local_player()
 	if player then 
 		self._audio_sources.suit = self._audio_sources.suit or XAudio.UnitSource:new(XAudio.PLAYER)
