@@ -216,7 +216,10 @@ HEVHUD.default_settings = {
 	STAMINA_ACTIVE_ALPHA = 1,
 	HINT_FOCUS_X = 100,
 	HINT_FOCUS_Y = 100,
-	HINT_FOCUS_ADJUST_DURATION = 1 --seconds for a hint to reach focus location
+	HINT_FOCUS_ADJUST_DURATION = 0.25, --seconds for a hint to reach focus location
+	HINT_QUEUE_MARGIN_Y = 16,
+	HINT_FONT_SIZE = 16,
+	MAX_HINTS_VISIBLE = 5
 }
 
 
@@ -785,21 +788,21 @@ function HEVHUD:ShowHint(params)
 		name = params.id or params.text,
 		visible = true,
 		alpha = 0,
-		x = 100,
-		y = 100, --temp
+		x = self.settings.HINT_FOCUS_X,
+		y = 400, --temp
 		w = 500, --temp
 		h = 500 --temp
 	})
 	
+	--centered text does not re-center properly after resizing its parent i guess,
+	--so create a text object specifically for measurement, resize the panel accordingly,
+	--create another text object, and then remove the measurement text 
 	local sample_sizer = new_hint:text({
 		name = "sample_sizer",
 		text = params.text,
-		align = "center",
-		vertical = "center",
 		font = self._fonts.hl2_text,
-		font_size = 16, -- default; changed in update
+		font_size = self.settings.HINT_FONT_SIZE,
 		color = self.color_data.hl2_yellow,
-		layer = 3,
 		visible = false
 	})
 	
@@ -807,15 +810,16 @@ function HEVHUD:ShowHint(params)
 	local tx,ty,tw,th = sample_sizer:text_rect()
 	new_hint:set_size(tw + HINT_MARGIN,th + HINT_MARGIN)
 	new_hint:set_y(self.settings.HINT_FOCUS_Y + (2 * new_hint:h()))
-	--centered text does not re-center properly after resizing its parent i guess
+	
 	new_hint:remove(sample_sizer)
+	
 	local hint_text = new_hint:text({
 		name = "text",
 		text = params.text,
 		vertical = "center",
 		align = "center",
 		font = self._fonts.hl2_text,
-		font_size = 16, -- default; changed in update
+		font_size = self.settings.HINT_FONT_SIZE,
 		color = self.color_data.hl2_yellow,
 		layer = 3,
 		visible = true
@@ -840,10 +844,44 @@ end
 function HEVHUD:UpdateHints(t,dt)
 	local panel = self._panel:child("hints")
 	local queue_bottom_y = 0
-	local HINT_QUEUE_MARGIN_Y = 16
+	local HINT_QUEUE_MARGIN_Y = self.settings.HINT_QUEUE_MARGIN_Y
+	local MAX_HINTS_VISIBLE = self.settings.MAX_HINTS_VISIBLE
 	for i,hint_data in ipairs(self._hints) do 
 		local hint_panel = hint_data.panel
-		if queue_bottom_y < panel:h() then
+		if i <= MAX_HINTS_VISIBLE then 
+		
+			hint_data.start_t = hint_data.start_t or t
+			if i == 1 then 
+				if not hint_data.is_first then 
+					hint_data.is_first = true
+					hint_data.time =  math.max(1,hint_data.time - (t - hint_data.start_t))
+					hint_data.start_t = t
+					
+				end
+				local elapsed = t - hint_data.start_t
+				local elapsed_ratio = math.clamp(math.pow(elapsed / self.settings.HINT_FOCUS_ADJUST_DURATION,2),0,1)
+				hint_panel:set_alpha(math.max(elapsed_ratio,hint_panel:alpha()))
+			
+--				local d_y = self.settings.HINT_FOCUS_Y - hint_panel:y()
+				local d_y = self.settings.HINT_FOCUS_Y - hint_data.start_y
+				hint_panel:set_y(hint_data.start_y + (d_y * (elapsed_ratio)))
+--				hint_panel:set_y(hint_data.start_y + (d_y * (elapsed_ratio > 0 and (1/elapsed_ratio) or 0)))
+				
+--				hint_panel:set_y(hint_panel:y() + (d_y * ((self.settings.HINT_FOCUS_ADJUST_DURATION / elapsed) - 1))
+
+--				hint_panel:set_y(hint_panel:y() + (dt * d_y / self.settings.HINT_FOCUS_ADJUST_DURATION))
+				
+				if elapsed > hint_data.time then 
+					table.remove(self._hints,i)
+					self:animate(hint_panel,"animate_fadeout",function(o) panel:remove(o) end,1/3,hint_panel:alpha(),hint_panel:x() - 200)
+				end
+				--[[
+				if elapsed_ratio <= 1 then 
+					local r = 1 - (math.pow(elapsed - self.settings.HINT_FOCUS_ADJUST_DURATION,2)/math.pow(self.settings.HINT_FOCUS_ADJUST_DURATION,2))
+					hint_panel:set_y(r * d_y)
+				end
+				--]]
+		--[[
 			local d_y = self.settings.HINT_FOCUS_Y - hint_data.start_y
 			if i == 1 then 
 				hint_data.start_t = hint_data.start_t or t
@@ -855,17 +893,17 @@ function HEVHUD:UpdateHints(t,dt)
 					table.remove(self._hints,i)
 					self:animate(hint_panel,"animate_fadeout",function(o) panel:remove(o) end,0.66,hint_panel:alpha(),-800)
 				end
-				--[[
-				if hint_panel:y() - self.settings.HINT_FOCUS_Y < 0.1 then 
-					hint_panel:set_y(self.settings.HINT_FOCUS_Y)
-				else
-				end
 				--]]
 			else
+			
+				local elapsed = t - hint_data.start_t
+				local elapsed_ratio = math.clamp(math.pow(elapsed / self.settings.HINT_FOCUS_ADJUST_DURATION,2),0,1)
+				hint_panel:set_alpha(elapsed_ratio)
+				
 				hint_panel:set_y(queue_bottom_y)
-				hint_data.start_y = hint_panel:y()
+				hint_data.start_y = queue_bottom_y
 			end
-			queue_bottom_y = queue_bottom_y + hint_panel:h() + HINT_QUEUE_MARGIN_Y
+			queue_bottom_y = hint_panel:bottom() + HINT_QUEUE_MARGIN_Y
 		end
 	end
 end
