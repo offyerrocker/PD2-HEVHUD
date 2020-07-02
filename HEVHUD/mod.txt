@@ -22,6 +22,10 @@
 			"script_path" : "lua/hudhint.lua"
 		},
 		{
+			"hook_id" : "lib/managers/hud/hudtemp",
+			"script_path" : "lua/hudtemp.lua"
+		},
+		{
 			"hook_id" : "lib/managers/hud/hudteammate",
 			"script_path" : "lua/hudteammate.lua"
 		},

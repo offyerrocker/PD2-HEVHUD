@@ -3,17 +3,16 @@ todo:
 
 -objectives
 -teammates
--carry bag
 -equipment
 -assault
--hints
 
 -deployables
 -throwables/abilities
 -zipties
 -hostages
 
-
+bag value?
+move hud into hudmanager hud 
 
 globals for hud subpanels
 
@@ -183,18 +182,15 @@ HEVHUD._font_icons = {
 	
 }
 
-HEVHUD._cache = {
+HEVHUD._cache = { --slight misnomer but basically intended as an unorganized bucket-style structure for random things set during in-game/in-heist
 	underbarrel = {
 		[1] = nil,
 		[2] = nil
 	},
 	stamina_update_t = 0
-} --slight misnomer but basically intended as an unorganized bucket-style structure for random things set during in-game/in-heist
+}
 
-
---HEVHUD._sounds_path = (HEVHUD._assets_path .. "snd/fvox/")
 HEVHUD._SETUP_COMPLETE = false
-
 
 HEVHUD.default_settings = {
 	HEALTH_THRESHOLD_DOOMED = 0.01,
@@ -329,7 +325,14 @@ function HEVHUD:CreateHUD()
 	--HINTS
 		local hints = self._panel:panel({
 			name = "hints"
+		}) 
+		--populated dynamically/separately
+		
+		local carry = self._panel:panel({
+			name = "carry"
 		})
+		--individual panels per bag are generated separately
+		--on bag picked up, since centered text does not seem to re-center correctly when a panel's size changes
 		
 	--CROSSHAIR
 		local crosshair_font_size = 32 --TODO get from setting
@@ -800,7 +803,7 @@ function HEVHUD:ShowHint(params)
 	local sample_sizer = new_hint:text({
 		name = "sample_sizer",
 		text = params.text,
-		font = self._fonts.hl2_text,
+		font = params.font or self._fonts.hl2_text,
 		font_size = self.settings.HINT_FONT_SIZE,
 		color = self.color_data.hl2_yellow,
 		visible = false
@@ -818,7 +821,7 @@ function HEVHUD:ShowHint(params)
 		text = params.text,
 		vertical = "center",
 		align = "center",
-		font = self._fonts.hl2_text,
+		font = params.font or self._fonts.hl2_text,
 		font_size = self.settings.HINT_FONT_SIZE,
 		color = self.color_data.hl2_yellow,
 		layer = 3,
@@ -862,38 +865,13 @@ function HEVHUD:UpdateHints(t,dt)
 				local elapsed_ratio = math.clamp(math.pow(elapsed / self.settings.HINT_FOCUS_ADJUST_DURATION,2),0,1)
 				hint_panel:set_alpha(math.max(elapsed_ratio,hint_panel:alpha()))
 			
---				local d_y = self.settings.HINT_FOCUS_Y - hint_panel:y()
 				local d_y = self.settings.HINT_FOCUS_Y - hint_data.start_y
 				hint_panel:set_y(hint_data.start_y + (d_y * (elapsed_ratio)))
---				hint_panel:set_y(hint_data.start_y + (d_y * (elapsed_ratio > 0 and (1/elapsed_ratio) or 0)))
-				
---				hint_panel:set_y(hint_panel:y() + (d_y * ((self.settings.HINT_FOCUS_ADJUST_DURATION / elapsed) - 1))
-
---				hint_panel:set_y(hint_panel:y() + (dt * d_y / self.settings.HINT_FOCUS_ADJUST_DURATION))
 				
 				if elapsed > hint_data.time then 
 					table.remove(self._hints,i)
 					self:animate(hint_panel,"animate_fadeout",function(o) panel:remove(o) end,1/3,hint_panel:alpha(),hint_panel:x() - 200)
 				end
-				--[[
-				if elapsed_ratio <= 1 then 
-					local r = 1 - (math.pow(elapsed - self.settings.HINT_FOCUS_ADJUST_DURATION,2)/math.pow(self.settings.HINT_FOCUS_ADJUST_DURATION,2))
-					hint_panel:set_y(r * d_y)
-				end
-				--]]
-		--[[
-			local d_y = self.settings.HINT_FOCUS_Y - hint_data.start_y
-			if i == 1 then 
-				hint_data.start_t = hint_data.start_t or t
-				local elapsed = t - hint_data.start_t
-				local elapsed_ratio = math.clamp(math.pow(elapsed / self.settings.HINT_FOCUS_ADJUST_DURATION,3),0,1)
-				hint_panel:set_y(hint_data.start_y + (d_y * elapsed_ratio))
-				hint_panel:set_alpha(elapsed_ratio)
-				if elapsed > hint_data.time then 
-					table.remove(self._hints,i)
-					self:animate(hint_panel,"animate_fadeout",function(o) panel:remove(o) end,0.66,hint_panel:alpha(),-800)
-				end
-				--]]
 			else
 			
 				local elapsed = t - hint_data.start_t
@@ -905,6 +883,98 @@ function HEVHUD:UpdateHints(t,dt)
 			end
 			queue_bottom_y = hint_panel:bottom() + HINT_QUEUE_MARGIN_Y
 		end
+	end
+end
+
+function HEVHUD:ShowCarry(carry_id,value)
+	local td = tweak_data.carry[tostring(carry_id)]
+	local bag_name = td and managers.localization:text(td.name_id)
+	local font_size = 16
+	local font = self._fonts.hl2_text
+	local text_margin = 12
+	
+	local icon_size = 16 --max values to constrain by
+	
+
+	
+	local sample_sizer = self._panel:text({
+		name = "sample_sizer",
+		text = bag_name,
+		font = font,
+		font_size = font_size,
+		visible = false
+	})
+	--todo value
+	local tx,ty,tw,th = sample_sizer:text_rect()
+	self._panel:remove(sample_sizer)
+	
+	local bag_w = tw + text_margin
+	local bag_h = th + text_margin
+	local bag_start_x = self._panel:child("primary"):child("ammo"):x() --self._panel:w() - (bag_w + 100)
+	local bag_start_y = self._panel:h() - (bag_h + 25)
+	local bag_end_y = bag_start_y - 64
+	local new_bag_panel = self._panel:child("carry"):panel({
+		name = "held_bag",
+		x = bag_start_x,
+		y = bag_start_y,
+		w = bag_w + (icon_size * 2),
+		h = bag_h,
+		alpha = 0
+	})
+	
+		
+	local bag_texture,bag_rect = tweak_data.hud_icons:get_icon_data("bag_icon")
+	local bag_icon = new_bag_panel:bitmap({
+		name = "bag_icon",
+		texture = bag_texture,
+		texture_rect = bag_rect,
+		layer = 2
+--		w = icon_w,
+--		h = icon_h,
+--		x = (icon_w + text_margin) / 2,
+--		y = (icon_h + text_margin) / 2
+	})	
+	
+	local size_ratio = icon_size / math.max(bag_icon:w(),bag_icon:h())
+	bag_icon:set_size(size_ratio * bag_icon:w(),size_ratio * bag_icon:h())	
+	bag_icon:set_position(text_margin / 2,(bag_h - bag_icon:h()) / 2)
+	
+	local bag_name = new_bag_panel:text({
+		name = "bag_name",
+		text = bag_name,
+		vertical = "center",
+		align = "center",
+		x = icon_size,
+		font = font,
+		font_size = font_size,
+		color = self.color_data.hl2_yellow,
+		layer = 3
+	})
+
+	
+	local bag_bg = new_bag_panel:bitmap({
+		name = "bag_bg",
+		layer = 1,
+		texture = "guis/textures/pd2/hud_tabs",
+		texture_rect = {84,0,44,32},
+		w = new_bag_panel:w(),
+		h = new_bag_panel:h(),
+		alpha = 0.75
+	})
+	self._held_bag = new_bag_panel
+	
+	self:animate(new_bag_panel,"animate_fadein",nil,0.5,1,nil,nil,bag_start_y,bag_end_y)
+	
+end
+
+function HEVHUD:HideCarry()
+	local carry_panel = self._panel:child("carry")
+	if self._held_bag and alive(self._held_bag) then 
+		self:animate(self._held_bag,"animate_fadeout",function(o) 
+			carry_panel:remove(o)
+		end,0.5,self._held_bag:alpha(),nil,-100)
+--		self._panel:child("carry"):remove(self._panel:child("held_bag"))
+		self._held_bag = nil
 	end
 end
 
@@ -1474,6 +1544,31 @@ function HEVHUD.animate_fadeout(o,t,dt,start_t,duration,from_alpha,exit_x,exit_y
 		o:set_x(o:x() + (exit_x * dt / duration))
 	end
 end
+
+function HEVHUD.animate_fadein(o,t,dt,start_t,duration,end_alpha,start_x,end_x,start_y,end_y)
+	duration = duration or 1
+	end_alpha = end_alpha or 1
+	local ratio = math.pow((t - start_t) / duration,2)
+	
+	if ratio >= 1 then 
+		o:set_alpha(end_alpha)
+		if end_x then 
+			o:set_x(end_x)
+		end 
+		if end_y then 
+			o:set_y(end_y)
+		end
+		return true
+	end
+	o:set_alpha(ratio * end_alpha)
+	if start_x and end_x then 
+		o:set_x(start_x + ((end_x - start_x) * ratio))
+	end
+	if start_y and end_y then 
+		o:set_y(start_y + ((end_y - start_y) * ratio))
+	end
+end
+
 
 function HEVHUD:animate_stop(name,do_cb)
 	local item = self._animate_targets[tostring(name)]
