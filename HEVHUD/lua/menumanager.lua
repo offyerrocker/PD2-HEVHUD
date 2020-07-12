@@ -1,16 +1,19 @@
 --[[
 todo:
 
+----equipment menu:
+-deployables (primary + secondary)
+-throwables/abilities
+-zipties
+-mission equipment
+
+
 -objectives
 
 -teammates
--equipment
 -assault
 
--deployables
--throwables/abilities
--zipties
--hostages
+
 
 bag value?
 move hud into hudmanager hud 
@@ -35,7 +38,10 @@ HEVHUD._DATA = {
 }
 HEVHUD._hints = {} --queue style structure
 
-HEVHUD._objectives_queue = {}
+HEVHUD._waits = 0
+
+HEVHUD._objectives_data = {} --stores all data by string id of objective
+HEVHUD._objectives_lookup = {} --stores ordered references to objective data (for hud display reasons)
 
 HEVHUD._suit_number_vox = HEVHUD._suit_number_vox or {
 	["0"] = "_comma",
@@ -220,7 +226,13 @@ HEVHUD.default_settings = {
 	HINT_FOCUS_ADJUST_DURATION = 0.25, --seconds for a hint to reach focus location
 	HINT_QUEUE_MARGIN_Y = 16,
 	HINT_FONT_SIZE = 16,
-	MAX_HINTS_VISIBLE = 5
+	MAX_HINTS_VISIBLE = 5,
+	OBJECTIVES_X = 100,
+	OBJECTIVES_Y = 100,
+	OBJECTIVES_W = 500,
+	OBJECTIVES_H = 500,
+	OBJECTIVE_W = 400,
+	OBJECTIVE_H = 100
 }
 
 
@@ -338,14 +350,26 @@ function HEVHUD:CreateHUD()
 		})
 		--individual panels per bag are generated separately
 		--on bag picked up, since centered text does not seem to re-center correctly when a panel's size changes
-		
+
 	--OBJECTIVES
 		local objective_font_size = 16
 		local objectives = self._panel:panel({
 			name = "objectives",
-			w = 100,
-			h = 100
+			x = self.settings.OBJECTIVES_X,
+			y = self.settings.OBJECTIVES_Y,
+			w = self.settings.OBJECTIVES_W,
+			h = self.settings.OBJECTIVES_H
 		})
+		local objectives_bg = objectives:bitmap({
+			name = "objectives_bg",
+			layer = 1,
+			texture = "guis/textures/pd2/hud_tabs",
+			texture_rect = {84,0,44,32},
+			w = objectives:w(),
+			h = objectives:h(),
+			alpha = 0.33 --0.75
+		})
+--		self:CreateScanlines(objectives)
 		--[[
 		local objective_title = objectives:text({
 			name = "objective_title",
@@ -358,16 +382,9 @@ function HEVHUD:CreateHUD()
 			color = self.color_data.hl2_yellow,
 			layer = 3
 		})
+		
+		
 		--]]
-		local objectives_bg = objectives:bitmap({
-			name = "objectives_bg",
-			layer = 1,
-			texture = "guis/textures/pd2/hud_tabs",
-			texture_rect = {84,0,44,32},
-			w = objectives:w(),
-			h = objectives:h(),
-			alpha = 0.75
-		})
 		
 		
 	--todo	
@@ -1422,31 +1439,77 @@ function HEVHUD:HideHostages(skip_anim)
 	self._panel:child("hostages"):child("hostages_count"):hide()
 end
 
-function HEVHUD:AddQueuedObjective(data)
+function HEVHUD:AddObjective(data)
 	if not data then
-		self:log("HEVHUD:AddQueuedObjective(): What kind of idiot tries to add an objective with no data?")
+		self:log("HEVHUD:AddObjective(): What kind of idiot tries to add an objective with no data?")
 		return
 	end
 	if not data.id then 
-		self:log("HEVHUD:AddQueuedObjective(): You know, back in my day, our objectives had INTEGRITY. We always added ids to our objectives. That's what's wrong with this country." )
+		self:log("HEVHUD:AddObjective(): You know, back in my day, our objectives had INTEGRITY. We always added ids to our objectives. That's what's wrong with this country." )
 		return
 	end	
 	
-	text = self._panel:child("objectives"):child(data.id)
-	if not text then 
-	--todo add to objectives queue
-		text = self._panel:text({
-			name = data.id,
-			text = data.text,
---			align = "center",
-			font = self._fonts.hl2_text,
-			font_size = 16,
-			color = self.color_data.hl2_yellow,
-			layer = 3,
-			visible = false
-		})
+	local objective = self._objectives_data[data.id]	
+	
+	if data.mode == "activate" then 
+		if not objective then --add new objective data to stored table
+			self._objectives_data[data.id] = data
+			objective = self._objectives_data[data.id]
+
+			--create text
+			local panel = self._panel:child("objectives"):panel({
+				name = data.id,
+				w = self.settings.OBJECTIVE_W,
+				h = self.settings.OBJECTIVE_H
+			})
+			objective.objective_panel = panel
+			objective.objective_text = panel:text({
+				name = "title",
+				text = data.text,
+				align = "left",
+				font = self._fonts.hl2_text,
+				font_size = 16,
+				color = self.color_data.hl2_yellow,
+				layer = 3,
+				visible = true
+			})
+			objective.objective_amount_text = panel:text({
+				name = "amount",
+				text = "",
+				align = "right",
+				font = self._fonts.hl2_text,
+				font_size = 16,
+				color = self.color_data.hl2_yellow,
+				layer = 4,
+				visible = true
+			})
+			
+			HEVHUD:ShowPopup(data.id,data.text)
+		end
+	elseif data.mode == "update_amount" then 
+		objective.amount = data.amount or objective.amount
+		objective.current_amount = data.current_amount or objective.current_amount
+		if objective.amount then 
+			if objective.current_amount then 
+				local s = managers.localization:text("hevhud_objective_amount_progress")
+				s = string.gsub(s,"$1",objective.current_amount)
+				s = string.gsub(s,"$2",objective.amount)
+				objective.objective_amount_text:set_text(s)
+			else
+				objective.objective_amount_text:set_text(tostring(objective.amount))
+			end
+		elseif data.current_amount then 
+			objective.objective_amount_text:set_text(tostring(data.current_amount))
+		end
+		objective.objective_text:set_text(data.text)
+	elseif data.mode == "complete" then 
+		self._panel:child("objectives"):remove(objective.objective_panel)
+--		objective.objective_panel:remove(objective.objective_text)
+--		objective.objective_panel:remove(objective.objective_amount_text)
+	elseif data.mode == "remind" then 
+		
 	else
-		text:set_text(data.text)
+		self:log("HEVHUD:AddObjective(" .. tostring(data) .. ") Error: unknown data mode " .. tostring(data.mode),{color=Color.red})
 	end
 	
 	--[[
@@ -1495,6 +1558,97 @@ function HEVHUD:AddQueuedObjective(data)
 	--]]
 end
 
+
+function HEVHUD.animate_scanlines(o,t,dt,start_t,alpha_table)
+	if not alpha_table then return true end
+	local speed = 10
+	for i = 1,#alpha_table do 
+		local elapsed = (t - start_t) * speed
+		local scanline = o:child("scanline_" .. tostring(i))
+		
+		if alive(scanline) then 
+			local j = math.floor((i + elapsed) % #alpha_table) + 1
+			if not alpha_table[j] then 
+				Log(j)
+				Log(#alpha_table,{color=Color.green})
+				logall(alpha_table)
+				return true
+			end
+			scanline:set_alpha(math.sin(180 * (j / #alpha_table) * alpha_table[j]))
+			scanline:set_y((j / #alpha_table) * o:h())
+		end
+	end
+
+
+--[[
+	if not count then return true end
+	
+	alpha = alpha or 1
+	alpha_deviation = alpha_deviation or 1
+	speed = speed or 2
+	local max_h = o:h()
+	local margin = 0.15
+	local color = HEVHUD.color_data.hl2_orange
+	for i = 1,count do 
+		local a_range = alpha + (math.random(alpha_deviation * 2 * 100) / 100) - alpha_deviation
+		local j = ((t - start_t) % count) --count functions as period here too
+--			local a_range = 0.5 + ((j % 2) / 2)
+			scanline:set_y((scanline:y() + (speed * dt)) % max_h)
+--			scanline:set_alpha( (((i + j) % count) / count) )
+
+	end
+	--]]
+end
+
+
+function HEVHUD:ShowPopup(id,text)
+	local hints_panel = self._panel:child("hints")
+	local popup = hints_panel:panel({
+		name = id .. "_popup",
+		alpha = 0
+	})
+	local sizer = popup:text({
+		name = "sizer",
+		text = text,
+		font = self._fonts.hl2_text,
+		font_size = 16,
+		visible = false
+	})
+	local tx,ty,tw,th = sizer:text_rect()
+	popup:remove(sizer)
+	local margin = 4
+	popup:set_size(tw + margin,th + margin)
+	
+	self:CreateScanlines(popup)
+	local function remove_panel(o)
+		o:parent():remove(o)
+	end
+	
+	local function wait()
+		self:animate_wait(2,
+			function ()
+				self:animate(popup,"animate_fadeout",remove_panel,1,popup:alpha(),nil,-popup:h())
+			end
+		)
+	end
+	--(popup,"animate_fade",function(o) self:animate(o,"animate_fadeout",remove_panel,2,o:alpha()) end,3)
+--	HEVHUD:animate(popup,"animate_scanlines",nil,data)
+	self:animate(popup,"animate_fadein",wait,1,1,nil,nil) --,popup:y() + popup:h(),popup:h())
+	
+	local popup_text = popup:text({
+		name = "popup_text",
+		text = text,
+		align = "center",
+		vertical = "center",
+		font = self._fonts.hl2_text,
+		font_size = 16,
+		color = self.color_data.hl2_yellow,
+		layer = 3,
+		visible = true
+	})
+	popup:set_center(hints_panel:center())
+end
+
 --animates the appearance of the topmost objective in the queue
 function HEVHUD:PerformObjectiveFromQueue()
 	--[[
@@ -1516,6 +1670,98 @@ function HEVHUD:PerformObjectiveFromQueue()
 	end
 	self:AnimateShowObjective(data)
 --]]	
+end
+
+function HEVHUD:CreateScanlines(panel,params)
+	if not alive(panel) then 
+		self:log("HEVHUD:CreateScanlines(" .. tostring(panel) .. "," .. tostring(count) .. "): bad panel")
+		return
+	end
+	params = params or {}
+	local count = params.count or panel:h()
+	local intensity = params.intensity or 0.5
+	local intensity_deviance = params.intensity_deviance or 0.2
+	local margin = params.margin or 0.15
+	
+	local visible = true
+	if params.visible ~= nil then 
+		visible = params.visible
+	end
+	local a_table = {}
+
+		
+	local color = self.color_data.hl2_orange
+	for i=1,count do 
+		local a_range = 0.5 + ((i % 2) / 2)
+		local alpha = intensity + (math.random(intensity_deviance * 2 * 100) / 100) - intensity_deviance
+		a_table[i] = alpha
+		local gradient = panel:gradient({
+			name = "scanline_" .. tostring(i),
+			x = params.x or 0,
+			y = params.y or ((i / count) * panel:h()),
+			w = params.w or (panel:w()),
+			h = params.h or (count / panel:h()),
+			layer = params.layer or -1,
+			alpha = alpha * math.sin(180 * i / count), --(((2 * i) / count) - (i / count)),
+			blend_mode = params.blend_mode or "add",
+			gradient_points = params.gradient_points or {
+				0,
+				color:with_alpha(0),
+				margin,
+				color:with_alpha(a_range),
+				1 - margin,
+				color:with_alpha(a_range),
+				1,
+				color:with_alpha(0)
+			},
+			visible = visible
+		})
+	end
+	
+	local objectives_bg = panel:bitmap({
+		name = "objectives_bg",
+		layer = (params.layer or -1) + 1,
+		texture = "guis/textures/pd2/hud_tabs",
+		texture_rect = {84,0,44,32},
+		w = panel:w(),
+		h = panel:h(),
+		alpha = 0.33 --0.75
+	})
+	return a_table
+end
+
+--	self:animate(panel,"animate_scanlines",nil,count,10,0.5,0.3)
+--	local panel = HEVHUD._panel:child("objectives"); HEVHUD:animate(panel,"animate_scanlines",nil,panel:h(),10,0.5,0.01)
+--technically this uses the parent as the animate target
+
+
+function HEVHUD.OLD_animate_scanlines(o,t,dt,start_t,count,speed,alpha,alpha_deviation)
+	if not count then return true end
+	alpha = alpha or 1
+	alpha_deviation = alpha_deviation or 1
+	speed = speed or 2
+	local max_h = o:h()
+	local margin = 0.15
+	local color = HEVHUD.color_data.hl2_orange
+	for i = 1,count do 
+		local a_range = alpha + (math.random(alpha_deviation * 2 * 100) / 100) - alpha_deviation
+		local j = ((t - start_t) % count) --count functions as period here too
+		local scanline = o:child("scanline_" .. tostring(i))
+		if alive(scanline) then 
+--			local a_range = 0.5 + ((j % 2) / 2)
+			scanline:set_y((scanline:y() + (speed * dt)) % max_h)
+			scanline:set_alpha(math.sin(180 * (scanline:y() / max_h)) * a_range)
+--			scanline:set_alpha( (((i + j) % count) / count) )
+
+		end
+	end
+end
+
+function HEVHUD.animate_flicker_alpha(o,t,dt,start_t,duration)
+	if duration == 0 then 
+	elseif (t - start_t) <= 0 then 
+	
+	end
 end
 
 function HEVHUD:SetObjectiveTitle(text)
@@ -1827,6 +2073,17 @@ function HEVHUD:animate(target,func,done_cb,...)
 	end
 end
 
+function HEVHUD:animate_wait(timer,callback,...)
+	self._waits = self._waits + 1
+	self:animate(self._waits,self._animate_wait,callback,timer,...)
+end
+
+function HEVHUD._animate_wait(o,t,dt,start_t,duration)
+	if (t - start_t) >= duration then 
+		return true
+	end
+end
+
 function HEVHUD.animate_fadeout(o,t,dt,start_t,duration,from_alpha,exit_x,exit_y)
 	duration = duration or 1
 	from_alpha = from_alpha or 1
@@ -1869,6 +2126,69 @@ function HEVHUD.animate_fadein(o,t,dt,start_t,duration,end_alpha,start_x,end_x,s
 	end
 end
 
+function HEVHUD.animate_text_color_ripple(o,t,dt,start_t,duration,start_color,end_color,start_alpha,end_alpha)
+	duration = duration or 1
+	local progress = (t - start_t) / duration
+	
+	Console:SetTrackerValue("trackera",tostring(progress))
+	Console:SetTrackerValue("trackerb",tostring(t - start_t)) --elapsed
+	if progress >= 1 then
+		if end_alpha then 
+			o:set_alpha(end_alpha)
+		end
+		if end_color then 
+			o:set_color(end_color)
+		end
+		return true
+	end
+	local length = string.len(o:text())
+	for i=1,length do 
+		local char_ratio = i/length
+		local char_duration = duration * char_ratio
+--		local char_start_t = start_t + (duration * char_ratio)
+--		local char_progress = math.clamp(t - char_start_t,0,1)
+--		local char_progress = math.clamp((t- start_t) / (duration * (i - 1) / length),0,1)
+		local char_start_t = start_t + (duration * char_ratio)
+--		local char_progress = math.clamp((t - (start_t + (char_duration - duration))) / char_duration,0,1)
+		local char_progress = math.clamp((t - char_start_t + duration) / (char_duration),0,1) --working
+
+		if start_color and end_color then 
+			local color = HEVHUD.interp_colors(start_color,end_color,char_progress)
+			o:set_range_color(i-1,i,color)
+		end
+	end
+	if start_alpha and end_alpha then 
+		local d_a = end_alpha - start_alpha
+		o:set_alpha(start_alpha + (d_a * progress))
+	end
+	
+end
+
+function HEVHUD.interp_colors(one,two,percent) --interpolates colors based on a percentage
+--percent is [0,1]
+	percent = math.clamp(percent,0,1)
+	
+--color 1
+	local r1 = one.red
+	local g1 = one.green
+	local b1 = one.blue
+	local a1 = one.alpha
+	
+--color 2
+	local r2 = two.red
+	local g2 = two.green
+	local b2 = two.blue
+	local a2 = two.alpha
+
+--delta
+	local r3 = r2 - r1
+	local g3 = g2 - g1
+	local b3 = b2 - b1
+	local a3 = a2 - a1
+	
+	return Color(r1 + (r3 * percent),g1 + (g3 * percent), b1 + (b3 * percent)):with_alpha(a1 + (a3 * percent))
+end
+
 
 function HEVHUD:animate_stop(name,do_cb)
 	local item = self._animate_targets[tostring(name)]
@@ -1903,7 +2223,12 @@ end
 Hooks:Add("BaseNetworkSessionOnLoadComplete","HEVHUD_OnLoadComplete",callback(HEVHUD,HEVHUD,"Setup"))
 
 
-Hooks:Add("DISABLED___LocalizationManagerPostInit", "hevhud_addlocalization", function( loc )
+Hooks:Add("LocalizationManagerPostInit", "hevhud_addlocalization", function( loc )
+	loc:add_localized_strings({
+		hevhud_objective_amount_progress = "$1 / $2",
+	})
+
+--[[
 	local path = HEVHUD._localization_path
 	
 	for _, filename in pairs(file.GetFiles(path)) do
@@ -1914,4 +2239,5 @@ Hooks:Add("DISABLED___LocalizationManagerPostInit", "hevhud_addlocalization", fu
 		end
 	end
 	loc:load_localization_file(path .. "english.txt")
+	--]]
 end)
