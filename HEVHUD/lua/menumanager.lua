@@ -1,6 +1,9 @@
 --[[
 todo:
 
+revise placement of hud mission objectives/hints queue
+
+
 ----equipment menu:
 -deployables (primary + secondary)
 -throwables/abilities
@@ -15,10 +18,12 @@ todo:
 
 
 
+
+fix left/right tracker bitmaps for less vertical margin
 bag value?
 move hud into hudmanager hud 
 
-globals for hud subpanels
+global references for hud subpanels
 init audio sources outside of update; call again on player respawn, and check for closed source
 
 --]]
@@ -38,7 +43,7 @@ HEVHUD._DATA = {
 }
 HEVHUD._hints = {} --queue style structure
 
-HEVHUD._waits = 0
+HEVHUD._animate_waits = 0
 
 HEVHUD._objectives_data = {} --stores all data by string id of objective
 HEVHUD._objectives_lookup = {} --stores ordered references to objective data (for hud display reasons)
@@ -921,6 +926,7 @@ function HEVHUD:UpdateHints(t,dt)
 	local queue_bottom_y = 0
 	local HINT_QUEUE_MARGIN_Y = self.settings.HINT_QUEUE_MARGIN_Y
 	local MAX_HINTS_VISIBLE = self.settings.MAX_HINTS_VISIBLE
+	local queued_remove = {}
 	for i,hint_data in ipairs(self._hints) do 
 		local hint_panel = hint_data.panel
 		if i <= MAX_HINTS_VISIBLE then 
@@ -940,8 +946,9 @@ function HEVHUD:UpdateHints(t,dt)
 				local d_y = self.settings.HINT_FOCUS_Y - hint_data.start_y
 				hint_panel:set_y(hint_data.start_y + (d_y * (elapsed_ratio)))
 				
-				if elapsed > hint_data.time then 
-					table.remove(self._hints,i)
+				if elapsed > hint_data.time then
+					table.insert(queued_remove,i) --performing the remove action after fully iterating through the hint queue prevents a "flicker" visual bug that can occur for a single frame 
+--					table.remove(self._hints,i)
 					self:animate(hint_panel,"animate_fadeout",function(o) panel:remove(o) end,1/3,hint_panel:alpha(),hint_panel:x() - 200)
 				end
 			else
@@ -955,6 +962,9 @@ function HEVHUD:UpdateHints(t,dt)
 			end
 			queue_bottom_y = hint_panel:bottom() + HINT_QUEUE_MARGIN_Y
 		end
+	end
+	for _,i in pairs(queued_remove) do 
+		table.remove(self._hints,i)
 	end
 end
 
@@ -2074,8 +2084,8 @@ function HEVHUD:animate(target,func,done_cb,...)
 end
 
 function HEVHUD:animate_wait(timer,callback,...)
-	self._waits = self._waits + 1
-	self:animate(self._waits,self._animate_wait,callback,timer,...)
+	self._animate_waits = self._animate_waits + 1
+	self:animate(self._animate_waits,self._animate_wait,callback,timer,...)
 end
 
 function HEVHUD._animate_wait(o,t,dt,start_t,duration)
@@ -2153,7 +2163,7 @@ function HEVHUD.animate_text_color_ripple(o,t,dt,start_t,duration,start_color,en
 		local char_progress = math.clamp((t - char_start_t + duration) / (char_duration),0,1) --working
 
 		if start_color and end_color then 
-			local color = HEVHUD.interp_colors(start_color,end_color,char_progress)
+			local color = HEVHUD.lerp_colors(start_color,end_color,char_progress)
 			o:set_range_color(i-1,i,color)
 		end
 	end
@@ -2164,7 +2174,7 @@ function HEVHUD.animate_text_color_ripple(o,t,dt,start_t,duration,start_color,en
 	
 end
 
-function HEVHUD.interp_colors(one,two,percent) --interpolates colors based on a percentage
+function HEVHUD.lerp_colors(one,two,percent) --interpolates colors based on a percentage
 --percent is [0,1]
 	percent = math.clamp(percent,0,1)
 	
@@ -2187,6 +2197,25 @@ function HEVHUD.interp_colors(one,two,percent) --interpolates colors based on a 
 	local a3 = a2 - a1
 	
 	return Color(r1 + (r3 * percent),g1 + (g3 * percent), b1 + (b3 * percent)):with_alpha(a1 + (a3 * percent))
+end
+
+--animate function that visually simulates typing text inside a text box, with an optional caret character
+function HEVHUD.animate_type_text(o,t,dt,start_t,duration,text,type_char,post_duration,blink_speed)
+	post_duration = post_duration or 0 --time after text is complete to finish
+
+	type_char = type_char or ""
+	if t - start_t > (duration + post_duration) then 
+		o:set_text(text)
+		return true
+	elseif t - start_t < duration then
+		local length = string.len(text)
+		local ratio = (t - start_t) / duration
+		o:set_text(string.sub(text,1,math.clamp(ratio * length,1,length)) .. type_char)
+	elseif (type_char ~= "") and (math.sin((t - start_t) * 360  * (blink_speed or 2)) > 0) then 
+		o:set_text(text .. type_char)
+	else
+		o:set_text(text)
+	end
 end
 
 
