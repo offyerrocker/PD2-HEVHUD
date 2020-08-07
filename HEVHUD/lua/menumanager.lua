@@ -6,6 +6,7 @@ mission equipment in loadout
 non-bold version of hl2_vitals font
 revise placement of hud mission objectives/hints queue
 ammo pickup popup
+flashlight icon
 
 ----equipment menu:
 -deployables (primary + secondary)
@@ -357,7 +358,7 @@ function HEVHUD:CreateHUD()
 			name = "carry"
 		})
 		--individual panels per bag are generated separately
-		--on bag picked up, since centered text does not seem to re-center correctly when a panel's size changes
+		--	on bag picked up, since centered text does not seem to re-center correctly when a panel's size changes
 
 	--OBJECTIVES
 		local objective_font_size = 16
@@ -409,6 +410,7 @@ function HEVHUD:CreateHUD()
 		local loadout_box_h = 75
 		local loadout_margin_w_percent = 1.1 --  1.1 = 10% margin
 		local loadout_margin_h_percent = 1.1
+		local tie_texture,tie_rect = tweak_data.hud_icons:get_icon_data("equipment_cable_ties")
 		local loadout_box_placement = {
 			{ --primary weapon
 				x = 0,
@@ -439,6 +441,12 @@ function HEVHUD:CreateHUD()
 			},
 			{ --zip ties?
 				x = 4,
+				y = 0,
+				texture = tie_texture,
+				texture_rect = tie_rect
+			},
+			{ --mission equipment
+				x = 5,
 				y = 0
 			}
 		}
@@ -462,6 +470,8 @@ function HEVHUD:CreateHUD()
 				name = "loadout_icon",
 				texture = placement_data.texture or "",
 				texture = placement_data.texture_rect,
+				w = placement_data.icon_w or 0,
+				h = placement_data.icon_h or 0,
 				blend_mode = "add",
 				color = self.color_data.hl2_yellow,
 				layer = 2
@@ -472,9 +482,8 @@ function HEVHUD:CreateHUD()
 				name = "loadout_count",
 				text = "999",
 				align = "right",
---				y = loadout_box:h() - 16,
 				font = self._fonts.hl2_vitals,
-				font_size = 16,
+				font_size = 12,
 				color = self.color_data.hl2_yellow,
 				layer = 3
 			})
@@ -484,7 +493,17 @@ function HEVHUD:CreateHUD()
 				align = "left",
 --				vertical = "bottom",
 				font = self._fonts.hl2_vitals,
-				font_size = 16,
+				font_size = 12,
+				color = self.color_data.hl2_yellow,
+				layer = 3
+			})
+			local loadout_text = loadout_box:text({
+				name = "loadout_text",
+				text = "First Aid Kit",
+				align = "center",
+				vertical = "bottom",
+				font = self._fonts.hl2_vitals,
+				font_size = 12,
 				color = self.color_data.hl2_yellow,
 				layer = 3
 			})
@@ -497,7 +516,7 @@ function HEVHUD:CreateHUD()
 				h = loadout_box_h,
 				alpha = 0.75
 			})
-			return loadout_box,loadout_icon,loadout_count,loadout_label
+			return loadout_box
 			
 		end
 		
@@ -508,6 +527,7 @@ function HEVHUD:CreateHUD()
 		local loadout_box_deployable_primary = create_loadout_box(5)
 		local loadout_box_deployable_secondary = create_loadout_box(6)
 		local loadout_box_cableties = create_loadout_box(7)
+		local loadout_box_equipment = create_loadout_box(8)
 		
 		
 		
@@ -935,18 +955,27 @@ function HEVHUD:TestIcon()
 	local player = managers.player:local_player()
 	local primary = player:inventory():unit_by_selection(2)
 	local secondary = player:inventory():unit_by_selection(1)
-	self:SetLoadoutWeaponIcon(1,primary:base():get_name_id())
-	self:SetLoadoutWeaponIcon(2,secondary:base():get_name_id())
+	self:SetLoadoutWeaponIcon(1,primary:base())
+	self:SetLoadoutWeaponIcon(2,secondary:base())
 end
 
-function HEVHUD:SetLoadoutWeaponIcon(slot,weapon_id)
+function HEVHUD:SetLoadoutWeaponIcon(slot,weapon)
 	local loadout_box = self._panel:child("loadout"):child("loadout_box_" .. tostring(slot))
 	if loadout_box then 
 		local loadout_icon = loadout_box:child("loadout_icon")
+		local weapon_id = weapon:get_name_id()
+		local weapon_name = tostring(managers.weapon_factory:get_weapon_name_by_weapon_id(weapon_id))
+		
 		loadout_icon:set_image(managers.blackmarket:get_weapon_icon_path(weapon_id))
 		local b_w = loadout_box:w()
 		loadout_icon:set_size(b_w,b_w / 2)
 		loadout_icon:set_x((loadout_box:w() - b_w) / 2)
+		
+		if weapon.custom_name then 
+			loadout_box:child("loadout_label"):set_text(weapon_name .. "\n" .. tostring(weapon.custom_name))
+		else
+			loadout_box:child("loadout_label"):set_text(weapon_name)			
+		end
 --		loadout_icon:set_y(loadout_box:h() * 0.25)
 	end
 end
@@ -1623,7 +1652,8 @@ function HEVHUD:AddObjective(data)
 			local panel = self._panel:child("objectives"):panel({
 				name = data.id,
 				w = self.settings.OBJECTIVE_W,
-				h = self.settings.OBJECTIVE_H
+				h = self.settings.OBJECTIVE_H,
+				y = 16 * #self._objectives_data --this won't work
 			})
 			objective.objective_panel = panel
 			objective.objective_text = panel:text({
@@ -1638,7 +1668,7 @@ function HEVHUD:AddObjective(data)
 			})
 			objective.objective_amount_text = panel:text({
 				name = "amount",
-				text = "",
+				text = "", --update_amount is usually called directly after activate, so text doesn't need to be set immediately on activate
 				align = "right",
 				font = self._fonts.hl2_text,
 				font_size = 16,
@@ -1672,53 +1702,8 @@ function HEVHUD:AddObjective(data)
 	elseif data.mode == "remind" then 
 		
 	else
-		self:log("HEVHUD:AddObjective(" .. tostring(data) .. ") Error: unknown data mode " .. tostring(data.mode),{color=Color.red})
+		self:log("HEVHUD:AddObjective(" .. tostring(data) .. ") Error: unknown data mode " .. tostring(data.mode),{color =Color.red})
 	end
-	
-	--[[
-	
-		item = self._panel:child("objectives"):panel({
-			name = data.id
-		})
-		local item_bg = item:bitmap({
-			name = "item_bg",
-			layer = 1,
-			texture = "guis/textures/pd2/hud_tabs",
-			texture_rect = {84,0,44,32},
-			w = item:w(),
-			h = item:h(),
-			alpha = 0.75
-		})
-	--]]
---[[
-	if data.mode == "remind" then 
-		local c = self._cache.objectives[data.id] or {text = ""}
-		data.current_amount = data.current_amount or c.current_amount
-		data.amount = data.amount or c.amount
-		data.text = data.text or c.text
-	elseif data.text then 
-		self._cache.objectives[data.id] = data
-	end
-	
-	
-	local added = false
-	
-	--search queued objectives for this objective, and replace it if it exists (and isn't already animating)
-	for i,queued in ipairs(self._objectives_queue) do 
-		if queued.id == data.id and not queued.is_animating then 
-			table.remove(self._objectives_queue,i)
-			table.insert(self._objectives_queue,data)
-			added = true
-			break
-		end
-	end
-	if not added then 		
-		table.insert(self._objectives_queue,data)
-	end
-	if self._objectives_queue[1] and not self._objectives_queue[1].is_animating then
-		self:PerformObjectiveFromQueue()
-	end
-	--]]
 end
 
 
