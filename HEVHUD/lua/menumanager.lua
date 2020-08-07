@@ -1,6 +1,9 @@
 --[[
 todo:
 
+margin for count/label in loadout
+mission equipment in loadout
+non-bold version of hl2_vitals font
 revise placement of hud mission objectives/hints queue
 ammo pickup popup
 
@@ -104,7 +107,7 @@ HEVHUD._font_icons = {
 	revolver_fill = "$",
 	pistol = "%",
 	smg = "&",
-	supers2 = "'",
+	supers2 = "'", --superscript 2 from half life 2 title
 	shotgun_fill = "(",
 	crossbow_fill = ")",
 	energy_box = "*",
@@ -129,7 +132,7 @@ HEVHUD._font_icons = {
 	arrow_up = "=",
 	arrow_right = ">",
 	arrow_down = "?",
-	hl2_icon = "@",
+	halflife2_icon = "@",
 	lambda = "A",
 	demo_d = "B",
 	follower = "C",
@@ -400,11 +403,10 @@ function HEVHUD:CreateHUD()
 		
 	
 	--LOADOUT (local player)
-		local loadout = self._panel:panel({
-			name = "loadout"
-		})
-		local loadout_box_w = 300
-		local loadout_box_h = 200
+		local loadout_w = 1000
+		local loadout_h = 150
+		local loadout_box_w = 100
+		local loadout_box_h = 75
 		local loadout_margin_w_percent = 1.1 --  1.1 = 10% margin
 		local loadout_margin_h_percent = 1.1
 		local loadout_box_placement = {
@@ -433,13 +435,20 @@ function HEVHUD:CreateHUD()
 			},
 			{ --deployable 2
 				x = 3,
-				y = 2
+				y = 1
 			},
 			{ --zip ties?
 				x = 4,
 				y = 0
 			}
 		}
+		local loadout = self._panel:panel({
+			name = "loadout",
+			x = 300,
+			y = 100,
+			w = loadout_w,
+			h = loadout_h
+		})
 		local function create_loadout_box(i)
 			local placement_data = loadout_box_placement[i] or {x=i,y=0}
 			local loadout_box = loadout:panel({
@@ -447,7 +456,7 @@ function HEVHUD:CreateHUD()
 				w = loadout_box_w,
 				h = loadout_box_h,
 				x = placement_data.x * (loadout_box_w * loadout_margin_w_percent),
-				y = placement_data.x * (loadout_box_h * loadout_margin_h_percent)
+				y = placement_data.y * (loadout_box_h * loadout_margin_h_percent)
 			})
 			local loadout_icon = loadout_box:bitmap({
 				name = "loadout_icon",
@@ -457,22 +466,24 @@ function HEVHUD:CreateHUD()
 				color = self.color_data.hl2_yellow,
 				layer = 2
 			})
+			
+			--todo set icon size constraints
 			local loadout_count = loadout_box:text({
 				name = "loadout_count",
-				text = "",
+				text = "999",
 				align = "right",
-				vertical = "top",
-				font = self._fonts.hl2_text,
+--				y = loadout_box:h() - 16,
+				font = self._fonts.hl2_vitals,
 				font_size = 16,
 				color = self.color_data.hl2_yellow,
 				layer = 3
 			})
 			local loadout_label = loadout_box:text({
 				name = "loadout_label",
-				text = "",
-				align = "center",
-				vertical = "bottom",
-				font = self._fonts.hl2_text,
+				text = tostring(i),
+				align = "left",
+--				vertical = "bottom",
+				font = self._fonts.hl2_vitals,
 				font_size = 16,
 				color = self.color_data.hl2_yellow,
 				layer = 3
@@ -922,16 +933,21 @@ end
 
 function HEVHUD:TestIcon()
 	local player = managers.player:local_player()
-	local primary = player:inventory():unit_by_selection(1)
-	local secondary = player:inventory():unit_by_selection(2)
-	self:SetLoadoutWeaponIcon(1,primary:get_name_id())
-	self:SetLoadoutWeaponIcon(2,secondary:get_name_id())
+	local primary = player:inventory():unit_by_selection(2)
+	local secondary = player:inventory():unit_by_selection(1)
+	self:SetLoadoutWeaponIcon(1,primary:base():get_name_id())
+	self:SetLoadoutWeaponIcon(2,secondary:base():get_name_id())
 end
 
 function HEVHUD:SetLoadoutWeaponIcon(slot,weapon_id)
 	local loadout_box = self._panel:child("loadout"):child("loadout_box_" .. tostring(slot))
 	if loadout_box then 
-		loadout_box:child("loadout_icon"):set_texture(managers.blackmarket:get_weapon_icon_path(weapon_id))
+		local loadout_icon = loadout_box:child("loadout_icon")
+		loadout_icon:set_image(managers.blackmarket:get_weapon_icon_path(weapon_id))
+		local b_w = loadout_box:w()
+		loadout_icon:set_size(b_w,b_w / 2)
+		loadout_icon:set_x((loadout_box:w() - b_w) / 2)
+--		loadout_icon:set_y(loadout_box:h() * 0.25)
 	end
 end
 
@@ -1787,6 +1803,7 @@ function HEVHUD:ShowPopup(id,text)
 		text = text,
 		align = "center",
 		vertical = "center",
+		y = -100,
 		font = self._fonts.hl2_text,
 		font_size = 16,
 		color = self.color_data.hl2_yellow,
@@ -1796,28 +1813,6 @@ function HEVHUD:ShowPopup(id,text)
 	popup:set_center(hints_panel:center())
 end
 
---animates the appearance of the topmost objective in the queue
-function HEVHUD:PerformObjectiveFromQueue()
-	--[[
-	local data = self._objectives_queue[1]
-	local mode = data.mode --can be activate, remind, or complete
-	if mode == "activate" then 
-		self:SetObjectiveTitle(utf8.to_upper(managers.localization:text("noblehud_hud_objective_activate")))
-	elseif mode == "remind" then 
-		self:SetObjectiveTitle(utf8.to_upper(managers.localization:text("noblehud_hud_objective_reminder")))
-	elseif mode == "update_amount" then
-		self:SetObjectiveTitle(utf8.to_upper(managers.localization:text("noblehud_hud_objective_update")))
-	elseif mode == "complete" then
-		self:SetObjectiveTitle(utf8.to_upper(managers.localization:text("noblehud_hud_objective_complete")))
-	elseif mode == "wave" then
-		self:SetObjectiveTitle(utf8.to_upper(managers.localization:text("noblehud_hud_objective_wave")))
-	else
-		self:log("If I was locked in a room with a gun, two bullets, and yourself, I would add a mode parameter to my PerformObjectiveFromQueue() calls. Also, I'd shoot the door lock.",{color=Color.red})
-		table.remove(self._objectives_queue,1)
-	end
-	self:AnimateShowObjective(data)
---]]	
-end
 
 function HEVHUD:CreateScanlines(panel,params)
 	if not alive(panel) then 
@@ -1909,143 +1904,6 @@ function HEVHUD.animate_flicker_alpha(o,t,dt,start_t,duration)
 	elseif (t - start_t) <= 0 then 
 	
 	end
-end
-
-function HEVHUD:SetObjectiveTitle(text)
---[[
-	if alive(self._objectives_panel) then 
-		self._objectives_panel:child("objectives_title"):set_text(label)
-		self._objectives_panel:child("objectives_title_shadow"):set_text(label)
-	end
-	--]]
-end
-
-function HEVHUD:AnimateShowObjective(data)
---[[
-	if not self._queued_objectives[1] then
-		self:log("NobleHUD:AnimateShowObjective() ERROR: Tried to animate nonexistent objective queue",{color=Color.red})
-		return
-	end
-	self._queued_objectives[1].is_animating = true
-	local objectives_panel = NobleHUD._objectives_panel
-	local objectives_label = objectives_panel:child("objectives_label")
-	local objectives_label_shadow = objectives_panel:child("objectives_label_shadow")
-	local objectives_title = objectives_panel:child("objectives_title")
-	local objectives_title_shadow = objectives_panel:child("objectives_title_shadow")
-	local _,_,label_w,label_h = objectives_label:text_rect()
-	
-	local _,_,title_w,title_h = objectives_title:text_rect()
-
-	local blink_label = NobleHUD._objectives_panel:child("blink_label")
-	local blink_title = NobleHUD._objectives_panel:child("blink_title")
-
-	local kern = -2
-	local title_font_size = tweak_data.hud.active_objective_title_font_size
-	local label_font_size = title_font_size * 1.15
-	local in_duration = 0.2
-	local mid_x = objectives_panel:w() / 2
-	local blinkout_time = 0.25
-	local blinkout_alpha = 0.9
-	local blinkout_stretch_w_mul = 1.25
-	local display_hold_time = 3
-	
---prep
-	blink_label:set_size(label_w,label_h)
---	blink_label:set_alpha(1)
-	blink_title:set_size(title_w,title_h)
-	blink_title:set_alpha(1)
-	objectives_title:set_font_size(0)
-	objectives_title:set_kern(kern)
-	objectives_title:set_alpha(1)
-	objectives_title_shadow:set_font_size(0)
-	objectives_title_shadow:set_kern(kern)
-	objectives_title_shadow:set_alpha(1)
-	objectives_label:set_font_size(0)
-	objectives_label:set_kern(kern)
-	objectives_label:set_alpha(1)
-	objectives_label:set_color(data.color or self.color_data.hud_objective_label_text)
-	objectives_label_shadow:set_font_size(0)
-	objectives_label_shadow:set_kern(kern)
-	objectives_label_shadow:set_alpha(1)
-	self:animate_stop(blink_label)
-	self:animate_stop(blink_title)
-	self:animate_stop(objectives_title)
-	self:animate_stop(objectives_title_shadow)
-	self:animate_stop(objectives_label)
-	self:animate_stop(objectives_label_shadow)
-	
-	if (data.mode ~= "remind") or (data.id and data.id == managers.hud._hud_objectives._active_objective_id) then
-		local label_text = utf8.to_upper(data.text)
-		if data.amount and data.current_amount then
-			label_text = label_text .. string.gsub(" [$CURRENT/$TOTAL]","$CURRENT",data.current_amount)
-			label_text = string.gsub(label_text,"$TOTAL",data.amount)
-		elseif data.amount or data.current_amount then 
-		--i don't know under what circumstances this would trigger, probably just weirdly scripted custom heissts
-			label_text = label_text .. " [" .. tostring(data.amount or data.current_amount) .. "]"
-		end
-		objectives_label:set_text(label_text)
-		objectives_label_shadow:set_text(label_text)
-	end
-	
-	
---build display cb sequence backwards
-
---forward order:
-
---animate white flash
-	-- done_cb fadein title, fadein label
---fadein title
-	--done cb: delayed cb to fadeout title after display duration
---fadein label
-	--done cb: delayed cb to fadeout label after display duration
---return done
-	
---basically, title and label are animated concurrently (after the initial flash)
---each with their own cb tree,
---but title is the one that calls the overall animate done callback for this objective 
-
---
-	local function done () 
-	--remove this objective from queue, 
-	--	and display next queued objective, if one exists
-		table.remove(self._queued_objectives,1)
-		if self._queued_objectives[1] then 
-			self:PerformObjectiveFromQueue()
-		end
-	end
-	
-	
-	
-	local function fadeout_title()
-		self:AddDelayedCallback(function()
-			self:animate(objectives_title,"animate_fadeout",function(o) o:set_font_size(title_font_size) done() end,0.5)
-			self:animate(objectives_title_shadow,"animate_fadeout",function(o) o:set_font_size(title_font_size) end,0.5)		
-		end,nil,display_hold_time,"objective_title_hide")
-	end
-	local function fadeout_label()
-		self:AddDelayedCallback(function()
-			self:animate(objectives_label,"animate_fadeout",nil,0.5)
-			self:animate(objectives_label_shadow,"animate_fadeout",nil,0.5)
-		end,nil,display_hold_time,"objective_label_hide")
-	end
-	
-	local function animate_objective_label_in()		
-		self:animate(objectives_label,"animate_objective_flash",fadeout_label,in_duration,label_font_size,kern)
-		self:animate(objectives_label_shadow,"animate_objective_flash",nil,in_duration,label_font_size,kern)
-	end
-	local function animate_blink_blinkout()
-		blink_label:set_alpha(1)
-		self:animate(blink_label,"animate_objective_blinkout",animate_objective_label_in,blinkout_time,label_w,label_w * blinkout_stretch_w_mul,blinkout_alpha,mid_x)
-	end
-	
-	local function animate_objective_title_in()
-		self:animate(objectives_title,"animate_objective_flash",fadeout_title,in_duration,title_font_size,kern)
-		self:animate(objectives_title_shadow,"animate_objective_flash",nil,in_duration,title_font_size,kern)
-		animate_blink_blinkout()
-	end
-
-	self:animate(blink_title,"animate_objective_blinkout",animate_objective_title_in,blinkout_time,title_w,title_w * blinkout_stretch_w_mul,blinkout_alpha,mid_x)
---]]
 end
 
 function HEVHUD:Setup()
