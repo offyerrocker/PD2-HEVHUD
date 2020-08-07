@@ -2,7 +2,7 @@
 todo:
 
 revise placement of hud mission objectives/hints queue
-
+ammo pickup popup
 
 ----equipment menu:
 -deployables (primary + secondary)
@@ -82,13 +82,13 @@ HEVHUD._suit_number_vox = HEVHUD._suit_number_vox or {
 	["AM"] = "am"
 }
 HEVHUD._fonts = {
-	hl2_icons = "fonts/halflife2",
+	hl2_icons = "fonts/halflife2", 
 	hl2_text = "fonts/trebuchet",
-	hl2_vitals = "fonts/tahoma_bold",
+	hl2_vitals = "fonts/tahoma_bold", --ui numbers 
 	not_hl2 = "fonts/myriad" --yeah turns out myriad is not the ui font used in half-life 
 }
 HEVHUD._animate_targets = {}
-HEVHUD._panel = HEVHUD._panel or nil --for name reference 
+HEVHUD._panel = HEVHUD._panel or nil --basically just for name reference for me, the dev
 
 HEVHUD.color_data = {
 	hl2_yellow = Color("FFD040"),
@@ -397,6 +397,108 @@ function HEVHUD:CreateHUD()
 		local squad = self._panel:panel({
 			name = "squad"
 		})
+		
+	
+	--LOADOUT (local player)
+		local loadout = self._panel:panel({
+			name = "loadout"
+		})
+		local loadout_box_w = 300
+		local loadout_box_h = 200
+		local loadout_margin_w_percent = 1.1 --  1.1 = 10% margin
+		local loadout_margin_h_percent = 1.1
+		local loadout_box_placement = {
+			{ --primary weapon
+				x = 0,
+				y = 0,
+				texture = managers.blackmarket:get_weapon_icon_path("amcar")
+			},
+			{ --secondary weapon
+				x = 0,
+				y = 1,
+				texture = managers.blackmarket:get_weapon_icon_path("amcar")
+			},
+			{ --throwable
+				x = 1,
+				y = 0
+			},
+			{ --melee
+				x = 2,
+				y = 0,
+				texture = "weapon" --weapon butt placeholder melee
+			},
+			{ --deployable 1
+				x = 3,
+				y = 0
+			},
+			{ --deployable 2
+				x = 3,
+				y = 2
+			},
+			{ --zip ties?
+				x = 4,
+				y = 0
+			}
+		}
+		local function create_loadout_box(i)
+			local placement_data = loadout_box_placement[i] or {x=i,y=0}
+			local loadout_box = loadout:panel({
+				name = "loadout_box_" .. tostring(i),
+				w = loadout_box_w,
+				h = loadout_box_h,
+				x = placement_data.x * (loadout_box_w * loadout_margin_w_percent),
+				y = placement_data.x * (loadout_box_h * loadout_margin_h_percent)
+			})
+			local loadout_icon = loadout_box:bitmap({
+				name = "loadout_icon",
+				texture = placement_data.texture or "",
+				texture = placement_data.texture_rect,
+				blend_mode = "add",
+				color = self.color_data.hl2_yellow,
+				layer = 2
+			})
+			local loadout_count = loadout_box:text({
+				name = "loadout_count",
+				text = "",
+				align = "right",
+				vertical = "top",
+				font = self._fonts.hl2_text,
+				font_size = 16,
+				color = self.color_data.hl2_yellow,
+				layer = 3
+			})
+			local loadout_label = loadout_box:text({
+				name = "loadout_label",
+				text = "",
+				align = "center",
+				vertical = "bottom",
+				font = self._fonts.hl2_text,
+				font_size = 16,
+				color = self.color_data.hl2_yellow,
+				layer = 3
+			})
+			local loadout_bg = loadout_box:bitmap({
+				name = "loadout_bg",
+				layer = 1,
+				texture = "guis/textures/pd2/hud_tabs",
+				texture_rect = {84,0,44,32},
+				w = loadout_box_w,
+				h = loadout_box_h,
+				alpha = 0.75
+			})
+			return loadout_box,loadout_icon,loadout_count,loadout_label
+			
+		end
+		
+		local loadout_box_weapon_primary = create_loadout_box(1)
+		local loadout_box_weapon_secondary = create_loadout_box(2)
+		local loadout_box_throwable = create_loadout_box(3)
+		local loadout_box_melee = create_loadout_box(4)
+		local loadout_box_deployable_primary = create_loadout_box(5)
+		local loadout_box_deployable_secondary = create_loadout_box(6)
+		local loadout_box_cableties = create_loadout_box(7)
+		
+		
 		
 		
 		
@@ -803,6 +905,36 @@ function HEVHUD:CreateHUD()
 	end
 end
 
+function HEVHUD:ShouldUseLoadoutSelectionNumber()
+	--[[
+	if true, shows a number:
+	1: primary weapon
+	2: secondary weapon
+	3: throwable
+	4: melee
+	5: deployable 1
+	6: deployable 2
+	7: zip ties
+	else, shows the keybind for the selected item (if a keybind exists)
+	--]]
+	return true
+end
+
+function HEVHUD:TestIcon()
+	local player = managers.player:local_player()
+	local primary = player:inventory():unit_by_selection(1)
+	local secondary = player:inventory():unit_by_selection(2)
+	self:SetLoadoutWeaponIcon(1,primary:get_name_id())
+	self:SetLoadoutWeaponIcon(2,secondary:get_name_id())
+end
+
+function HEVHUD:SetLoadoutWeaponIcon(slot,weapon_id)
+	local loadout_box = self._panel:child("loadout"):child("loadout_box_" .. tostring(slot))
+	if loadout_box then 
+		loadout_box:child("loadout_icon"):set_texture(managers.blackmarket:get_weapon_icon_path(weapon_id))
+	end
+end
+
 function HEVHUD:SetUnderbarrelPanelState(slot_name,is_active,ammo_ratio)
 	local weapon_panel = self._panel:child(tostring(slot_name))
 	if alive(weapon_panel) then 
@@ -1147,6 +1279,7 @@ function HEVHUD:GetHLGunAmmoIcon(categories,weapon_id,fallback)
 		return overrides[weapon_id]
 	end
 	local is_revolver
+	local is_pistol 
 	for _,cat in pairs(categories) do 
 		if cat == "revolver" then 
 			is_revolver = true
@@ -1170,14 +1303,18 @@ function HEVHUD:GetHLGunAmmoIcon(categories,weapon_id,fallback)
 		elseif cat == "assault_rifle" then 
 			return "smg_ammo"
 		elseif cat == "pistol" then 
-			if is_revolver then 
-				return "revolver_ammo" 
-			end
-			return "pistol_ammo"
+			is_pistol = true
 		elseif cat == "saw" then 
 			return "darkenergy_ammo"
 		elseif cat == "flamethrower" then
 			return "darkenergy_ammo"
+		end
+	end
+	if is_pistol then 
+		if is_revolver then 
+			return "revolver_ammo"
+		else
+			return "pistol_ammo"
 		end
 	end
 	return fallback
@@ -1199,12 +1336,11 @@ function HEVHUD:GetUnderbarrelInSlot(slot,underbarrel_slot)
 		if #underbarrel_weapons > 0 then 
 			self._cache.underbarrel[slot] = underbarrel_weapons
 			local categories = underbarrel_weapons[underbarrel_slot]._tweak_data.categories
---			local categories = {"pistol","revolver"}
+			--get underbarrel tweakdata categories and set underbarrel icon
 			local underbarrel_category = self:GetHLGunAmmoIcon(categories,underbarrel_weapons[underbarrel_slot].name_id)
 			if underbarrel_category then 
 				self:SetUnderbarrelIcon((slot == 1 and "secondary") or (slot == 2 and "primary"),self._font_icons[underbarrel_category])
 			end
-			--todo get underbarrel tweakdata categories and set underbarrel icon
 		else
 			--set flag not to check for underbarrels anymore
 			self._cache.underbarrel[slot] = false
@@ -1238,7 +1374,7 @@ function HEVHUD:SetWeaponReserve(slot_name,current_reserve,max_reserve)
 			
 			--set underbarrel count if current weapon has an underbarrel
 			if not underbarrel._on and weapon_category then 
-				self:SetWeaponIcon(slot_name,self._font_icons[weapon_category])
+				self:SetAmmoIcon(slot_name,self._font_icons[weapon_category])
 			end
 		end
 		if underbarrel._on then 
@@ -1249,7 +1385,7 @@ function HEVHUD:SetWeaponReserve(slot_name,current_reserve,max_reserve)
 		self:SetUnderbarrel(slot_name,false)
 		local weapon_category = self:GetHLGunAmmoIcon(player:inventory():equipped_unit():base():categories())
 		if weapon_category then 
-			self:SetWeaponIcon(slot_name,self._font_icons[weapon_category])
+			self:SetAmmoIcon(slot_name,self._font_icons[weapon_category])
 		end
 		--hide underbarrel panel if none exists
 	end
@@ -1372,6 +1508,7 @@ function HEVHUD:SetUnderbarrelIcon(slot_name,icon_name)
 end
 
 --[[
+-- i don't think i need this, since underbarrel is hidden by default and shown if one exists
 function HEVHUD:SetUnderbarrelVisible(weapon_slot,state)
 	local weapon_panel = self._panel:child(tostring(weapon_slot))
 	if alive(weapon_panel) then 
@@ -1380,7 +1517,7 @@ function HEVHUD:SetUnderbarrelVisible(weapon_slot,state)
 end
 --]]
 
-function HEVHUD:SetWeaponIcon(slot_name,icon_name)
+function HEVHUD:SetAmmoIcon(slot_name,icon_name)
 	local weapon_panel = self._panel:child(tostring(slot_name))
 	if alive(weapon_panel) then 
 		weapon_panel:child("ammo"):child("ammo_icon"):set_text(icon_name)
