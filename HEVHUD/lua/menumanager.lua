@@ -1,7 +1,7 @@
 --[[
 todo:
 
-margin for count/label in loadout
+add scanlines to mission objectives
 mission equipment in loadout
 non-bold version of hl2_vitals font
 revise placement of hud mission objectives/hints queue
@@ -236,8 +236,8 @@ HEVHUD.default_settings = {
 	HINT_QUEUE_MARGIN_Y = 16,
 	HINT_FONT_SIZE = 16,
 	MAX_HINTS_VISIBLE = 5,
-	OBJECTIVES_X = 100,
-	OBJECTIVES_Y = 100,
+	OBJECTIVES_X = 64,
+	OBJECTIVES_Y = 64,
 	OBJECTIVES_W = 500,
 	OBJECTIVES_H = 500,
 	OBJECTIVE_W = 400,
@@ -367,7 +367,8 @@ function HEVHUD:CreateHUD()
 			x = self.settings.OBJECTIVES_X,
 			y = self.settings.OBJECTIVES_Y,
 			w = self.settings.OBJECTIVES_W,
-			h = self.settings.OBJECTIVES_H
+			h = self.settings.OBJECTIVES_H,
+			visible = true
 		})
 		local objectives_bg = objectives:bitmap({
 			name = "objectives_bg",
@@ -376,7 +377,7 @@ function HEVHUD:CreateHUD()
 			texture_rect = {84,0,44,32},
 			w = objectives:w(),
 			h = objectives:h(),
-			alpha = 0.33 --0.75
+			alpha = 1/3 --0.75
 		})
 --		self:CreateScanlines(objectives)
 		--[[
@@ -408,6 +409,8 @@ function HEVHUD:CreateHUD()
 		local loadout_h = 150
 		local loadout_box_w = 100
 		local loadout_box_h = 75
+		local loadout_font_size = 8
+		local loadout_font_size_large = 20
 		local loadout_margin_w_percent = 1.1 --  1.1 = 10% margin
 		local loadout_margin_h_percent = 1.1
 		local tie_texture,tie_rect = tweak_data.hud_icons:get_icon_data("equipment_cable_ties")
@@ -480,31 +483,40 @@ function HEVHUD:CreateHUD()
 			--todo set icon size constraints
 			local loadout_count = loadout_box:text({
 				name = "loadout_count",
-				text = "999",
+				text = "",
+				x = -loadout_font_size_large * 0.5,
+--				y = loadout_font_size_large * 0.5,
 				align = "right",
+				vertical = "center",
+				y = placement_data.y * -8,
 				font = self._fonts.hl2_vitals,
-				font_size = 12,
+				font_size = loadout_font_size_large,
 				color = self.color_data.hl2_yellow,
 				layer = 3
 			})
 			local loadout_label = loadout_box:text({
 				name = "loadout_label",
 				text = tostring(i),
+				x = loadout_font_size * 0.5,
+				y = loadout_font_size * 0.5,
 				align = "left",
 --				vertical = "bottom",
 				font = self._fonts.hl2_vitals,
-				font_size = 12,
+				font_size = loadout_font_size,
 				color = self.color_data.hl2_yellow,
+				alpha = 2/3,
 				layer = 3
 			})
 			local loadout_text = loadout_box:text({
 				name = "loadout_text",
-				text = "First Aid Kit",
+				text = "",
 				align = "center",
 				vertical = "bottom",
 				font = self._fonts.hl2_vitals,
-				font_size = 12,
+				font_size = loadout_font_size,
+				y = placement_data.y * -8,
 				color = self.color_data.hl2_yellow,
+				alpha = 2/3,
 				layer = 3
 			})
 			local loadout_bg = loadout_box:bitmap({
@@ -957,6 +969,118 @@ function HEVHUD:TestIcon()
 	local secondary = player:inventory():unit_by_selection(1)
 	self:SetLoadoutWeaponIcon(1,primary:base())
 	self:SetLoadoutWeaponIcon(2,secondary:base())
+	
+	local equipped_grenade,max_grenade_amount = managers.blackmarket:equipped_grenade()
+	local grenade_amount = managers.player:get_grenade_amount(managers.network:session():local_peer():id())
+	local equipped_melee = managers.blackmarket:equipped_melee_weapon()
+	
+	local function get_melee_icon (melee_weapon)
+	
+		if melee_weapon then
+			local guis_catalog = "guis/"
+			local bundle_folder = tweak_data.blackmarket.melee_weapons[melee_weapon] and tweak_data.blackmarket.melee_weapons[melee_weapon].texture_bundle_folder
+
+			if bundle_folder then
+				guis_catalog = guis_catalog .. "dlcs/" .. tostring(bundle_folder) .. "/"
+			end
+
+			return guis_catalog .. "textures/pd2/blackmarket/icons/melee_weapons/" .. tostring(melee_weapon),managers.localization:text(tweak_data.blackmarket.melee_weapons[melee_weapon].name_id)
+		end
+	end
+
+	local function set_box_simple(slot,texture,texture_rect,count,text,skip_resize)
+		local loadout_box = self._panel:child("loadout"):child("loadout_box_" .. tostring(slot))
+		if loadout_box then 
+			local loadout_icon = loadout_box:child("loadout_icon")
+			if texture_rect then 
+				loadout_icon:set_image(texture,unpack(texture_rect))
+			else
+				loadout_icon:set_image(texture)
+			end
+			
+			if not skip_resize then 
+				local b_w = loadout_box:w()
+				loadout_icon:set_size(b_w,b_w / 2)
+			elseif type(skip_resize) == "number" then 
+				loadout_icon:set_size(loadout_box:h() * skip_resize,loadout_box:h() * skip_resize)
+			else
+				loadout_icon:set_size(loadout_box:h(),loadout_box:h())
+			end
+			
+			loadout_icon:set_x((loadout_box:w() - loadout_icon:w()) / 2) --center horizontally
+			loadout_icon:set_y((loadout_box:h() - loadout_icon:h()) / 4) --center horizontally
+			
+			if count then 
+				loadout_box:child("loadout_count"):set_text(tostring(count))
+			end 
+			if text then 
+				loadout_box:child("loadout_text"):set_text(tostring(text))
+			end
+		end
+	end
+	
+	local function get_grenade_icon (grenade)
+		if grenade then
+			local guis_catalog = "guis/"
+			local bundle_folder = tweak_data.blackmarket.projectiles[grenade] and tweak_data.blackmarket.projectiles[grenade].texture_bundle_folder
+
+			if bundle_folder then
+				guis_catalog = guis_catalog .. "dlcs/" .. tostring(bundle_folder) .. "/"
+			end
+
+			return guis_catalog .. "textures/pd2/blackmarket/icons/grenades/" .. tostring(grenade),managers.localization:text(tweak_data.blackmarket.projectiles[grenade].name_id)
+		end
+	end
+	local grenade_texture,grenade_name = get_grenade_icon(equipped_grenade)
+	set_box_simple(3,grenade_texture,nil,grenade_amount,grenade_name)
+	
+--	local grenade_texture,grenade_rect = tweak_data.hud_icons:get_icon_data(tweak_data.blackmarket.projectiles[equipped_grenade].icon)
+--	set_box_simple(3,grenade_texture,grenade_rect,grenade_amount,managers.localization:text(tweak_data.blackmarket.projectiles[equipped_grenade].name_id))
+	local melee_icon,melee_name = get_melee_icon(equipped_melee)
+	set_box_simple(4,melee_icon,nil,nil,melee_name)
+
+
+
+	local function get_deployable(slot)
+	local equipment = managers.player._equipment.selections[slot]
+		if equipment and equipment.amount then
+			for i = 1, #equipment.amount do
+				local amount = Application:digest_value(equipment.amount[i], false)
+				if amount > 0 then
+					return equipment.equipment,amount
+				end
+			end
+		end
+	end
+	local primary_deployable,primary_deployable_amount = get_deployable(1)
+	local secondary_deployable,secondary_deployable_amount = get_deployable(2)
+	
+
+	local function get_deployable_icon(deployable)
+		if deployable then
+			local guis_catalog = "guis/"
+			local bundle_folder = tweak_data.blackmarket.deployables[deployable] and tweak_data.blackmarket.deployables[deployable].texture_bundle_folder
+
+			if bundle_folder then
+				guis_catalog = guis_catalog .. "dlcs/" .. tostring(bundle_folder) .. "/"
+			end
+
+			return guis_catalog .. "textures/pd2/blackmarket/icons/deployables/" .. tostring(deployable),managers.localization:text(tweak_data.upgrades.definitions[deployable].name_id)
+		end	
+	end
+	local primary_deployable_icon,primary_deployable_name = get_deployable_icon(primary_deployable)
+	if primary_deployable then 
+		set_box_simple(5,primary_deployable_icon,nil,primary_deployable_amount,primary_deployable_name,0.75)
+	end
+	local secondary_deployable_icon,secondary_deployable_name = get_deployable_icon(secondary_deployable)
+	if secondary_deployable_icon then 
+		set_box_simple(6,secondary_deployable_icon,nil,secondary_deployable_amount,secondary_deployable_name,0.75)
+	end
+	
+	local ties_texture,ties_rect = tweak_data.hud_icons:get_icon_data("equipment_cable_ties")
+	local ties_amount = Application:digest_value(managers.player._equipment.specials.cable_tie and managers.player._equipment.specials.cable_tie.amount, false)
+	local ties_name = managers.localization:text(tweak_data.equipments.specials.cable_tie.name_id) or "cable ties"
+	set_box_simple(7,ties_texture,ties_rect,ties_amount,ties_name,0.5)
 end
 
 function HEVHUD:SetLoadoutWeaponIcon(slot,weapon)
@@ -972,13 +1096,15 @@ function HEVHUD:SetLoadoutWeaponIcon(slot,weapon)
 		loadout_icon:set_x((loadout_box:w() - b_w) / 2)
 		
 		if weapon.custom_name then 
-			loadout_box:child("loadout_label"):set_text(weapon_name .. "\n" .. tostring(weapon.custom_name))
+			loadout_box:child("loadout_text"):set_text(weapon_name .. "\n" .. tostring(weapon.custom_name))
 		else
-			loadout_box:child("loadout_label"):set_text(weapon_name)			
+			loadout_box:child("loadout_text"):set_text(weapon_name)			
 		end
 --		loadout_icon:set_y(loadout_box:h() * 0.25)
 	end
 end
+
+
 
 function HEVHUD:SetUnderbarrelPanelState(slot_name,is_active,ammo_ratio)
 	local weapon_panel = self._panel:child(tostring(slot_name))
@@ -1628,7 +1754,7 @@ function HEVHUD:ShowHostages(skip_anim)
 end
 
 function HEVHUD:HideHostages(skip_anim)
-	self._panel:child("hostages"):child("hostages_count"):hide()
+--	self._panel:child("hostages"):child("hostages_count"):hide()
 end
 
 function HEVHUD:AddObjective(data)
@@ -1647,7 +1773,9 @@ function HEVHUD:AddObjective(data)
 		if not objective then --add new objective data to stored table
 			self._objectives_data[data.id] = data
 			objective = self._objectives_data[data.id]
-
+			
+			local tmargin = 10
+			
 			--create text
 			local panel = self._panel:child("objectives"):panel({
 				name = data.id,
@@ -1659,6 +1787,8 @@ function HEVHUD:AddObjective(data)
 			objective.objective_text = panel:text({
 				name = "title",
 				text = data.text,
+				x = tmargin/2,
+				y = tmargin/2,
 				align = "left",
 				font = self._fonts.hl2_text,
 				font_size = 16,
@@ -1666,6 +1796,7 @@ function HEVHUD:AddObjective(data)
 				layer = 3,
 				visible = true
 			})
+			
 			objective.objective_amount_text = panel:text({
 				name = "amount",
 				text = "", --update_amount is usually called directly after activate, so text doesn't need to be set immediately on activate
@@ -1676,6 +1807,12 @@ function HEVHUD:AddObjective(data)
 				layer = 4,
 				visible = true
 			})
+			
+			local tx,ty,tw,th = objective.objective_text:text_rect()
+			
+			self._panel:child("objectives"):child("objectives_bg"):set_size(tw + tmargin,th + tmargin)
+--			self._panel:child("objectives"):child("objectives_bg"):set_position(tx - (tmargin / 2),ty - (tmargin / 2))
+			
 			
 			HEVHUD:ShowPopup(data.id,data.text)
 		end
@@ -1788,7 +1925,7 @@ function HEVHUD:ShowPopup(id,text)
 		text = text,
 		align = "center",
 		vertical = "center",
-		y = -100,
+--		y = -100,
 		font = self._fonts.hl2_text,
 		font_size = 16,
 		color = self.color_data.hl2_yellow,
