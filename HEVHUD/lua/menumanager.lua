@@ -7,6 +7,7 @@ non-bold version of hl2_vitals font
 revise placement of hud mission objectives/hints queue
 ammo pickup popup
 flashlight icon
+hide sprint/aux when full
 
 ----equipment menu:
 -deployables (primary + secondary)
@@ -236,11 +237,11 @@ HEVHUD.default_settings = {
 	HINT_QUEUE_MARGIN_Y = 16,
 	HINT_FONT_SIZE = 16,
 	MAX_HINTS_VISIBLE = 5,
-	OBJECTIVES_X = 64,
+	OBJECTIVES_X = 16,
 	OBJECTIVES_Y = 64,
 	OBJECTIVES_W = 500,
 	OBJECTIVES_H = 500,
-	OBJECTIVE_W = 400,
+	OBJECTIVE_W = 250,
 	OBJECTIVE_H = 100
 }
 
@@ -1766,8 +1767,25 @@ function HEVHUD:AddObjective(data)
 		self:log("HEVHUD:AddObjective(): You know, back in my day, our objectives had INTEGRITY. We always added ids to our objectives. That's what's wrong with this country." )
 		return
 	end	
+
 	
 	local objective = self._objectives_data[data.id]	
+		
+	local function get_objective_string()
+		local amount_string 
+		if objective.current_amount and objective.amount then 
+			amount_string = string.gsub(managers.localization:text("hevhud_objective_amount_progress"),"$1",objective.current_amount)
+			amount_string = string.gsub(amount_string,"$2",objective.amount)
+		else
+			amount_string = objective.current_amount or objective.amount
+		end
+		
+		local objective_string = data.text
+		if amount_string then
+			objective_string = amount_string .. "   " .. objective_string
+		end
+		return objective_string
+	end
 	
 	if data.mode == "activate" then 
 		if not objective then --add new objective data to stored table
@@ -1780,13 +1798,13 @@ function HEVHUD:AddObjective(data)
 			local panel = self._panel:child("objectives"):panel({
 				name = data.id,
 				w = self.settings.OBJECTIVE_W,
-				h = self.settings.OBJECTIVE_H,
-				y = 16 * #self._objectives_data --this won't work
+				h = self.settings.OBJECTIVE_H
 			})
+
 			objective.objective_panel = panel
 			objective.objective_text = panel:text({
 				name = "title",
-				text = data.text,
+				text = get_objective_string(),
 				x = tmargin/2,
 				y = tmargin/2,
 				align = "left",
@@ -1797,20 +1815,10 @@ function HEVHUD:AddObjective(data)
 				visible = true
 			})
 			
-			objective.objective_amount_text = panel:text({
-				name = "amount",
-				text = "", --update_amount is usually called directly after activate, so text doesn't need to be set immediately on activate
-				align = "right",
-				font = self._fonts.hl2_text,
-				font_size = 16,
-				color = self.color_data.hl2_yellow,
-				layer = 4,
-				visible = true
-			})
-			
 			local tx,ty,tw,th = objective.objective_text:text_rect()
 			
 			self._panel:child("objectives"):child("objectives_bg"):set_size(tw + tmargin,th + tmargin)
+			
 --			self._panel:child("objectives"):child("objectives_bg"):set_position(tx - (tmargin / 2),ty - (tmargin / 2))
 			
 			
@@ -1819,27 +1827,14 @@ function HEVHUD:AddObjective(data)
 	elseif data.mode == "update_amount" then 
 		objective.amount = data.amount or objective.amount
 		objective.current_amount = data.current_amount or objective.current_amount
-		if objective.amount then 
-			if objective.current_amount then 
-				local s = managers.localization:text("hevhud_objective_amount_progress")
-				s = string.gsub(s,"$1",objective.current_amount)
-				s = string.gsub(s,"$2",objective.amount)
-				objective.objective_amount_text:set_text(s)
-			else
-				objective.objective_amount_text:set_text(tostring(objective.amount))
-			end
-		elseif data.current_amount then 
-			objective.objective_amount_text:set_text(tostring(data.current_amount))
-		end
-		objective.objective_text:set_text(data.text)
+		
+		objective.objective_text:set_text(get_objective_string())
 	elseif data.mode == "complete" then 
 		self._panel:child("objectives"):remove(objective.objective_panel)
---		objective.objective_panel:remove(objective.objective_text)
---		objective.objective_panel:remove(objective.objective_amount_text)
 	elseif data.mode == "remind" then 
 		
 	else
-		self:log("HEVHUD:AddObjective(" .. tostring(data) .. ") Error: unknown data mode " .. tostring(data.mode),{color =Color.red})
+		self:log("HEVHUD:AddObjective(" .. tostring(data) .. ") Error: unknown data mode " .. tostring(data.mode),{color = Color.red})
 	end
 end
 
@@ -2335,6 +2330,9 @@ function HEVHUD.animate_type_text(o,t,dt,start_t,duration,text,type_char,post_du
 	end
 end
 
+--todo
+function HEVHUD.animate_type_text_replace()
+end
 
 function HEVHUD:animate_stop(name,do_cb)
 	local item = self._animate_targets[tostring(name)]
@@ -2371,7 +2369,7 @@ Hooks:Add("BaseNetworkSessionOnLoadComplete","HEVHUD_OnLoadComplete",callback(HE
 
 Hooks:Add("LocalizationManagerPostInit", "hevhud_addlocalization", function( loc )
 	loc:add_localized_strings({
-		hevhud_objective_amount_progress = "$1 / $2",
+		hevhud_objective_amount_progress = "[$1 / $2]",
 	})
 
 --[[
