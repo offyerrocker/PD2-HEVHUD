@@ -237,11 +237,13 @@ HEVHUD.default_settings = {
 	HINT_QUEUE_MARGIN_Y = 16,
 	HINT_FONT_SIZE = 16,
 	MAX_HINTS_VISIBLE = 5,
+	OBJECTIVES_HINT_CENTER_Y_OFFSET = -150,
+	OBJECTIVES_HINT_CENTER_X_OFFSET = 0,
 	OBJECTIVES_X = 16,
 	OBJECTIVES_Y = 64,
 	OBJECTIVES_W = 500,
 	OBJECTIVES_H = 500,
-	OBJECTIVE_W = 250,
+	OBJECTIVE_W = 300,
 	OBJECTIVE_H = 100
 }
 
@@ -343,8 +345,10 @@ end
 
 function HEVHUD:CreateHUD()
 	if true or Utils:IsInHeist() then 
-		self._ws = managers.gui_data:create_fullscreen_workspace()
-		local hl2 = self._ws:panel()
+		self._ws = managers.hud._workspace --managers.gui_data:create_fullscreen_workspace()
+		local hl2 = self._ws:panel():panel({
+			name = "hevhud"
+		})
 		self._panel = hl2
 		
 		local scale = 1
@@ -975,7 +979,23 @@ function HEVHUD:TestIcon()
 	local grenade_amount = managers.player:get_grenade_amount(managers.network:session():local_peer():id())
 	local equipped_melee = managers.blackmarket:equipped_melee_weapon()
 	
-	local function get_melee_icon (melee_weapon)
+	local use_selection_number = self:ShouldUseLoadoutSelectionNumber()
+	
+	local function get_action_binding(connection_name,fallback)
+		local controller = player:movement():current_state()._controller
+		local bind_data = controller:get_connection_settings(connection_name)
+		if type(bind_data) == "table" then 
+			local binds_list = bind_data._input_name_list
+			if type(binds_list) == "table" then 
+				if binds_list[1] then 
+					return unpack(binds_list)
+				end
+			end
+		end
+		return fallback
+	end
+		
+	local function get_melee_icon(melee_weapon)
 	
 		if melee_weapon then
 			local guis_catalog = "guis/"
@@ -989,7 +1009,7 @@ function HEVHUD:TestIcon()
 		end
 	end
 
-	local function set_box_simple(slot,texture,texture_rect,count,text,skip_resize)
+	local function set_box_simple(slot,texture,texture_rect,count,text,skip_resize,connection_name)
 		local loadout_box = self._panel:child("loadout"):child("loadout_box_" .. tostring(slot))
 		if loadout_box then 
 			local loadout_icon = loadout_box:child("loadout_icon")
@@ -1017,10 +1037,17 @@ function HEVHUD:TestIcon()
 			if text then 
 				loadout_box:child("loadout_text"):set_text(tostring(text))
 			end
+			if connection_name and not use_selection_number then 
+				local keybind_name = get_action_binding(connection_name)
+				if keybind_name then 
+					loadout_box:child("loadout_label"):set_text(utf8.to_upper(keybind_name))
+				end
+			end
+			
 		end
 	end
 	
-	local function get_grenade_icon (grenade)
+	local function get_grenade_icon(grenade)
 		if grenade then
 			local guis_catalog = "guis/"
 			local bundle_folder = tweak_data.blackmarket.projectiles[grenade] and tweak_data.blackmarket.projectiles[grenade].texture_bundle_folder
@@ -1033,12 +1060,12 @@ function HEVHUD:TestIcon()
 		end
 	end
 	local grenade_texture,grenade_name = get_grenade_icon(equipped_grenade)
-	set_box_simple(3,grenade_texture,nil,grenade_amount,grenade_name)
+	set_box_simple(3,grenade_texture,nil,grenade_amount,grenade_name,nil,"throw_grenade")
 	
 --	local grenade_texture,grenade_rect = tweak_data.hud_icons:get_icon_data(tweak_data.blackmarket.projectiles[equipped_grenade].icon)
 --	set_box_simple(3,grenade_texture,grenade_rect,grenade_amount,managers.localization:text(tweak_data.blackmarket.projectiles[equipped_grenade].name_id))
 	local melee_icon,melee_name = get_melee_icon(equipped_melee)
-	set_box_simple(4,melee_icon,nil,nil,melee_name)
+	set_box_simple(4,melee_icon,nil,nil,melee_name,nil,"melee")
 
 
 
@@ -1055,6 +1082,14 @@ function HEVHUD:TestIcon()
 	end
 	local primary_deployable,primary_deployable_amount = get_deployable(1)
 	local secondary_deployable,secondary_deployable_amount = get_deployable(2)
+	local selected_equipment = managers.player._equipment.selected_index
+	local primary_bind = "change_equipment"
+	local secondary_bind = "change_equipment"
+	if selected_equipment == 1 then 
+		primary_bind = "use_item"
+	elseif selected_equipment == 2 then
+		secondary_bind = "use_item"
+	end
 	
 
 	local function get_deployable_icon(deployable)
@@ -1069,19 +1104,20 @@ function HEVHUD:TestIcon()
 			return guis_catalog .. "textures/pd2/blackmarket/icons/deployables/" .. tostring(deployable),managers.localization:text(tweak_data.upgrades.definitions[deployable].name_id)
 		end	
 	end
+	
 	local primary_deployable_icon,primary_deployable_name = get_deployable_icon(primary_deployable)
 	if primary_deployable then 
-		set_box_simple(5,primary_deployable_icon,nil,primary_deployable_amount,primary_deployable_name,0.75)
+		set_box_simple(5,primary_deployable_icon,nil,primary_deployable_amount,primary_deployable_name,0.75,primary_bind)
 	end
 	local secondary_deployable_icon,secondary_deployable_name = get_deployable_icon(secondary_deployable)
 	if secondary_deployable_icon then 
-		set_box_simple(6,secondary_deployable_icon,nil,secondary_deployable_amount,secondary_deployable_name,0.75)
+		set_box_simple(6,secondary_deployable_icon,nil,secondary_deployable_amount,secondary_deployable_name,0.75,secondary_bind)
 	end
 	
 	local ties_texture,ties_rect = tweak_data.hud_icons:get_icon_data("equipment_cable_ties")
 	local ties_amount = Application:digest_value(managers.player._equipment.specials.cable_tie and managers.player._equipment.specials.cable_tie.amount, false)
 	local ties_name = managers.localization:text(tweak_data.equipments.specials.cable_tie.name_id) or "cable ties"
-	set_box_simple(7,ties_texture,ties_rect,ties_amount,ties_name,0.5)
+	set_box_simple(7,ties_texture,ties_rect,ties_amount,ties_name,0.5,"interact")
 end
 
 function HEVHUD:SetLoadoutWeaponIcon(slot,weapon)
@@ -1173,7 +1209,7 @@ function HEVHUD:ShowHint(params)
 		visible = true,
 		alpha = 0,
 		x = self.settings.HINT_FOCUS_X,
-		y = 400, --temp
+		y = 400, --temp (set below)
 		w = 500, --temp
 		h = 500 --temp
 	})
@@ -1849,9 +1885,9 @@ function HEVHUD.animate_scanlines(o,t,dt,start_t,alpha_table)
 		if alive(scanline) then 
 			local j = math.floor((i + elapsed) % #alpha_table) + 1
 			if not alpha_table[j] then 
-				Log(j)
-				Log(#alpha_table,{color=Color.green})
-				logall(alpha_table)
+--				Log(j)
+--				Log(#alpha_table,{color=Color.green})
+--				logall(alpha_table)
 				return true
 			end
 			scanline:set_alpha(math.sin(180 * (j / #alpha_table) * alpha_table[j]))
@@ -1927,7 +1963,10 @@ function HEVHUD:ShowPopup(id,text)
 		layer = 3,
 		visible = true
 	})
-	popup:set_center(hints_panel:center())
+	local c_x,c_y = hints_panel:center()
+	c_x = c_x + self.settings.OBJECTIVES_HINT_CENTER_X_OFFSET
+	c_y = c_y + self.settings.OBJECTIVES_HINT_CENTER_Y_OFFSET
+	popup:set_center(c_x,c_y)
 end
 
 
@@ -2385,3 +2424,4 @@ Hooks:Add("LocalizationManagerPostInit", "hevhud_addlocalization", function( loc
 	loc:load_localization_file(path .. "english.txt")
 	--]]
 end)
+
