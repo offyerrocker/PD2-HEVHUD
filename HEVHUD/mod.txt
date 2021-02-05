@@ -18,7 +18,7 @@
 			"script_path" : "lua/playermanager.lua"
 		},
 		{
-			"DISABLED_hook_id" : "lib/managers/hudmanagerpd2",
+			"hook_id" : "lib/managers/hudmanagerpd2",
 			"script_path" : "lua/hudmanagerpd2.lua"
 		},
 		{
