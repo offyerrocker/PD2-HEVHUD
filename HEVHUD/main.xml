@@ -1,5 +1,5 @@
 <mod name="Half-Life 2 HUD" author="Offyerrocker" global_key="HEVHUD" color="Color(0.6,0.9,1)" core_class="hevhud_core.lua">
-	<AssetUpdates id="27955" version="0.02" provider="modworkshop" install_directory = "mods/" version_is_number="false"/>
+	<AssetUpdates id="27954" version="0.5" provider="modworkshop" install_directory = "mods/" version_is_number="false"/>
 	<AddFiles directory="assets">
 		<font path="fonts/halflife2" load="true" unload="false" />
 		<texture path="fonts/halflife2" />
@@ -13,6 +13,10 @@
 		<texture path="textures/hl2_crosshair_fill_right" />
 		<texture path="textures/hl2_crosshair_angled_left" />
 		<texture path="textures/hl2_crosshair_angled_right" />
+		<texture path="textures/hevhud_firemode_1" />
+		<texture path="textures/hevhud_firemode_2" />
+		<texture path="textures/hevhud_firemode_3" />
+		
 	</AddFiles>
 	<Localization directory="localization" default="english.txt">
 		<loc file="english.txt" language="english" />

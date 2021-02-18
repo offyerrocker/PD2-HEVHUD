@@ -252,8 +252,12 @@ HEVHUD.default_settings = {
 	ARMOR_THRESHOLD_CRITICAL = 0.3,
 	ARMOR_THRESHOLD_MINOR = 0.5,
 	AMMO_THRESHOLD_LOW = 1/3,
+	WEAPON_FIREMODE_X_OFFSET = -4,
+	WEAPON_FIREMODE_Y_OFFSET = 0,
 	WEAPON_INACTIVE_ALPHA = 2/3,
 	WEAPON_ACTIVE_ALPHA = 1,
+	WEAPON_FIREMODE_W = 16 * 0.5,
+	WEAPON_FIREMODE_H = 48 * 0.5,
 	CROSSHAIR_INDICATOR_SIZE = 48,
 	crosshair_indicator_left_tracker = 1,
 	crosshair_indicator_right_tracker = 3,
@@ -1002,7 +1006,19 @@ function HEVHUD:CreateHUD(parent_hud)
 			alpha = 2/3,
 			layer = 2
 		})
-	
+		local firemode = ammo:bitmap({
+			name = "firemode",
+			texture = "hevhud_firemode_3",
+			color = self.color_data.hl2_yellow,
+			x = self.settings.WEAPON_FIREMODE_X_OFFSET + ammo:w() - self.settings.WEAPON_FIREMODE_W,
+			y = (self.settings.WEAPON_FIREMODE_Y_OFFSET + ammo:h() - self.settings.WEAPON_FIREMODE_H) / 2, 
+--			w = self.settings.WEAPON_FIREMODE_W,
+--			h = self.settings.WEAPON_FIREMODE_H,
+w = 0,
+h = 0,
+			alpha = 2/3,
+			layer = 2
+		})
 	end
 	local primary = self._panel:panel({
 		name = "primary",
@@ -2068,11 +2084,29 @@ function HEVHUD:ShouldUseRealAmmo()
 	return true
 end
 
-function HEVHUD:SetWeaponFiremode(id,firemode) --todo
-	local is_secondary = id == 1
-	if firemode == "single" then 
-	elseif firemode == "auto" then 
-	elseif firemode == "burst" then 
+function HEVHUD:SetWeaponFiremode(id,firemode)
+	if not alive(self._panel) then 
+		return
+	end
+	local weapon_panel
+	if id == 1 then 
+		weapon_panel = self._panel:child("secondary")
+	elseif id == 2 then 
+		weapon_panel = self._panel:child("primary")
+	end
+	if weapon_panel then 
+		local ammo = weapon_panel:child("ammo")
+		local firemode_icon = ammo:child("firemode")
+		if firemode == "single" then 
+			firemode_icon:set_image("textures/hevhud_firemode_1")
+			firemode_icon:set_size(self.settings.WEAPON_FIREMODE_W,self.settings.WEAPON_FIREMODE_H)
+		elseif firemode == "auto" then 
+			firemode_icon:set_image("textures/hevhud_firemode_3")
+			firemode_icon:set_size(self.settings.WEAPON_FIREMODE_W,self.settings.WEAPON_FIREMODE_H)
+		elseif firemode == "burst" then 
+			firemode_icon:set_image("textures/hevhud_firemode_2")
+			firemode_icon:set_size(self.settings.WEAPON_FIREMODE_W,self.settings.WEAPON_FIREMODE_H)
+		end
 	end
 end
 
