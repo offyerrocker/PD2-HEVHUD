@@ -37,3 +37,9 @@ Hooks:PostHook(HUDTeammate,"set_ammo_amount_by_type","hevhud_set_ammo",function(
 	end
 	HEVHUD:SetWeaponMagazine(slot_name,current_clip,max_clip)
 end)
+
+Hooks:PostHook(HUDTeammate,"set_weapon_firemode","hevhud_teammate_set_firemode",function(self,id,firemode)
+	if self._id == HUDManager.PLAYER_PANEL then 
+		HEVHUD:SetWeaponFiremode(id,firemode)
+	end
+end)

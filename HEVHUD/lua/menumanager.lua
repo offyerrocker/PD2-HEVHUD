@@ -5,14 +5,15 @@ todo:
 non-bold version of hl2_vitals font
 
 ----HUD/VISUALS:
+finish SetWeaponFiremode
 add scanlines to mission objectives
-mission equipment in loadout
 revise placement of hud mission objectives/hints queue
 hostage counter label needs placement tweak
 ammo pickup popup
 flashlight icon
 hide sprint/aux when full?
 bag value?
+
 
 ----OPTIMIZATION:
 global references for hud subpanels
@@ -243,6 +244,8 @@ HEVHUD.default_settings = {
 	SHOW_REAL_VITALS = true,
 	SHOW_LOADOUT_KEYBINDS = false,
 	PLAY_WEAPON_SWITCH_SOUNDS = true,
+	USE_VANILLA_HUDPRESENTER = false,
+	USE_ALLCAPS_HINT_TEXT = false,
 	HEALTH_THRESHOLD_DOOMED = 0.01,
 	HEALTH_THRESHOLD_CRITICAL = 0.3,
 	HEALTH_THRESHOLD_MINOR = 0.5,
@@ -265,6 +268,7 @@ HEVHUD.default_settings = {
 	HINT_FOCUS_ADJUST_DURATION = 0.25, --seconds for a hint to reach focus location
 	HINT_QUEUE_MARGIN_Y = 16,
 	HINT_FONT_SIZE = 16,
+	HINT_DEFAULT_DURATION = 2, --duration to use if none is supplied
 	MAX_HINTS_VISIBLE = 5,
 	OBJECTIVES_HINT_CENTER_Y_OFFSET = -150,
 	OBJECTIVES_HINT_CENTER_X_OFFSET = 0,
@@ -281,7 +285,8 @@ HEVHUD.default_settings = {
 	LOADOUT_COUNT_Y_OFFSET = -24,
 	LOADOUT_PANEL_X = 300,
 	LOADOUT_PANEL_Y = 32,
-	HEIST_TIMER_FONT_SIZE = 24
+	HEIST_TIMER_FONT_SIZE = 24,
+	POPUP_FONT_SIZE = 16
 }
 
 
@@ -602,7 +607,7 @@ function HEVHUD:CreateHUD(parent_hud)
 	local equipment = loadout:panel({
 		name = "equipment"
 	})
-	--populated on an individual basis
+	--populated on an individual basis; child panels of equipment should all be individual mission equipments
 	
 	
 	
@@ -1014,7 +1019,7 @@ end
 function HEVHUD:ClearAudioQueue(...)
 	local target_sources = {...}
 	local clear_all = #target_sources == 0
-	for source_name,queue_data in pairs(self._audio_queue) do 
+	for source_name,_ in pairs(self._sound_source_data) do 
 		if clear_all or table.contains(target_sources,source_name) then 
 --			for i,queued_sound in pairs(queue_data) do 
 --				if queued_sound.buffer then 
@@ -1073,8 +1078,7 @@ function HEVHUD:CreateSoundSources()
 end
 
 function HEVHUD:RegisterSounds()
-	self._audio_queue.suit = {}
-	self._audio_queue.sfx = {}
+	self:ClearAudioQueue() --also functions to create the audio queue tables
 	
 	local path_util = BeardLib.Utils.Path
 	
@@ -1195,11 +1199,12 @@ function HEVHUD:PlaySound(source_name,sound_name,should_loop)
 		end
 		--]]
 		
-		self._audio_buffers[sound_name] = {
+		snd = {
 			name = sound_name,
 			looping = should_loop,
 			buffer = buffer
 		}
+		self._audio_buffers[sound_name] = snd
 	end
 	if snd and audio_source then
 		if should_loop ~= nil then
@@ -1572,6 +1577,17 @@ function HEVHUD:RemoveSpecialEquipment(equipment_id)
 	end
 end
 
+function HEVHUD:ClearSpecialEquipment()
+	if alive(self._panel) then 
+		local loadout_panel = self._panel:child("loadout")
+		local equipment_panel = loadout_panel:child("equipment")
+			
+		for _,child in pairs(equipment_panel:children()) do 
+			equipment_panel:remove(child)
+		end
+	end
+end
+
 function HEVHUD:SetSpecialEquipmentAmount(equipment_id,amount)
 	if equipment_id and alive(self._panel) then
 		local loadout_panel = self._panel:child("loadout")
@@ -1672,9 +1688,16 @@ function HEVHUD:SetRevives(id,revives)
 	
 end
 
+function HEVHUD:ShouldUseOriginalHUDPresenter()
+	return self.settings.USE_VANILLA_HUDPRESENTER
+end
+
 function HEVHUD:ShowHint(params)
 	if type(params) ~= "table" then return end
 	local text = params.text
+	if text and self.settings.USE_ALLCAPS_HINT_TEXT then 
+		text = utf88.to_upper(text)
+	end
 	
 	local new_hint = self._panel:child("hints"):panel({
 		name = params.id or params.text,
@@ -1691,7 +1714,7 @@ function HEVHUD:ShowHint(params)
 	--create another text object, and then remove the measurement text 
 	local sample_sizer = new_hint:text({
 		name = "sample_sizer",
-		text = params.text,
+		text = text,
 		font = params.font or self._fonts.hl2_text,
 		font_size = self.settings.HINT_FONT_SIZE,
 		color = self.color_data.hl2_yellow,
@@ -1707,7 +1730,7 @@ function HEVHUD:ShowHint(params)
 	
 	local hint_text = new_hint:text({
 		name = "text",
-		text = params.text,
+		text = text,
 		vertical = "center",
 		align = "center",
 		font = params.font or self._fonts.hl2_text,
@@ -1726,7 +1749,7 @@ function HEVHUD:ShowHint(params)
 		alpha = 2/3
 	})
 	params.panel = new_hint
-	params.time = (tonumber(params.time) or 3) + self.settings.HINT_FOCUS_ADJUST_DURATION
+	params.time = (tonumber(params.time) or self.settings.HINT_DEFAULT_DURATION) + self.settings.HINT_FOCUS_ADJUST_DURATION
 	params.start_y = new_hint:y()
 --	params.start_t = Application:time()
 	table.insert(self._hints,params)
@@ -1751,6 +1774,14 @@ function HEVHUD:UpdateHints(t,dt)
 					hint_data.is_first = true
 					hint_data.time =  math.max(1,hint_data.time - (t - hint_data.start_t))
 					hint_data.start_t = t
+					
+--					if hint_data.event then 
+--						managers.hud._sound_source:post_event(hint_data.event)
+--					end
+					if hint_data.xaudio_event_data then 
+						--nothing uses this yet
+						self:PlaySound(unpack(hint_data.xaudio_event_data))
+					end
 					
 				end
 				local elapsed = t - hint_data.start_t
@@ -2035,6 +2066,14 @@ end
 
 function HEVHUD:ShouldUseRealAmmo()
 	return true
+end
+
+function HEVHUD:SetWeaponFiremode(id,firemode) --todo
+	local is_secondary = id == 1
+	if firemode == "single" then 
+	elseif firemode == "auto" then 
+	elseif firemode == "burst" then 
+	end
 end
 
 function HEVHUD:SetWeaponReserve(slot_name,current_reserve,max_reserve)
@@ -2401,7 +2440,7 @@ function HEVHUD.animate_scanlines(o,t,dt,start_t,alpha_table)
 end
 
 
-function HEVHUD:ShowPopup(id,text)
+function HEVHUD:ShowPopup(id,text,timer)
 	local hints_panel = self._panel:child("hints")
 	local popup = hints_panel:panel({
 		name = id .. "_popup",
@@ -2411,7 +2450,7 @@ function HEVHUD:ShowPopup(id,text)
 		name = "sizer",
 		text = text,
 		font = self._fonts.hl2_text,
-		font_size = 16,
+		font_size = self.settings.POPUP_FONT_SIZE,
 		visible = false
 	})
 	local tx,ty,tw,th = sizer:text_rect()
@@ -2421,11 +2460,12 @@ function HEVHUD:ShowPopup(id,text)
 	
 	self:CreateScanlines(popup)
 	local function remove_panel(o)
+--		self._current_popup = nil
 		o:parent():remove(o)
 	end
 	
 	local function wait()
-		self:animate_wait(2,
+		self:animate_wait(timer or 2,
 			function ()
 				self:animate(popup,"animate_fadeout",remove_panel,1,popup:alpha(),nil,-popup:h())
 			end
@@ -2442,7 +2482,7 @@ function HEVHUD:ShowPopup(id,text)
 		vertical = "center",
 --		y = -100,
 		font = self._fonts.hl2_text,
-		font_size = 16,
+		font_size = self.settings.POPUP_FONT_SIZE,
 		color = self.color_data.hl2_yellow,
 		layer = 3,
 		visible = true
