@@ -14,4 +14,7 @@
 		<texture path="textures/hl2_crosshair_angled_left" />
 		<texture path="textures/hl2_crosshair_angled_right" />
 	</AddFiles>
+	<Localization directory="localization" default="english.txt">
+		<loc file="english.txt" language="english" />
+	</Localization>
 </mod>

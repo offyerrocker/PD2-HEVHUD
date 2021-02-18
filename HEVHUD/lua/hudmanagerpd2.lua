@@ -1,3 +1,27 @@
+
+Hooks:PostHook(HUDManager,"set_disabled","hevhud_hudmanager_hidehud",function(self)
+	HEVHUD._panel:hide()
+end)
+
+Hooks:PostHook(HUDManager,"set_enabled","hevhud_hudmanager_showhud",function(self)
+	HEVHUD._panel:show()
+end)
+
+
+Hooks:PostHook(HUDManager,"add_special_equipment","hevhud_hudmanager_add_special_equipment",function(self,...)
+	HEVHUD:AddSpecialEquipment(...)
+end)
+Hooks:PostHook(HUDManager,"remove_special_equipment","hevhud_hudmanager_remove_special_equipment",function(self,...)
+	HEVHUD:RemoveSpecialEquipment(...)
+end)
+Hooks:PostHook(HUDManager,"set_special_equipment_amount","hevhud_hudmanager_set_special_equipment_amount",function(self,...)
+	HEVHUD:SetSpecialEquipmentAmount(...)
+end)
+
+--Hooks:PostHook(HUDManager,"clear_player_special_equipments","",function(self)
+
+--end)
+
 --[[
 function HUDManager:hide_player_gear(panel_id)
 	if self._teammate_panels[panel_id] and self._teammate_panels[panel_id]:panel() and self._teammate_panels[panel_id]:panel():child("player") then
@@ -31,13 +55,4 @@ end
 --]]
 
 
-
-
-Hooks:PostHook(HUDManager,"set_disabled","hevhud_hidehud",function(self)
-	HEVHUD._panel:hide()
-end)
-
-Hooks:PostHook(HUDManager,"set_enabled","hevhud_showhud",function(self)
-	HEVHUD._panel:show()
-end)
 

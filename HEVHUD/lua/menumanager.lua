@@ -1,5 +1,7 @@
 --[[
 todo:
+--sound source should be (re)created on player_check_skills, when player is respawned
+move hud into hudmanager hud to avoid hud displaying during pregame 
 
 add scanlines to mission objectives
 mission equipment in loadout
@@ -7,7 +9,7 @@ non-bold version of hl2_vitals font
 revise placement of hud mission objectives/hints queue
 ammo pickup popup
 flashlight icon
-hide sprint/aux when full
+hide sprint/aux when full?
 
 ----equipment menu:
 -deployables (primary + secondary)
@@ -21,15 +23,13 @@ hide sprint/aux when full
 -teammates
 -assault
 
-
-
-
-fix left/right tracker bitmaps for less vertical margin
 bag value?
-move hud into hudmanager hud 
 
 global references for hud subpanels
 init audio sources outside of update; call again on player respawn, and check for closed source
+- sound when swapping weapons
+- hostage counter label needs placement adjustment
+-better sound control: PlaySound should include option to cut off current sound and play new sound instead
 
 --]]
 
@@ -37,7 +37,7 @@ HEVHUD = HEVHUD or {}
 HEVHUD._path = HEVHUD._path or ModPath
 HEVHUD._localization_path = HEVHUD._localization_path or (HEVHUD._path .. "localization/")
 HEVHUD._assets_path = HEVHUD._assets_path or (HEVHUD._path .. "assets/")
-HEVHUD._sounds_path = HEVHUD._sounds_path or (HEVHUD._assets_path .. "snd/fvox/")
+HEVHUD._sounds_path = HEVHUD._sounds_path or (HEVHUD._assets_path .. "snd/")
 HEVHUD._AUDIO_FILE_FORMAT = ".ogg"
 HEVHUD._audio_sources = HEVHUD._audio_sources or {}
 HEVHUD._audio_buffers = HEVHUD._audio_buffers or {}
@@ -52,6 +52,8 @@ HEVHUD._animate_waits = 0
 
 HEVHUD._objectives_data = {} --stores all data by string id of objective
 HEVHUD._objectives_lookup = {} --stores ordered references to objective data (for hud display reasons)
+
+HEVHUD._sounds = {}
 
 HEVHUD._suit_number_vox = HEVHUD._suit_number_vox or {
 	["0"] = "_comma",
@@ -244,7 +246,11 @@ HEVHUD.default_settings = {
 	OBJECTIVES_W = 500,
 	OBJECTIVES_H = 500,
 	OBJECTIVE_W = 300,
-	OBJECTIVE_H = 100
+	OBJECTIVE_H = 100,
+	SPECIAL_EQUIPMENT_ICON_SIZE = 24,
+	SPECIAL_EQUIPMENT_FONT_SIZE = 20,
+	SPECIAL_EQUIPMENT_ICON_MARGIN = 4,
+	LOADOUT_FADE_DURATION = 1/4
 }
 
 
@@ -344,460 +350,534 @@ function HEVHUD:log(...)
 end
 
 function HEVHUD:CreateHUD()
-	if true or Utils:IsInHeist() then 
-		self._ws = managers.hud._workspace --managers.gui_data:create_fullscreen_workspace()
-		local hl2 = self._ws:panel():panel({
-			name = "hevhud"
-		})
-		self._panel = hl2
-		
-		local scale = 1
-		
-	--HINTS
-		local hints = self._panel:panel({
-			name = "hints"
-		}) 
-		--populated dynamically/separately
-		
-		local carry = self._panel:panel({
-			name = "carry"
-		})
-		--individual panels per bag are generated separately
-		--	on bag picked up, since centered text does not seem to re-center correctly when a panel's size changes
-
-	--OBJECTIVES
-		local objective_font_size = 16
-		local objectives = self._panel:panel({
-			name = "objectives",
-			x = self.settings.OBJECTIVES_X,
-			y = self.settings.OBJECTIVES_Y,
-			w = self.settings.OBJECTIVES_W,
-			h = self.settings.OBJECTIVES_H,
-			visible = true
-		})
-		local objectives_bg = objectives:bitmap({
-			name = "objectives_bg",
-			layer = 1,
-			texture = "guis/textures/pd2/hud_tabs",
-			texture_rect = {84,0,44,32},
-			w = objectives:w(),
-			h = objectives:h(),
-			alpha = 1/3 --0.75
-		})
---		self:CreateScanlines(objectives)
-		--[[
-		local objective_title = objectives:text({
-			name = "objective_title",
-			text = self._font_icons.cross_dots,
-			vertical = "center",
-			align = "center",
-			y = 0,
-			font = self._fonts.hl2_text,
-			font_size = objective_font_size,
-			color = self.color_data.hl2_yellow,
-			layer = 3
-		})
-		
-		
-		--]]
-		
-		
-	--todo	
-	--SQUAD
-		local squad = self._panel:panel({
-			name = "squad"
-		})
-		
+	self._ws = managers.hud._workspace --managers.gui_data:create_fullscreen_workspace()
 	
-	--LOADOUT (local player)
-		local loadout_w = 1000
-		local loadout_h = 150
-		local loadout_box_w = 100
-		local loadout_box_h = 75
-		local loadout_font_size = 8
-		local loadout_font_size_large = 20
-		local loadout_margin_w_percent = 1.1 --  1.1 = 10% margin
-		local loadout_margin_h_percent = 1.1
-		local tie_texture,tie_rect = tweak_data.hud_icons:get_icon_data("equipment_cable_ties")
-		local loadout_box_placement = {
-			{ --primary weapon
-				x = 0,
-				y = 0,
-				texture = managers.blackmarket:get_weapon_icon_path("amcar")
-			},
-			{ --secondary weapon
-				x = 0,
-				y = 1,
-				texture = managers.blackmarket:get_weapon_icon_path("amcar")
-			},
-			{ --throwable
-				x = 1,
-				y = 0
-			},
-			{ --melee
-				x = 2,
-				y = 0,
-				texture = "weapon" --weapon butt placeholder melee
-			},
-			{ --deployable 1
-				x = 3,
-				y = 0
-			},
-			{ --deployable 2
-				x = 3,
-				y = 1
-			},
-			{ --zip ties?
-				x = 4,
-				y = 0,
-				texture = tie_texture,
-				texture_rect = tie_rect
-			},
-			{ --mission equipment
-				x = 5,
-				y = 0
-			}
+--		local teammate_panels = managers.hud._teammate_panels
+--		if not (teammate_panels and teammate_panels[managers.hud.PLAYER_PANEL]) then 
+--			return
+--		end
+--		local hl2 = managers.hud._teammate_panels[managers.hud.PLAYER_PANEL]
+	
+	local hl2 = self._ws:panel():panel({
+		name = "hevhud"
+	})
+	self._panel = hl2
+	
+	local scale = 1 --not used
+	
+--HINTS
+	local hints = self._panel:panel({
+		name = "hints"
+	}) 
+	--populated dynamically/separately
+	
+	local carry = self._panel:panel({
+		name = "carry"
+	})
+	--individual panels per bag are generated separately
+	--	on bag picked up, since centered text does not seem to re-center correctly when a panel's size changes
+
+--OBJECTIVES
+	local objective_font_size = 16
+	local objectives = self._panel:panel({
+		name = "objectives",
+		x = self.settings.OBJECTIVES_X,
+		y = self.settings.OBJECTIVES_Y,
+		w = self.settings.OBJECTIVES_W,
+		h = self.settings.OBJECTIVES_H,
+		visible = true
+	})
+	local objectives_bg = objectives:bitmap({
+		name = "objectives_bg",
+		layer = 1,
+		texture = "guis/textures/pd2/hud_tabs",
+		texture_rect = {84,0,44,32},
+		w = objectives:w(),
+		h = objectives:h(),
+		visible = false,
+		alpha = 1/3 --0.75
+	})
+--		self:CreateScanlines(objectives)
+	--[[
+	local objective_title = objectives:text({
+		name = "objective_title",
+		text = self._font_icons.cross_dots,
+		vertical = "center",
+		align = "center",
+		y = 0,
+		font = self._fonts.hl2_text,
+		font_size = objective_font_size,
+		color = self.color_data.hl2_yellow,
+		layer = 3
+	})
+	
+	
+	--]]
+	
+	
+--todo	
+--SQUAD
+	local squad = self._panel:panel({
+		name = "squad"
+	})
+	
+
+--LOADOUT (local player)
+	local loadout_w = 1000
+	local loadout_h = 700
+	local loadout_box_w = 100
+	local loadout_box_h = 75
+	local loadout_font_size = 8
+	local loadout_font_size_large = 20
+	local loadout_margin_w_percent = 1.1 --  1.1 = 10% margin
+	local loadout_margin_h_percent = 1.1
+	local tie_texture,tie_rect = tweak_data.hud_icons:get_icon_data("equipment_cable_ties")
+	local loadout_box_placement = {
+		{ --primary weapon
+			x = 0,
+			y = 0,
+			texture = managers.blackmarket:get_weapon_icon_path("amcar")
+		},
+		{ --secondary weapon
+			x = 0,
+			y = 1,
+			texture = managers.blackmarket:get_weapon_icon_path("amcar")
+		},
+		{ --throwable
+			x = 1,
+			y = 0
+		},
+		{ --melee
+			x = 2,
+			y = 0,
+			texture = "weapon" --weapon butt placeholder melee
+		},
+		{ --deployable 1
+			x = 3,
+			y = 0
+		},
+		{ --deployable 2
+			x = 3,
+			y = 1
+		},
+		{ --zip ties?
+			x = 4,
+			y = 0,
+			texture = tie_texture,
+			texture_rect = tie_rect
+		},
+		{ --mission equipment
+			x = 5,
+			y = 0
 		}
-		local loadout = self._panel:panel({
-			name = "loadout",
-			x = 300,
-			y = 100,
-			w = loadout_w,
-			h = loadout_h
+	}
+	local loadout = self._panel:panel({
+		name = "loadout",
+		x = 300,
+		y = 100,
+		w = loadout_w,
+		h = loadout_h,
+		visible = false
+	})
+	local function create_loadout_box(i)
+		local placement_data = loadout_box_placement[i] or {x=i,y=0}
+		local loadout_box = loadout:panel({
+			name = "loadout_box_" .. tostring(i),
+			w = loadout_box_w,
+			h = loadout_box_h,
+			x = placement_data.x * (loadout_box_w * loadout_margin_w_percent),
+			y = placement_data.y * (loadout_box_h * loadout_margin_h_percent)
 		})
-		local function create_loadout_box(i)
-			local placement_data = loadout_box_placement[i] or {x=i,y=0}
-			local loadout_box = loadout:panel({
-				name = "loadout_box_" .. tostring(i),
-				w = loadout_box_w,
-				h = loadout_box_h,
-				x = placement_data.x * (loadout_box_w * loadout_margin_w_percent),
-				y = placement_data.y * (loadout_box_h * loadout_margin_h_percent)
-			})
-			local loadout_icon = loadout_box:bitmap({
-				name = "loadout_icon",
-				texture = placement_data.texture or "",
-				texture = placement_data.texture_rect,
-				w = placement_data.icon_w or 0,
-				h = placement_data.icon_h or 0,
-				blend_mode = "add",
-				color = self.color_data.hl2_yellow,
-				layer = 2
-			})
-			
-			--todo set icon size constraints
-			local loadout_count = loadout_box:text({
-				name = "loadout_count",
-				text = "",
-				x = -loadout_font_size_large * 0.5,
+		local loadout_icon = loadout_box:bitmap({
+			name = "loadout_icon",
+			texture = placement_data.texture or "",
+			texture = placement_data.texture_rect,
+			w = placement_data.icon_w or 0,
+			h = placement_data.icon_h or 0,
+			blend_mode = "add",
+			color = self.color_data.hl2_yellow,
+			layer = 2
+		})
+		
+		--todo set icon size constraints
+		local loadout_count = loadout_box:text({
+			name = "loadout_count",
+			text = "",
+			x = -loadout_font_size_large * 0.5,
 --				y = loadout_font_size_large * 0.5,
-				align = "right",
-				vertical = "center",
-				y = placement_data.y * -8,
-				font = self._fonts.hl2_vitals,
-				font_size = loadout_font_size_large,
-				color = self.color_data.hl2_yellow,
-				layer = 3
-			})
-			local loadout_label = loadout_box:text({
-				name = "loadout_label",
-				text = tostring(i),
-				x = loadout_font_size * 0.5,
-				y = loadout_font_size * 0.5,
-				align = "left",
---				vertical = "bottom",
-				font = self._fonts.hl2_vitals,
-				font_size = loadout_font_size,
-				color = self.color_data.hl2_yellow,
-				alpha = 2/3,
-				layer = 3
-			})
-			local loadout_text = loadout_box:text({
-				name = "loadout_text",
-				text = "",
-				align = "center",
-				vertical = "bottom",
-				font = self._fonts.hl2_vitals,
-				font_size = loadout_font_size,
-				y = placement_data.y * -8,
-				color = self.color_data.hl2_yellow,
-				alpha = 2/3,
-				layer = 3
-			})
-			local loadout_bg = loadout_box:bitmap({
-				name = "loadout_bg",
-				layer = 1,
-				texture = "guis/textures/pd2/hud_tabs",
-				texture_rect = {84,0,44,32},
-				w = loadout_box_w,
-				h = loadout_box_h,
-				alpha = 0.75
-			})
-			return loadout_box
-			
-		end
-		
-		local loadout_box_weapon_primary = create_loadout_box(1)
-		local loadout_box_weapon_secondary = create_loadout_box(2)
-		local loadout_box_throwable = create_loadout_box(3)
-		local loadout_box_melee = create_loadout_box(4)
-		local loadout_box_deployable_primary = create_loadout_box(5)
-		local loadout_box_deployable_secondary = create_loadout_box(6)
-		local loadout_box_cableties = create_loadout_box(7)
-		local loadout_box_equipment = create_loadout_box(8)
-		
-		
-		
-		
-		
-	--CROSSHAIR
-		local crosshair_font_size = 32 --TODO get from setting
-		local crosshairs = self._panel:panel({
-			name = "crosshairs"
-		})
-		local crosshair_dots = crosshairs:text({
-			name = "crosshair_dots",
-			text = self._font_icons.cross_dots,
+			align = "right",
 			vertical = "center",
+			y = placement_data.y * -8,
+			font = self._fonts.hl2_vitals,
+			font_size = loadout_font_size_large,
+			color = self.color_data.hl2_yellow,
+			layer = 3
+		})
+		local loadout_label = loadout_box:text({
+			name = "loadout_label",
+			text = tostring(i),
+			x = loadout_font_size * 0.5,
+			y = loadout_font_size * 0.5,
+			align = "left",
+--				vertical = "bottom",
+			font = self._fonts.hl2_vitals,
+			font_size = loadout_font_size,
+			color = self.color_data.hl2_yellow,
+			alpha = 2/3,
+			layer = 3
+		})
+		local loadout_text = loadout_box:text({
+			name = "loadout_text",
+			text = "",
 			align = "center",
+			vertical = "bottom",
+			font = self._fonts.hl2_vitals,
+			font_size = loadout_font_size,
+			y = placement_data.y * -8,
+			color = self.color_data.hl2_yellow,
+			alpha = 2/3,
+			layer = 3
+		})
+		local loadout_bg = loadout_box:bitmap({
+			name = "loadout_bg",
+			layer = 1,
+			texture = "guis/textures/pd2/hud_tabs",
+			texture_rect = {84,0,44,32},
+			w = loadout_box_w,
+			h = loadout_box_h,
+			alpha = 0.75
+		})
+		return loadout_box
+		
+	end
+	
+	local loadout_box_weapon_primary = create_loadout_box(1)
+	local loadout_box_weapon_secondary = create_loadout_box(2)
+	local loadout_box_throwable = create_loadout_box(3)
+	local loadout_box_melee = create_loadout_box(4)
+	local loadout_box_deployable_primary = create_loadout_box(5)
+	local loadout_box_deployable_secondary = create_loadout_box(6)
+	local loadout_box_cableties = create_loadout_box(7)
+--	local loadout_box_equipment = create_loadout_box(8)
+	
+	local equipment = loadout:panel({
+		name = "equipment"
+	})
+	--populated on an individual basis
+	
+	
+	
+	
+--CROSSHAIR
+	local crosshair_font_size = 32 --TODO get from setting
+	local crosshairs = self._panel:panel({
+		name = "crosshairs"
+	})
+	local crosshair_dots = crosshairs:text({
+		name = "crosshair_dots",
+		text = self._font_icons.cross_dots,
+		vertical = "center",
+		align = "center",
+		y = 0,
+		font = self._fonts.hl2_icons,
+		font_size = crosshair_font_size,
+		color = self.color_data.hl2_yellow,
+		layer = 3
+	})
+	
+	local crosshair_size = self.settings.CROSSHAIR_INDICATOR_SIZE
+	local crosshair_distance = 32
+	local crosshair_empty_left = crosshairs:bitmap({
+		name = "crosshair_empty_left",
+		texture = "textures/hl2_crosshair_empty_left",
+		w = crosshair_size,
+		h = crosshair_size,
+		x = -crosshair_distance + (crosshairs:w() - crosshair_size) / 2,
+		y = (crosshairs:h() - crosshair_size) / 2,
+		color = self.color_data.hl2_yellow,
+		layer = 2
+	})
+	local crosshair_empty_right = crosshairs:bitmap({
+		name = "crosshair_empty_right",
+		texture = "textures/hl2_crosshair_empty_right",
+		w = crosshair_size,
+		h = crosshair_size,
+		x = crosshair_distance + (crosshairs:w() - crosshair_size) / 2,
+		y = (crosshairs:h() - crosshair_size) / 2,
+		color = self.color_data.hl2_yellow,
+		layer = 2
+	})
+	local crosshair_fill_left = crosshairs:bitmap({
+		name = "crosshair_fill_left",
+		texture = "textures/hl2_crosshair_fill_left",
+		w = crosshair_size,
+		h = crosshair_size,
+		x = -crosshair_distance + (crosshairs:w() - crosshair_size) / 2,
+		y = (crosshairs:h() - crosshair_size) / 2,
+		color = self.color_data.hl2_yellow,
+		layer = 3
+	})
+	local crosshair_fill_right = crosshairs:bitmap({
+		name = "crosshair_fill_right",
+		texture = "textures/hl2_crosshair_fill_right",
+		w = crosshair_size,
+		h = crosshair_size,
+		x = crosshair_distance + (crosshairs:w() - crosshair_size) / 2,
+		y = (crosshairs:h() - crosshair_size) / 2,
+		color = self.color_data.hl2_yellow,
+		layer = 3
+	})
+	
+	
+	local hostages_margin = 12
+	local hostages_w = 72
+	local hostages_h = 36
+	local hostages_y = 48
+	local hostage_icon_size = 32
+--HOSTAGES
+	local hostages = self._panel:panel({
+		name = "hostages",
+		w = hostages_w,
+		h = hostages_h,
+		x = self._panel:w() - (hostages_w + hostages_margin),
+		y = hostages_y + hostages_margin
+	})
+	local hostages_icon = hostages:bitmap({
+		name = "hostages_icon",
+		texture = "guis/textures/pd2/hud_icon_hostage",
+		x = (hostages_h - hostage_icon_size) / 2,
+		y = (hostages_h - hostage_icon_size) / 2, --hostages_h is not a typo
+		w = hostage_icon_size,
+		h = hostage_icon_size,
+		color = self.color_data.hl2_yellow,
+		layer = 2
+	})
+	local hostages_count = hostages:text({
+		name = "hostages_count",
+		text = "0",
+		vertical = "center",
+--			align = "center",
+		x = (hostages_w - 8) / 2,
+		font = self._fonts.hl2_icons,
+		font_size = crosshair_font_size,
+		color = self.color_data.hl2_yellow,
+		layer = 3
+	})
+	local hostages_bg = hostages:bitmap({
+		name = "hostages_bg",
+		layer = 1,
+		texture = "guis/textures/pd2/hud_tabs",
+		texture_rect = {84,0,44,32},
+		w = hostages_w,
+		h = hostages_h,
+		alpha = 0.75
+	})
+	
+	
+	
+--HEALTH/SUIT/AUX
+	local vitals = self._panel:panel({
+		name = "vitals"
+	})
+
+	local box_scale = 1
+	local box_w = 128 * box_scale
+	local box_h = 48 * box_scale
+	
+	local text_name_size = 12 * box_scale
+	local text_label_size = 32 * box_scale
+	local text_hor_margin = 24 * box_scale
+	
+	local box_ver_offset = -32
+	local text_ver_offset = -12
+	local label_ver_offset = -8 --for the values themselves
+	
+	local health = hl2:panel({
+		name = "health",
+		w = box_w,
+		h = box_h,
+		x = 24,
+		y = box_ver_offset + hl2:h() - box_h
+	})
+			
+	local NUM_POWER_TICKS = self._DATA.NUM_POWER_TICKS
+	local TICK_HEIGHT = 4
+	local TICK_WIDTH = 7
+	local TICK_MARGIN = 4
+
+	local power_h = 32
+	local power = hl2:panel({
+		name = "power",
+		w = box_w,
+		h = power_h * box_scale,
+		x = 24,
+		y = health:y() - ((power_h * box_scale) + 8)
+	})
+	local power_bg = power:bitmap({
+		name = "power_bg",
+		layer = 1,
+		texture = "guis/textures/pd2/hud_tabs",
+		texture_rect = {84,0,44,32},
+		w = power:w(),
+		h = power:h(),
+		alpha = 0.75
+	})
+	local power_name = power:text({
+		name = "power_name",
+		text = managers.localization:text("hevhud_hud_aux_power"),
+		x = 8 + TICK_MARGIN,
+		blend_mode = "add",
+		y = -16 + power:h() - text_name_size,
+		font = self._fonts.hl2_vitals,
+		font_size = text_name_size,
+		color = self.color_data.hl2_yellow,
+		alpha = 2/3,
+		layer = 2
+	})
+	local TICK_OFFSET_X = (power:w() - ((NUM_POWER_TICKS - 1) * (TICK_MARGIN + (TICK_WIDTH * box_scale)))) / 2
+
+	for i=1,NUM_POWER_TICKS do
+		power:rect({
+			name = "power_tick_" .. tostring(i),
+			color = self.color_data.hl2_yellow_bright,
+			x = 10 + ((i - 1) * (TICK_MARGIN + TICK_WIDTH)),
+			y = -4 + power:h() - (TICK_HEIGHT + TICK_MARGIN),
+			w = TICK_WIDTH,
+			h = TICK_HEIGHT,
+			alpha = 2/3,
+			layer = 2
+		})
+	end
+	--TODO "SPRINT" text animation
+	
+	local health_bg = health:bitmap({
+		name = "health_bg",
+		layer = 1,
+		texture = "guis/textures/pd2/hud_tabs",
+		texture_rect = {84,0,44,32},
+		w = health:w(),
+		h = health:h(),
+		alpha = 0.75
+	})
+	local health_name = health:text({
+		name = "health_name",
+		text = managers.localization:text("hevhud_hud_health"),
+		x = 8,
+		y = text_ver_offset + health:h() - text_name_size,
+		font = self._fonts.hl2_vitals,
+		font_size = text_name_size,
+		color = self.color_data.hl2_yellow,
+		alpha = 2/3,
+		layer = 2
+	})
+	local health_label = health:text({
+		name = "health_label",
+		text = "",
+		align = "right",
+		x = -text_hor_margin,
+		y = label_ver_offset + health:h() - text_label_size,
+		font = self._fonts.hl2_icons,
+		font_size = text_label_size,
+		color = self.color_data.hl2_yellow,
+		alpha = 2/3,
+		layer = 2
+	})
+	
+	local suit = hl2:panel({
+		name = "suit",
+		w = box_w,
+		h = box_h,
+		x = 24 + health:right(),
+		y = box_ver_offset + hl2:h() - box_h
+	})
+	
+	local suit_bg = suit:bitmap({
+		name = "suit_bg",
+		layer = 1,
+		texture = "guis/textures/pd2/hud_tabs",
+		texture_rect = {84,0,44,32},
+		w = suit:w(),
+		h = suit:h(),
+		alpha = 0.75
+	})
+	local suit_name = suit:text({
+		name = "suit_name",
+		text = managers.localization:text("hevhud_hud_suit"),
+		x = 8,
+		y = text_ver_offset + suit:h() - text_name_size,
+		font = self._fonts.hl2_vitals,
+		font_size = text_name_size,
+		color = self.color_data.hl2_yellow,
+		alpha = 2/3,
+		layer = 2
+	})
+	local suit_label = suit:text({
+		name = "suit_label",
+		text = "",
+		align = "right",
+		x = -text_hor_margin,
+		y = label_ver_offset + suit:h() - text_label_size,
+		font = self._fonts.hl2_icons,
+		font_size = text_label_size,
+		color = self.color_data.hl2_yellow,
+		alpha = 2/3,
+		layer = 2
+	})
+	
+	
+	local function populate_weapon_panel(weapon_panel)
+		
+		local ammo_icon_size = 32 * box_scale
+		local underbarrel_icon_size = 32 * box_scale
+		local underbarrel_w = 64 * box_scale
+		local underbarrel_h = box_h
+
+		local underbarrel = weapon_panel:panel({
+			name = "underbarrel",
+			x = weapon_panel:w() - underbarrel_w + box_ver_offset,
+			y = weapon_panel:h() - underbarrel_h + box_ver_offset,
+			w = underbarrel_w,
+			h = underbarrel_h
+		})
+		
+		local underbarrel_bg = underbarrel:bitmap({
+			name = "underbarrel_bg",
+			layer = 1,
+			texture = "guis/textures/pd2/hud_tabs",
+			texture_rect = {84,0,44,32},
+			w = underbarrel:w(),
+			h = underbarrel:h(),
+			alpha = 0.75
+		})
+		local underbarrel_icon = underbarrel:text({
+			name = "underbarrel_icon",
+			text = "",
+			x = 8,
 			y = 0,
 			font = self._fonts.hl2_icons,
-			font_size = crosshair_font_size,
-			color = self.color_data.hl2_yellow,
-			layer = 3
-		})
-		
-		local crosshair_size = self.settings.CROSSHAIR_INDICATOR_SIZE
-		local crosshair_distance = 32
-		local crosshair_empty_left = crosshairs:bitmap({
-			name = "crosshair_empty_left",
-			texture = "textures/hl2_crosshair_empty_left",
-			w = crosshair_size,
-			h = crosshair_size,
-			x = -crosshair_distance + (crosshairs:w() - crosshair_size) / 2,
-			y = (crosshairs:h() - crosshair_size) / 2,
-			color = self.color_data.hl2_yellow,
-			layer = 2
-		})
-		local crosshair_empty_right = crosshairs:bitmap({
-			name = "crosshair_empty_right",
-			texture = "textures/hl2_crosshair_empty_right",
-			w = crosshair_size,
-			h = crosshair_size,
-			x = crosshair_distance + (crosshairs:w() - crosshair_size) / 2,
-			y = (crosshairs:h() - crosshair_size) / 2,
-			color = self.color_data.hl2_yellow,
-			layer = 2
-		})
-		local crosshair_fill_left = crosshairs:bitmap({
-			name = "crosshair_fill_left",
-			texture = "textures/hl2_crosshair_fill_left",
-			w = crosshair_size,
-			h = crosshair_size,
-			x = -crosshair_distance + (crosshairs:w() - crosshair_size) / 2,
-			y = (crosshairs:h() - crosshair_size) / 2,
-			color = self.color_data.hl2_yellow,
-			layer = 3
-		})
-		local crosshair_fill_right = crosshairs:bitmap({
-			name = "crosshair_fill_right",
-			texture = "textures/hl2_crosshair_fill_right",
-			w = crosshair_size,
-			h = crosshair_size,
-			x = crosshair_distance + (crosshairs:w() - crosshair_size) / 2,
-			y = (crosshairs:h() - crosshair_size) / 2,
-			color = self.color_data.hl2_yellow,
-			layer = 3
-		})
-		
-		
-		local hostages_margin = 12
-		local hostages_w = 72
-		local hostages_h = 36
-		local hostage_icon_size = 32
-	--HOSTAGES
-		local hostages = self._panel:panel({
-			name = "hostages",
-			w = hostages_w,
-			h = hostages_h,
-			x = self._panel:w() - (hostages_w + hostages_margin),
-			y = hostages_margin
-		})
-		local hostages_icon = hostages:bitmap({
-			name = "hostages_icon",
-			texture = "guis/textures/pd2/hud_icon_hostage",
-			x = (hostages_h - hostage_icon_size) / 2,
-			y = (hostages_h - hostage_icon_size) / 2, --hostages_h is not a typo
-			w = hostage_icon_size,
-			h = hostage_icon_size,
-			color = self.color_data.hl2_yellow,
-			layer = 2
-		})
-		local hostages_count = hostages:text({
-			name = "hostages_count",
-			text = "0",
-			vertical = "center",
---			align = "center",
-			x = (hostages_w - 8) / 2,
-			font = self._fonts.hl2_icons,
-			font_size = crosshair_font_size,
-			color = self.color_data.hl2_yellow,
-			layer = 3
-		})
-		local hostages_bg = hostages:bitmap({
-			name = "hostages_bg",
-			layer = 1,
-			texture = "guis/textures/pd2/hud_tabs",
-			texture_rect = {84,0,44,32},
-			w = hostages_w,
-			h = hostages_h,
-			alpha = 0.75
-		})
-		
-		
-		
-	--HEALTH/SUIT/AUX
-		local vitals = self._panel:panel({
-			name = "vitals"
-		})
-
-		local box_scale = 1
-		local box_w = 128 * box_scale
-		local box_h = 48 * box_scale
-		
-		local text_name_size = 12 * box_scale
-		local text_label_size = 32 * box_scale
-		local text_hor_margin = 24 * box_scale
-		
-		local box_ver_offset = -32
-		local text_ver_offset = -12
-		local label_ver_offset = -8 --for the values themselves
-		
-		local health = hl2:panel({
-			name = "health",
-			w = box_w,
-			h = box_h,
-			x = 24,
-			y = box_ver_offset + hl2:h() - box_h
-		})
-				
-		local NUM_POWER_TICKS = self._DATA.NUM_POWER_TICKS
-		local TICK_HEIGHT = 4
-		local TICK_WIDTH = 7
-		local TICK_MARGIN = 4
-
-		local power_h = 32
-		local power = hl2:panel({
-			name = "power",
-			w = box_w,
-			h = power_h * box_scale,
-			x = 24,
-			y = health:y() - ((power_h * box_scale) + 8)
-		})
-		local power_bg = power:bitmap({
-			name = "power_bg",
-			layer = 1,
-			texture = "guis/textures/pd2/hud_tabs",
-			texture_rect = {84,0,44,32},
-			w = power:w(),
-			h = power:h(),
-			alpha = 0.75
-		})
-		local power_name = power:text({
-			name = "power_name",
-			text = "AUX POWER",
-			x = 8 + TICK_MARGIN,
-			blend_mode = "add",
-			y = -16 + power:h() - text_name_size,
-			font = self._fonts.hl2_vitals,
-			font_size = text_name_size,
+			font_size = underbarrel_icon_size,
 			color = self.color_data.hl2_yellow,
 			alpha = 2/3,
 			layer = 2
 		})
-		local TICK_OFFSET_X = (power:w() - ((NUM_POWER_TICKS - 1) * (TICK_MARGIN + (TICK_WIDTH * box_scale)))) / 2
-
-		for i=1,NUM_POWER_TICKS do
-			power:rect({
-				name = "power_tick_" .. tostring(i),
-				color = self.color_data.hl2_yellow_bright,
-				x = 10 + ((i - 1) * (TICK_MARGIN + TICK_WIDTH)),
-				y = -4 + power:h() - (TICK_HEIGHT + TICK_MARGIN),
-				w = TICK_WIDTH,
-				h = TICK_HEIGHT,
-				alpha = 2/3,
-				layer = 2
-			})
-		end
-		--TODO "SPRINT" text animation
-		
-		local health_bg = health:bitmap({
-			name = "health_bg",
-			layer = 1,
-			texture = "guis/textures/pd2/hud_tabs",
-			texture_rect = {84,0,44,32},
-			w = health:w(),
-			h = health:h(),
-			alpha = 0.75
-		})
-		local health_name = health:text({
-			name = "health_name",
-			text = "HEALTH",
+		local underbarrel_name = underbarrel:text({
+			name = "underbarrel_name",
+			text = managers.localization:text("hevhud_hud_alt"),
+			align = "left",
 			x = 8,
-			y = text_ver_offset + health:h() - text_name_size,
+			y = text_ver_offset + underbarrel:h() - text_name_size,
 			font = self._fonts.hl2_vitals,
 			font_size = text_name_size,
 			color = self.color_data.hl2_yellow,
 			alpha = 2/3,
 			layer = 2
 		})
-		local health_label = health:text({
-			name = "health_label",
-			text = "",
+		local underbarrel_label = underbarrel:text({
+			name = "underbarrel_label",
+			text = "", --number of rounds
 			align = "right",
-			x = -text_hor_margin,
-			y = label_ver_offset + health:h() - text_label_size,
-			font = self._fonts.hl2_icons,
-			font_size = text_label_size,
-			color = self.color_data.hl2_yellow,
-			alpha = 2/3,
-			layer = 2
-		})
-		
-		local suit = hl2:panel({
-			name = "suit",
-			w = box_w,
-			h = box_h,
-			x = 24 + health:right(),
-			y = box_ver_offset + hl2:h() - box_h
-		})
-		
-		local suit_bg = suit:bitmap({
-			name = "suit_bg",
-			layer = 1,
-			texture = "guis/textures/pd2/hud_tabs",
-			texture_rect = {84,0,44,32},
-			w = suit:w(),
-			h = suit:h(),
-			alpha = 0.75
-		})
-		local suit_name = suit:text({
-			name = "suit_name",
-			text = "SUIT",
-			x = 8,
-			y = text_ver_offset + suit:h() - text_name_size,
-			font = self._fonts.hl2_vitals,
-			font_size = text_name_size,
-			color = self.color_data.hl2_yellow,
-			alpha = 2/3,
-			layer = 2
-		})
-		local suit_label = suit:text({
-			name = "suit_label",
-			text = "",
-			align = "right",
-			x = -text_hor_margin,
-			y = label_ver_offset + suit:h() - text_label_size,
+			x = -8,
+			y = (underbarrel:h() - text_label_size)/2,
 			font = self._fonts.hl2_icons,
 			font_size = text_label_size,
 			color = self.color_data.hl2_yellow,
@@ -806,150 +886,131 @@ function HEVHUD:CreateHUD()
 		})
 		
 		
-		local function populate_weapon_panel(weapon_panel)
-			
-			local ammo_icon_size = 32 * box_scale
-			local underbarrel_icon_size = 32 * box_scale
-			local underbarrel_w = 64 * box_scale
-			local underbarrel_h = box_h
-
-			local underbarrel = weapon_panel:panel({
-				name = "underbarrel",
-				x = weapon_panel:w() - underbarrel_w + box_ver_offset,
-				y = weapon_panel:h() - underbarrel_h + box_ver_offset,
-				w = underbarrel_w,
-				h = underbarrel_h
-			})
-			
-			local underbarrel_bg = underbarrel:bitmap({
-				name = "underbarrel_bg",
-				layer = 1,
-				texture = "guis/textures/pd2/hud_tabs",
-				texture_rect = {84,0,44,32},
-				w = underbarrel:w(),
-				h = underbarrel:h(),
-				alpha = 0.75
-			})
-			local underbarrel_icon = underbarrel:text({
-				name = "underbarrel_icon",
-				text = "",
-				x = 8,
-				y = 0,
-				font = self._fonts.hl2_icons,
-				font_size = underbarrel_icon_size,
-				color = self.color_data.hl2_yellow,
-				alpha = 2/3,
-				layer = 2
-			})
-			local underbarrel_name = underbarrel:text({
-				name = "underbarrel_name",
-				text = "ALT",
-				align = "left",
-				x = 8,
-				y = text_ver_offset + underbarrel:h() - text_name_size,
-				font = self._fonts.hl2_vitals,
-				font_size = text_name_size,
-				color = self.color_data.hl2_yellow,
-				alpha = 2/3,
-				layer = 2
-			})
-			local underbarrel_label = underbarrel:text({
-				name = "underbarrel_label",
-				text = "", --number of rounds
-				align = "right",
-				x = -8,
-				y = (underbarrel:h() - text_label_size)/2,
-				font = self._fonts.hl2_icons,
-				font_size = text_label_size,
-				color = self.color_data.hl2_yellow,
-				alpha = 2/3,
-				layer = 2
-			})
-			
-			
-			local ammo_w = 200 * box_scale
-			local ammo_h = box_h
-			local reserve_font_size = 24 * box_scale
-			local magazine_font_size = 32 * box_scale
-			
-			local ammo = weapon_panel:panel({
-				name = "ammo",
-				x = underbarrel:x() - (ammo_w + 16),
-				y = underbarrel:y(),
-				w = ammo_w,
-				h = ammo_h
-			})
-			local ammo_bg = ammo:bitmap({
-				name = "ammo_bg",
-				layer = 1,
-				texture = "guis/textures/pd2/hud_tabs",
-				texture_rect = {84,0,44,32},
-				w = ammo:w(),
-				h = ammo:h(),
-				alpha = 0.75
-			})
-			local ammo_name = ammo:text({
-				name = "ammo_name",
-				text = "AMMO",
-				align = "left",
-				x = text_name_size,
-				y = ammo:h() - text_name_size + text_ver_offset,
-				font = self._fonts.hl2_vitals,
-				font_size = text_name_size,
-				color = self.color_data.hl2_yellow,
-				alpha = 2/3,
-				layer = 2
-			})
-			local ammo_name_x,ammo_name_y,ammo_name_w,ammo_name_h = ammo_name:text_rect()
-			local ammo_icon = ammo:text({
-				name = "ammo_icon",
-				text = "",
-	--			x = 8,
-				y = 0,
-				x = ammo_name:x() + ((ammo_name_w - ammo_icon_size) / 1),
-	--			y = ammo_name_y + ammo_name_h,
-				font = self._fonts.hl2_icons,
-				font_size = ammo_icon_size,
-				color = self.color_data.hl2_yellow,
-				alpha = 2/3,
-				layer = 2
-			})
-			local magazine = ammo:text({
-				name = "magazine",
-				text = "18",
-				align = "center",
-				y = label_ver_offset + ammo:h() - magazine_font_size,
-				font = self._fonts.hl2_icons,
-				font_size = magazine_font_size,
-				color = self.color_data.hl2_yellow,
-				alpha = 2/3,
-				layer = 2
-			})
-			
-			local reserve = ammo:text({
-				name = "reserve",
-				text = "60",
-				align = "right",
-				x = -reserve_font_size,
-				y = label_ver_offset + ammo:h() - reserve_font_size,
-				font = self._fonts.hl2_icons,
-				font_size = reserve_font_size,
-				color = self.color_data.hl2_yellow,
-				alpha = 2/3,
-				layer = 2
-			})
+		local ammo_w = 200 * box_scale
+		local ammo_h = box_h
+		local reserve_font_size = 24 * box_scale
+		local magazine_font_size = 32 * box_scale
 		
+		local ammo = weapon_panel:panel({
+			name = "ammo",
+			x = underbarrel:x() - (ammo_w + 16),
+			y = underbarrel:y(),
+			w = ammo_w,
+			h = ammo_h
+		})
+		local ammo_bg = ammo:bitmap({
+			name = "ammo_bg",
+			layer = 1,
+			texture = "guis/textures/pd2/hud_tabs",
+			texture_rect = {84,0,44,32},
+			w = ammo:w(),
+			h = ammo:h(),
+			alpha = 0.75
+		})
+		local ammo_name = ammo:text({
+			name = "ammo_name",
+			text = managers.localization:text("hevhud_hud_ammo"),
+			align = "left",
+			x = text_name_size,
+			y = ammo:h() - text_name_size + text_ver_offset,
+			font = self._fonts.hl2_vitals,
+			font_size = text_name_size,
+			color = self.color_data.hl2_yellow,
+			alpha = 2/3,
+			layer = 2
+		})
+		local ammo_name_x,ammo_name_y,ammo_name_w,ammo_name_h = ammo_name:text_rect()
+		local ammo_icon = ammo:text({
+			name = "ammo_icon",
+			text = "",
+--			x = 8,
+			y = 0,
+			x = ammo_name:x() + ((ammo_name_w - ammo_icon_size) / 1),
+--			y = ammo_name_y + ammo_name_h,
+			font = self._fonts.hl2_icons,
+			font_size = ammo_icon_size,
+			color = self.color_data.hl2_yellow,
+			alpha = 2/3,
+			layer = 2
+		})
+		local magazine = ammo:text({
+			name = "magazine",
+			text = "18",
+			align = "center",
+			y = label_ver_offset + ammo:h() - magazine_font_size,
+			font = self._fonts.hl2_icons,
+			font_size = magazine_font_size,
+			color = self.color_data.hl2_yellow,
+			alpha = 2/3,
+			layer = 2
+		})
+		
+		local reserve = ammo:text({
+			name = "reserve",
+			text = "60",
+			align = "right",
+			x = -reserve_font_size,
+			y = label_ver_offset + ammo:h() - reserve_font_size,
+			font = self._fonts.hl2_icons,
+			font_size = reserve_font_size,
+			color = self.color_data.hl2_yellow,
+			alpha = 2/3,
+			layer = 2
+		})
+	
+	end
+	local primary = self._panel:panel({
+		name = "primary",
+		visible = false
+	})
+	--
+	populate_weapon_panel(primary)
+	local secondary = self._panel:panel({
+		name = "secondary"
+	})
+	populate_weapon_panel(secondary)
+end
+
+function HEVHUD:CreateSoundSources()
+	if managers.player and alive(managers.player:local_player()) then 
+		self._audio_sources.suit = self._audio_sources.suit or XAudio.UnitSource:new(XAudio.PLAYER)
+		self._audio_sources.sfx = self._audio_sources.sfx or XAudio.UnitSource:new(XAudio.PLAYER)
+		self._cache.sound_sources_setup = true
+	end
+end
+
+function HEVHUD:RegisterSounds()
+	self._audio_queue.suit = {}
+	self._audio_queue.sfx = {}
+	
+	local path_util = BeardLib.Utils.Path
+	
+	for _,subfolder in pairs(SystemFS:list(self._sounds_path,true)) do 
+		local path = path_util:Combine(self._sounds_path,subfolder)
+		for _,_snd in pairs(SystemFS:list(path,false)) do 
+			local snd = _snd
+			if string.sub(snd,-4) == HEVHUD._AUDIO_FILE_FORMAT then 
+				snd = string.sub(snd,1,-5)
+			end
+			self._sounds[snd] = {
+				name = snd,
+				path = path .. "/"
+--					extension = path_util:GetFileExtension(path .. snd)
+			}
 		end
-		local primary = self._panel:panel({
-			name = "primary",
-			visible = false
-		})
-		--
-		populate_weapon_panel(primary)
-		local secondary = self._panel:panel({
-			name = "secondary"
-		})
-		populate_weapon_panel(secondary)
+	end
+end
+
+function HEVHUD:Setup()
+	if not self._SETUP_COMPLETE then 
+--		self._SETUP_COMPLETE = true
+		--init blt xaudio (doesn't matter if another mod has already set it up)
+		if blt.xaudio then
+			blt.xaudio.setup()
+			self:RegisterSounds()
+		end
+		self:CreateHUD()
+		BeardLib:AddUpdater("HEVHUD_update",callback(self,self,"Update"))
 	end
 end
 
@@ -969,7 +1030,10 @@ function HEVHUD:ShouldUseLoadoutSelectionNumber()
 end
 
 function HEVHUD:TestIcon()
-	local player = managers.player:local_player()
+	local player = managers.player and managers.player:local_player()
+	if not alive(player) then 
+		return
+	end
 	local primary = player:inventory():unit_by_selection(2)
 	local secondary = player:inventory():unit_by_selection(1)
 	self:SetLoadoutWeaponIcon(1,primary:base())
@@ -1118,30 +1182,220 @@ function HEVHUD:TestIcon()
 	local ties_amount = Application:digest_value(managers.player._equipment.specials.cable_tie and managers.player._equipment.specials.cable_tie.amount, false)
 	local ties_name = managers.localization:text(tweak_data.equipments.specials.cable_tie.name_id) or "cable ties"
 	set_box_simple(7,ties_texture,ties_rect,ties_amount,ties_name,0.5,"interact")
+	
+	--mission eq here
 end
 
 function HEVHUD:SetLoadoutWeaponIcon(slot,weapon)
-	local loadout_box = self._panel:child("loadout"):child("loadout_box_" .. tostring(slot))
-	if loadout_box then 
-		local loadout_icon = loadout_box:child("loadout_icon")
-		local weapon_id = weapon:get_name_id()
-		local weapon_name = tostring(managers.weapon_factory:get_weapon_name_by_weapon_id(weapon_id))
-		
-		loadout_icon:set_image(managers.blackmarket:get_weapon_icon_path(weapon_id))
-		local b_w = loadout_box:w()
-		loadout_icon:set_size(b_w,b_w / 2)
-		loadout_icon:set_x((loadout_box:w() - b_w) / 2)
-		
-		if weapon.custom_name then 
-			loadout_box:child("loadout_text"):set_text(weapon_name .. "\n" .. tostring(weapon.custom_name))
-		else
-			loadout_box:child("loadout_text"):set_text(weapon_name)			
+	if alive(self._panel) then 
+		local loadout_box = self._panel:child("loadout"):child("loadout_box_" .. tostring(slot))
+		if alive(loadout_box) then 
+			local loadout_icon = loadout_box:child("loadout_icon")
+			local weapon_id = weapon:get_name_id()
+			local weapon_name = tostring(managers.weapon_factory:get_weapon_name_by_weapon_id(weapon_id))
+			
+			loadout_icon:set_image(managers.blackmarket:get_weapon_icon_path(weapon_id))
+			local b_w = loadout_box:w()
+			loadout_icon:set_size(b_w,b_w / 2)
+			loadout_icon:set_x((loadout_box:w() - b_w) / 2)
+			
+			if weapon.custom_name then 
+				loadout_box:child("loadout_text"):set_text(weapon_name .. "\n" .. tostring(weapon.custom_name))
+			else
+				loadout_box:child("loadout_text"):set_text(weapon_name)			
+			end
+	--		loadout_icon:set_y(loadout_box:h() * 0.25)
 		end
---		loadout_icon:set_y(loadout_box:h() * 0.25)
 	end
 end
 
+function HEVHUD:AnimateShowLoadoutPanel()
+	if alive(self._panel) then 
+		local loadout_panel = self._panel:child("loadout")
+		loadout_panel:show()
+		self:animate(loadout_panel,"animate_fadein",nil,self.settings.LOADOUT_FADE_DURATION,1)
+	--						HEVHUD:animate(HEVHUD._panel:child("loadout"),"animate_fadein",nil,HEVHUD.settings.LOADOUT_FADE_DURATION,1)
+	end
+end
 
+function HEVHUD:AnimateHideLoadoutPanel()
+	if alive(self._panel) then 
+		local loadout_panel = self._panel:child("loadout")
+	--						HEVHUD:animate(HEVHUD._panel:child("loadout"),"animate_fadeout",nil,HEVHUD.settings.LOADOUT_FADE_DURATION,loadout_panel:alpha())
+	--						local loadout_panel = HEVHUD._panel:child("loadout"); callback(Panel,loadout_panel,"show")()
+		self:animate(loadout_panel,"animate_fadeout",function(o) o:hide(); o:set_alpha(1) end,self.settings.LOADOUT_FADE_DURATION,loadout_panel:alpha())
+	end
+end
+
+function HEVHUD:SetLoadoutPanelVisible(visible,instant,play_sound)
+	if alive(self._panel) then 
+		local loadout_panel = self._panel:child("loadout")
+		if alive(loadout_panel) then 
+			if visible == nil then 
+				--if no argument given, toggle visibility
+				visible = not loadout_panel:visible()
+				if instant then 
+					loadout_panel:set_visible(visible)
+				else
+					local animate_id = tostring(loadout_panel)
+					local animate_data = self._animate_targets[animate_id]
+					if animate_data then 
+						visible = animate_data.func == self.animate_fadeout
+						self:animate_stop(animate_id)
+					end
+					
+					if visible then 
+						self:AnimateShowLoadoutPanel()
+--						self:animate(loadout_panel,"animate_fadein",nil,self.settings.LOADOUT_FADE_DURATION,1)
+					else						
+						self:AnimateHideLoadoutPanel()
+--						self:animate(loadout_panel,"animate_fadeout",nil,self.settings.LOADOUT_FADE_DURATION,loadout_panel:alpha())
+					end
+				end
+			else
+				if instant then 
+					loadout_panel:set_visible(visible and true or false)
+				else
+					if visible then 
+						self:AnimateShowLoadoutPanel()
+					else
+						self:AnimateHideLoadoutPanel()
+					end
+				end
+			end
+		end
+	end
+	if play_sound then 
+		self:PlaySound("sfx","wpn_moveselect",false)
+--		if visible then 
+--			self:PlaySound("sfx","wpn_hudon",false)
+--		else
+--			self:PlaySound("sfx","wpn_hudoff",false)
+--		end
+	end
+end
+
+function HEVHUD:AddSpecialEquipment(data)
+	if not alive(self._panel) then 
+		return
+	end
+	local loadout_panel = self._panel:child("loadout")
+	local equipment_panel = loadout_panel:child("equipment")
+	
+	local icon_size = self.settings.SPECIAL_EQUIPMENT_ICON_SIZE
+	local font_size = self.settings.SPECIAL_EQUIPMENT_FONT_SIZE
+	local margin = self.settings.SPECIAL_EQUIPMENT_ICON_MARGIN
+	local x = 550
+--	for _,loadout_box in pairs(loadout_panel:children()) do 
+--		x = math.max(x,loadout_box:right() + margin)
+--	end
+	
+	local amount = data.amount or 1
+	local texture,texture_rect = tweak_data.hud_icons:get_icon_data(data.icon)
+	local id = data.id
+	
+	
+	local eq_num = #equipment_panel:children()
+	local panel = equipment_panel:panel({
+		name = tostring(id),
+		w = 2 * icon_size,
+		h = icon_size,
+		x = x,
+		y = eq_num * (margin + icon_size),
+		layer = eq_num
+	})
+	local icon = panel:bitmap({
+		name = "bitmap",
+		texture = texture,
+		texture_rect = texture_rect,
+		w = icon_size,
+		h = icon_size,
+		color = self.color_data.hl2_yellow,
+		layer = 2
+	})
+	
+	local bg = panel:bitmap({
+		name = "bg",
+		x = 0,
+		y = 0,
+		texture = "guis/textures/pd2/hud_tabs",
+		texture_rect = {84,0,44,32},
+--		w = icon_size,
+--		h = icon_size,
+		alpha = 0.75,
+		layer = 1
+	})
+	
+	local amount_label = panel:text({
+		name = "amount_label",
+		text = tostring(amount),
+		font = self._fonts.hl2_text,
+		font_size = font_size,
+		align = "right",
+		vertical = "bottom",
+		x = -margin,
+		y = 0,
+		color = self.color_data.hl2_yellow,
+		layer = 3
+	})
+	
+	self:SortSpecialEquipment()
+end
+
+function HEVHUD:RemoveSpecialEquipment(equipment_id)
+	if equipment_id and alive(self._panel) then 
+		local loadout_panel = self._panel:child("loadout")
+		local equipment_panel = loadout_panel:child("equipment")
+		local equipment = equipment_panel:child(equipment_id)
+		if alive(equipment) then 
+			equipment_panel:remove(equipment)
+		end
+		self:SortSpecialEquipment()
+	end
+end
+
+function HEVHUD:SetSpecialEquipmentAmount(equipment_id,amount)
+	if equipment_id and alive(self._panel) then
+		local loadout_panel = self._panel:child("loadout")
+		local equipment_panel = loadout_panel:child("equipment")
+		local equipment = equipment_panel:child(equipment_id)
+		if alive(equipment) then 
+			local amount_label = equipment:child("amount_label")
+			amount_label:set_text(tostring(amount))
+		else
+			self:log("ERROR: HEVHUD:SetSpecialEquipmentAmount(" .. tostring(equipment_id) .. "," .. tostring(amount) .. "): invalid equipment (no existing panel found)")
+		end
+	end
+end
+
+function HEVHUD:SortSpecialEquipment()
+	if alive(self._panel) then
+		local loadout_panel = self._panel:child("loadout")
+		local equipment_panel = loadout_panel:child("equipment")
+		local eq = equipment_panel:children()
+		if #eq > 0 then 
+			table.sort(eq,function(a,b)
+				local eqtd = tweak_data.equipments.specials
+				local e_a = eqtd[a:name()]
+				local e_b = eqtd[b:name()]
+				if e_a and e_b then 
+					if e_a.text_id and e_b.text_id then 
+						return managers.localization:text(e_a.text_id) < managers.localization:text(e_b.text_id)
+					end
+				end
+				return a:name() < b:name()
+			end)
+		end
+		local icon_size = self.settings.SPECIAL_EQUIPMENT_ICON_SIZE
+		local margin = self.settings.SPECIAL_EQUIPMENT_ICON_MARGIN
+	
+		for i,equipment in ipairs(eq) do 
+			equipment:set_y((i - 1) * (icon_size + margin))
+			equipment:set_layer(i)
+		end
+		
+	end
+end
 
 function HEVHUD:SetUnderbarrelPanelState(slot_name,is_active,ammo_ratio)
 	local weapon_panel = self._panel:child(tostring(slot_name))
@@ -1262,6 +1516,8 @@ function HEVHUD:ShowHint(params)
 end
 
 function HEVHUD:UpdateHints(t,dt)
+	--i think the reason i made this update separate from the animate system is that it initially included non-animation logic, 
+	--and that it involved multiple types of animation on single gui objects (which my animate system does not yet support)
 	local panel = self._panel:child("hints")
 	local queue_bottom_y = 0
 	local HINT_QUEUE_MARGIN_Y = self.settings.HINT_QUEUE_MARGIN_Y
@@ -1416,7 +1672,7 @@ end
 --]]
 
 function HEVHUD:SetHealth(data)
-	HEVHUD:SetRevives(nil,data.revives)
+	self:SetRevives(nil,data.revives)
 
 	local health_ratio = 0
 	local text = ""
@@ -1804,6 +2060,9 @@ function HEVHUD:AddObjective(data)
 		return
 	end	
 
+--	self:log("Objective received:[[")
+--	logall(data)
+--	self:log("]]")
 	
 	local objective = self._objectives_data[data.id]	
 		
@@ -1866,9 +2125,14 @@ function HEVHUD:AddObjective(data)
 		
 		objective.objective_text:set_text(get_objective_string())
 	elseif data.mode == "complete" then 
-		self._panel:child("objectives"):remove(objective.objective_panel)
+		if objective then 
+			self._panel:child("objectives"):remove(objective.objective_panel)
+			self._objectives_data[data.id] = nil
+			--todo animate done here instead of instant disappear
+		end
 	elseif data.mode == "remind" then 
-		
+		--popup reminder; todo option to not show these reminders
+--		HEVHUD:ShowPopup(data.id,data.text)
 	else
 		self:log("HEVHUD:AddObjective(" .. tostring(data) .. ") Error: unknown data mode " .. tostring(data.mode),{color = Color.red})
 	end
@@ -2062,20 +2326,6 @@ function HEVHUD.animate_flicker_alpha(o,t,dt,start_t,duration)
 	end
 end
 
-function HEVHUD:Setup()
-	if not self._SETUP_COMPLETE then 
---		self._SETUP_COMPLETE = true
-		--init blt xaudio (doesn't matter if another mod has already set it up)
-		if blt.xaudio then
-			blt.xaudio.setup()
-		end
-		
-		self._audio_queue.suit = {}
-		self:CreateHUD()
-		BeardLib:AddUpdater("HEVHUD_update",callback(self,self,"Update"))
-	end
-end
-
 function HEVHUD:SayTime()
 	self:PlaySound("suit","time_is_now")
 	local TWELVE_HOUR = true
@@ -2116,6 +2366,10 @@ function HEVHUD:SayTime()
 end
 
 function HEVHUD:PlaySound(source_name,sound_name,should_loop)
+	if not self._cache.sound_sources_setup then 
+		self:CreateSoundSources()
+	end
+
 	if not sound_name then 
 		return
 	end
@@ -2126,7 +2380,16 @@ function HEVHUD:PlaySound(source_name,sound_name,should_loop)
 	if type(snd) == "table" and snd.disabled then 
 		self:log("PlaySound(): sound [" .. sound_name .. "] not found",{color = Color.red})
 	elseif not snd then
-		local buffer = XAudio.Buffer:new(self._sounds_path .. sound_name .. self._AUDIO_FILE_FORMAT)
+		local sound_data = self._sounds[sound_name]
+		if not sound_data then 
+			self:log("ERROR: Bad sound data for sound " .. tostring(sound_name))
+			return
+		end
+		if not sound_data.buffer then 
+			sound_data.buffer = XAudio.Buffer:new(sound_data.path .. sound_name .. self._AUDIO_FILE_FORMAT)
+		end
+		local buffer = sound_data.buffer
+--		local buffer = XAudio.Buffer:new(self._sounds_path .. sound_name .. self._AUDIO_FILE_FORMAT)
 		--[[
 		if not buffer then 
 			self._audio_buffers[sound_name] = {
@@ -2155,17 +2418,17 @@ end
 function HEVHUD:Update(t,dt)
 	--Audio sources
 	
+	self:UpdateHints(t,dt)
 	
+	self:UpdateAnimate(t,dt)
 	--init HEV suit sound source; TODO make this init and check for closed source
 	local player = managers.player:local_player()
-	if player then 
-		self._audio_sources.suit = self._audio_sources.suit or XAudio.UnitSource:new(XAudio.PLAYER)
-	else
+	if not player then 
 		return
 	end
 	for source_name,audio_queue in pairs(self._audio_queue) do 
 		local audio_source = self._audio_sources[source_name] and self._audio_sources[source_name]
-		if audio_source and audio_source:get_state() ~= 1 then 
+		if audio_source and not audio_source._closed and audio_source:get_state() ~= 1 then 
 			local snd_data = table.remove(audio_queue,1)
 			if snd_data and type(snd_data) == "table" then
 				audio_source:set_buffer(snd_data.buffer)
@@ -2206,9 +2469,6 @@ function HEVHUD:Update(t,dt)
 		end
 	end
 	self._cache.stamina_update_t = self._cache.stamina_update_t + dt
-	
-	self:UpdateHints(t,dt)
-	self:UpdateAnimate(t,dt)
 end
 
 function HEVHUD:animate(target,func,done_cb,...)
@@ -2291,8 +2551,8 @@ function HEVHUD.animate_text_color_ripple(o,t,dt,start_t,duration,start_color,en
 	duration = duration or 1
 	local progress = (t - start_t) / duration
 	
-	Console:SetTrackerValue("trackera",tostring(progress))
-	Console:SetTrackerValue("trackerb",tostring(t - start_t)) --elapsed
+--	Console:SetTrackerValue("trackera",tostring(progress))
+--	Console:SetTrackerValue("trackerb",tostring(t - start_t)) --elapsed
 	if progress >= 1 then
 		if end_alpha then 
 			o:set_alpha(end_alpha)
@@ -2406,22 +2666,11 @@ end
 Hooks:Add("BaseNetworkSessionOnLoadComplete","HEVHUD_OnLoadComplete",callback(HEVHUD,HEVHUD,"Setup"))
 
 
+--[[
 Hooks:Add("LocalizationManagerPostInit", "hevhud_addlocalization", function( loc )
 	loc:add_localized_strings({
 		hevhud_objective_amount_progress = "[$1 / $2]",
 	})
-
---[[
-	local path = HEVHUD._localization_path
-	
-	for _, filename in pairs(file.GetFiles(path)) do
-		local str = filename:match('^(.*).txt$')
-		if str and Idstring(str) and Idstring(str):key() == SystemInfo:language():key() then
-			loc:load_localization_file(path .. filename)
-			return
-		end
-	end
-	loc:load_localization_file(path .. "english.txt")
-	--]]
 end)
+--]]
 

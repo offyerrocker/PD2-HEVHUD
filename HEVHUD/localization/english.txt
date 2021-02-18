@@ -1,0 +1,11 @@
+{
+	"hevhud_menu_title" : "HEVHUD Options",
+	"hevhud_menu_toggle_loadout_title" : "Toggle Loadout View",
+	"hevhud_menu_toggle_loadout_desc" : "Show your current weapons, deployables, throwables, cable ties, and mission equipment.",
+	"hevhud_objective_amount_progress" : "[$1 / $2]",
+	"hevhud_hud_aux_power" : "AUX POWER",
+	"hevhud_hud_health" : "HEALTH",
+	"hevhud_hud_suit" : "SUIT",
+	"hevhud_hud_alt" : "ALT",
+	"hevhud_hud_ammo" : "AMMO"
+}

@@ -10,6 +10,19 @@ Hooks:PostHook(HUDTeammate,"set_health","hevhud_set_health",function(self,data)
 	HEVHUD:SetHealth(data)
 end)
 
+Hooks:PostHook(HUDTeammate,"_create_primary_weapon_firemode","hevhud_disable_primary_firemode_panel",function(self)
+	if self._id == HUDManager.PLAYER_PANEL then 
+		local primary_weapon_panel = self._player_panel:child("weapons_panel"):child("primary_weapon_panel")
+		primary_weapon_panel:child("weapon_selection"):hide()
+	end
+end)
+Hooks:PostHook(HUDTeammate,"_create_secondary_weapon_firemode","hevhud_disable_secondary_firemode_panel",function(self)
+	if self._id == HUDManager.PLAYER_PANEL then 
+		local secondary_weapon_panel = self._player_panel:child("weapons_panel"):child("secondary_weapon_panel")
+		secondary_weapon_panel:child("weapon_selection"):hide()
+	end
+end)
+
 Hooks:PostHook(HUDTeammate,"set_armor","hevhud_set_armor",function(self,data)
 	HEVHUD:SetArmor(data)
 end)
