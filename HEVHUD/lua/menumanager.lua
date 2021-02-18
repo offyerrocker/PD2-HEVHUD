@@ -1,35 +1,43 @@
 --[[
 todo:
---sound source should be (re)created on player_check_skills, when player is respawned
-move hud into hudmanager hud to avoid hud displaying during pregame 
 
+----ASSETS:
+non-bold version of hl2_vitals font
+
+----HUD/VISUALS:
 add scanlines to mission objectives
 mission equipment in loadout
-non-bold version of hl2_vitals font
 revise placement of hud mission objectives/hints queue
+hostage counter label needs placement tweak
 ammo pickup popup
 flashlight icon
 hide sprint/aux when full?
+bag value?
+
+----OPTIMIZATION:
+global references for hud subpanels
+
+
+----SOUNDS:
+- todo investigate arbitrary PlayerInventory "equip" listener calls causing repeated weapon switch sounds
+- HEV suit vocalization for injury noises 
+-ammo low beep (likely needs to be taken from hl2 instead of hl1 assets)
+- init audio sources outside of update; call again on player respawn, and check for closed source
+	- attempted this, and the source instantly closes after recreating the sources when the player respawns- reason unknown
+- better sound control: PlaySound should include option to cut off current sound and play new sound instead
 
 ----equipment menu:
--deployables (primary + secondary)
--throwables/abilities
--zipties
--mission equipment
+-secondary deployable amount (shaped charges)
 
+multiple objectives available at once? (not sure if vanilla hud or maps even support it though)
 
 -objectives
 
 -teammates
 -assault
 
-bag value?
 
-global references for hud subpanels
-init audio sources outside of update; call again on player respawn, and check for closed source
-- sound when swapping weapons
-- hostage counter label needs placement adjustment
--better sound control: PlaySound should include option to cut off current sound and play new sound instead
+
 
 --]]
 
@@ -38,7 +46,12 @@ HEVHUD._path = HEVHUD._path or ModPath
 HEVHUD._localization_path = HEVHUD._localization_path or (HEVHUD._path .. "localization/")
 HEVHUD._assets_path = HEVHUD._assets_path or (HEVHUD._path .. "assets/")
 HEVHUD._sounds_path = HEVHUD._sounds_path or (HEVHUD._assets_path .. "snd/")
-HEVHUD._AUDIO_FILE_FORMAT = ".ogg"
+
+HEVHUD._AUDIO_FILE_FORMATS = {
+	"ogg" --whitelist for valid formats; currently only ogg is supported 
+}
+
+
 HEVHUD._audio_sources = HEVHUD._audio_sources or {}
 HEVHUD._audio_buffers = HEVHUD._audio_buffers or {}
 HEVHUD._audio_queue = HEVHUD._audio_queue or {}
@@ -48,12 +61,23 @@ HEVHUD._DATA = {
 }
 HEVHUD._hints = {} --queue style structure
 
-HEVHUD._animate_waits = 0
+HEVHUD._animate_waits = 0 --used for unique number identifiers for animate_wait() calls
 
 HEVHUD._objectives_data = {} --stores all data by string id of objective
 HEVHUD._objectives_lookup = {} --stores ordered references to objective data (for hud display reasons)
 
-HEVHUD._sounds = {}
+HEVHUD._sounds = {} --holds ids and paths for sounds since there are multiple sounds subdirectories (populated automatically, ids are filenames without extensions)
+
+HEVHUD._sound_source_data = {
+	suit = {
+		source_class = "UnitSource",
+		source_type = "PLAYER"
+	},
+	sfx = {
+		source_class = "UnitSource",
+		source_type = "PLAYER"
+	}
+}
 
 HEVHUD._suit_number_vox = HEVHUD._suit_number_vox or {
 	["0"] = "_comma",
@@ -216,6 +240,9 @@ HEVHUD._cache = { --slight misnomer but basically intended as an unorganized buc
 HEVHUD._SETUP_COMPLETE = false
 
 HEVHUD.default_settings = {
+	SHOW_REAL_VITALS = true,
+	SHOW_LOADOUT_KEYBINDS = false,
+	PLAY_WEAPON_SWITCH_SOUNDS = true,
 	HEALTH_THRESHOLD_DOOMED = 0.01,
 	HEALTH_THRESHOLD_CRITICAL = 0.3,
 	HEALTH_THRESHOLD_MINOR = 0.5,
@@ -250,7 +277,11 @@ HEVHUD.default_settings = {
 	SPECIAL_EQUIPMENT_ICON_SIZE = 24,
 	SPECIAL_EQUIPMENT_FONT_SIZE = 20,
 	SPECIAL_EQUIPMENT_ICON_MARGIN = 4,
-	LOADOUT_FADE_DURATION = 1/4
+	LOADOUT_FADE_DURATION = 1/4,
+	LOADOUT_COUNT_Y_OFFSET = -24,
+	LOADOUT_PANEL_X = 300,
+	LOADOUT_PANEL_Y = 32,
+	HEIST_TIMER_FONT_SIZE = 24
 }
 
 
@@ -321,6 +352,7 @@ Hooks:Add("HEVHUD_Crosshair_Listener","HEVHUD_OnCrosshairListenerEvent",function
 			elseif setting == 9 then
 				if source == "perk" then 
 					local equipped_perk_deck --blackmarket equipped specialization blah blah blah
+					--these need to be done on a case-by-case basis 
 				end
 			end
 		end
@@ -335,6 +367,7 @@ Hooks:Add("HEVHUD_Crosshair_Listener","HEVHUD_OnCrosshairListenerEvent",function
 end)
 
 HEVHUD.settings = HEVHUD.settings or {}
+--other mods that edit HEVHUD settings won't have their changes overwritten. though i doubt anyone would want to
 for k,v in pairs(HEVHUD.default_settings) do 
 	if HEVHUD.settings[k] == nil then 
 		HEVHUD.settings[k] = v
@@ -349,8 +382,11 @@ function HEVHUD:log(...)
 	end
 end
 
-function HEVHUD:CreateHUD()
+function HEVHUD:CreateHUD(parent_hud)
 	self._ws = managers.hud._workspace --managers.gui_data:create_fullscreen_workspace()
+	if not parent_hud then 
+		return
+	end
 	
 --		local teammate_panels = managers.hud._teammate_panels
 --		if not (teammate_panels and teammate_panels[managers.hud.PLAYER_PANEL]) then 
@@ -358,7 +394,7 @@ function HEVHUD:CreateHUD()
 --		end
 --		local hl2 = managers.hud._teammate_panels[managers.hud.PLAYER_PANEL]
 	
-	local hl2 = self._ws:panel():panel({
+	local hl2 = parent_hud:panel({--self._ws:panel():panel({
 		name = "hevhud"
 	})
 	self._panel = hl2
@@ -397,6 +433,8 @@ function HEVHUD:CreateHUD()
 		visible = false,
 		alpha = 1/3 --0.75
 	})
+	--this thing is ugly as sin
+	
 --		self:CreateScanlines(objectives)
 	--[[
 	local objective_title = objectives:text({
@@ -473,8 +511,8 @@ function HEVHUD:CreateHUD()
 	}
 	local loadout = self._panel:panel({
 		name = "loadout",
-		x = 300,
-		y = 100,
+		x = self.settings.LOADOUT_PANEL_X,
+		y = self.settings.LOADOUT_PANEL_Y,
 		w = loadout_w,
 		h = loadout_h,
 		visible = false
@@ -500,20 +538,21 @@ function HEVHUD:CreateHUD()
 		})
 		
 		--todo set icon size constraints
-		local loadout_count = loadout_box:text({
+		
+		local loadout_count = loadout_box:text({ --amount of this loadout item
 			name = "loadout_count",
 			text = "",
 			x = -loadout_font_size_large * 0.5,
 --				y = loadout_font_size_large * 0.5,
 			align = "right",
 			vertical = "center",
-			y = placement_data.y * -8,
+			y = (placement_data.y * -8) + self.settings.LOADOUT_COUNT_Y_OFFSET,
 			font = self._fonts.hl2_vitals,
 			font_size = loadout_font_size_large,
 			color = self.color_data.hl2_yellow,
 			layer = 3
 		})
-		local loadout_label = loadout_box:text({
+		local loadout_label = loadout_box:text({ --top left loadout box index/keybind (depending on setting)
 			name = "loadout_label",
 			text = tostring(i),
 			x = loadout_font_size * 0.5,
@@ -526,7 +565,7 @@ function HEVHUD:CreateHUD()
 			alpha = 2/3,
 			layer = 3
 		})
-		local loadout_text = loadout_box:text({
+		local loadout_text = loadout_box:text({ --name of loadout item
 			name = "loadout_text",
 			text = "",
 			align = "center",
@@ -688,7 +727,8 @@ function HEVHUD:CreateHUD()
 	local text_label_size = 32 * box_scale
 	local text_hor_margin = 24 * box_scale
 	
-	local box_ver_offset = -32
+	local box_ver_offset = -4 -- -32 if using fullscreen, but currently uses saferect which includes its own margin
+	local box_hor_offset = 4 --24 if using fullscren (see above)
 	local text_ver_offset = -12
 	local label_ver_offset = -8 --for the values themselves
 	
@@ -696,7 +736,7 @@ function HEVHUD:CreateHUD()
 		name = "health",
 		w = box_w,
 		h = box_h,
-		x = 24,
+		x = box_hor_offset,
 		y = box_ver_offset + hl2:h() - box_h
 	})
 			
@@ -710,7 +750,7 @@ function HEVHUD:CreateHUD()
 		name = "power",
 		w = box_w,
 		h = power_h * box_scale,
-		x = 24,
+		x = box_hor_offset,
 		y = health:y() - ((power_h * box_scale) + 8)
 	})
 	local power_bg = power:bitmap({
@@ -971,11 +1011,64 @@ function HEVHUD:CreateHUD()
 	populate_weapon_panel(secondary)
 end
 
+function HEVHUD:ClearAudioQueue(...)
+	local target_sources = {...}
+	local clear_all = #target_sources == 0
+	for source_name,queue_data in pairs(self._audio_queue) do 
+		if clear_all or table.contains(target_sources,source_name) then 
+--			for i,queued_sound in pairs(queue_data) do 
+--				if queued_sound.buffer then 
+--					queued_sound.buffer:close()
+--					queued_sound.buffer = nil
+--				end
+--			end
+			self._audio_queue[source_name] = {}
+		end
+	end
+end
+
+function HEVHUD:ClearSoundBuffers(...) --DO NOT USE unless all audio queues are empty! queues still contain references to buffers, even closed ones, which will result in a crash when XAudio attempts to play a closed buffer
+	local target_buffers = {...}
+	local clear_all = #target_buffers == 0
+	for sound_name,sound_data in pairs(self._sounds) do 
+		if clear_all or table.contains(target_buffers,sound_name) then 
+			if sound_data.buffer then 
+				sound_data.buffer:close()
+				sound_data.buffer = nil
+			end
+		end
+	end
+	
+end
+
 function HEVHUD:CreateSoundSources()
 	if managers.player and alive(managers.player:local_player()) then 
-		self._audio_sources.suit = self._audio_sources.suit or XAudio.UnitSource:new(XAudio.PLAYER)
-		self._audio_sources.sfx = self._audio_sources.sfx or XAudio.UnitSource:new(XAudio.PLAYER)
-		self._cache.sound_sources_setup = true
+		
+		self:ClearAudioQueue()
+		
+		for source_name,source_data in pairs(self._sound_source_data) do 
+			local src = self._audio_sources[source_name]
+			if src and not src:is_closed() then 
+				--source is okay, so do nothing
+			else
+				
+				local src_class_name = source_data.source_class
+				local src_class = XAudio[src_class_name]
+				if src_class then 
+					
+					local src_type_name = source_data.source_type
+					local src_type
+					if src_type_name and XAudio[src_type_name] then 
+						src_type = XAudio[src_type_name]
+					end
+					local new_src = src_class:new(src_type)
+					self._audio_sources[source_name] = new_src
+					
+				else
+					self:log("ERROR: HEVHUD:CreateSoundSources(): Bad sound source creation data: source_name " .. tostring(source_name) .. " = [" .. table.concat(source_data,",") .. "]")
+				end
+			end
+		end
 	end
 end
 
@@ -989,29 +1082,150 @@ function HEVHUD:RegisterSounds()
 		local path = path_util:Combine(self._sounds_path,subfolder)
 		for _,_snd in pairs(SystemFS:list(path,false)) do 
 			local snd = _snd
-			if string.sub(snd,-4) == HEVHUD._AUDIO_FILE_FORMAT then 
-				snd = string.sub(snd,1,-5)
+			local extension = path_util:GetFileExtension(path .. snd)
+			if table.contains(self._AUDIO_FILE_FORMATS,extension) then --is valid file extension
+				extension = "." .. extension
+				snd = string.sub(_snd,1,-(string.len(extension) + 1))
+				
+				self._sounds[snd] = {
+					name = snd,
+					path = path .. "/",
+					extension = extension --should always be ".ogg" but doesn't hurt to futureproof
+				}
+			else
+				self:log("HEVHUD:RegisterSounds(): Error! File type " .. extension ..  " not supported!")
+--				extension = string.sub(_snd,string.find(snd,"%.") or 1)
+--				snd = string.sub(_snd,1,(string.find(snd,"%.") or 0) - 1)
+--				extension = ""
 			end
-			self._sounds[snd] = {
-				name = snd,
-				path = path .. "/"
---					extension = path_util:GetFileExtension(path .. snd)
-			}
+			
 		end
 	end
 end
 
-function HEVHUD:Setup()
-	if not self._SETUP_COMPLETE then 
---		self._SETUP_COMPLETE = true
-		--init blt xaudio (doesn't matter if another mod has already set it up)
-		if blt.xaudio then
-			blt.xaudio.setup()
-			self:RegisterSounds()
+function HEVHUD:UpdateSounds(t,dt)
+	for source_name,audio_queue in pairs(self._audio_queue) do 
+		local audio_source = self._audio_sources[source_name] and self._audio_sources[source_name]
+		if audio_source and not audio_source._closed and audio_source:get_state() ~= 1 then 
+			local snd_data = table.remove(audio_queue,1)
+			if snd_data and type(snd_data) == "table" and snd_data.buffer then
+				audio_source:set_buffer(snd_data.buffer)
+				audio_source:set_looping(snd_data.should_loop)
+				audio_source:play()
+			end
 		end
-		self:CreateHUD()
-		BeardLib:AddUpdater("HEVHUD_update",callback(self,self,"Update"))
 	end
+end
+
+function HEVHUD:SayTime()
+	self:PlaySound("suit","time_is_now")
+	local TWELVE_HOUR = true
+	--i don't plan to include an option to disable twelve-hour format because... see below comments
+	local c_h
+	if TWELVE_HOUR then 
+		c_h = os.date("%I")
+	else
+		c_h = os.date("%H")
+	end
+	local c_m = os.date("%M")
+	
+	local h_1 = string.sub(c_h,1,1) or ""
+	local h_2 = string.sub(c_h,2,2) or ""
+	if c_h == "00" then
+		--times with hour 00 (midnight, when not using twelve-hour will say "12" because the HEV suit has no voice line for "zero" or "oh" )
+		self:PlaySound("suit",self._suit_number_vox["12"])
+	elseif (h_2 == "0") or (h_1 == "1") then 
+		self:PlaySound("suit",self._suit_number_vox[c_h] or self._suit_number_vox[h_2])
+	else
+		self:PlaySound("suit",self._suit_number_vox[h_1 .. "0"])
+		self:PlaySound("suit",self._suit_number_vox[h_2])
+	end
+	local m_1 = string.sub(c_m,1,1) or ""
+	local m_2 = string.sub(c_m,2,2) or ""
+	
+	if m_1 ~= "0" then --times with minutes 00-09 are just not said, again because the HEV suit can't say "zero"		
+		if tonumber(c_m) < 20 then 
+			self:PlaySound("suit",self._suit_number_vox[tostring(c_m)])
+		else
+			self:PlaySound("suit",self._suit_number_vox[m_1 .. "0"])
+			self:PlaySound("suit",self._suit_number_vox[m_2])
+		end
+	end
+	if TWELVE_HOUR then 
+		self:PlaySound("suit",self._suit_number_vox[os.date("%p")])
+	end
+end
+
+function HEVHUD:PlaySound(source_name,sound_name,should_loop)
+
+	if not sound_name then 
+		return
+	end
+	
+	sound_name = tostring(sound_name)
+	local audio_source = self._audio_sources[tostring(source_name)]
+	if not audio_source or audio_source:is_closed() then 
+		self:CreateSoundSources()
+		audio_source = self._audio_sources[tostring(source_name)]
+	end
+	
+	
+	local snd = self._audio_buffers[sound_name]
+	if type(snd) == "table" and snd.disabled then 
+--		self:log("PlaySound(): sound [" .. sound_name .. "] not found",{color = Color.red})
+	elseif not snd then
+		local sound_data = self._sounds[sound_name]
+		if not sound_data then 
+			self:log("ERROR: Bad sound data for sound [" .. tostring(sound_name) .. "]")
+			return
+		end
+		if sound_data.disabled then 
+			return
+		end
+		if not sound_data.buffer then 
+			sound_data.buffer = XAudio.Buffer:new(sound_data.path .. sound_name .. sound_data.extension)
+		end
+		local buffer = sound_data.buffer
+--		local buffer = XAudio.Buffer:new(self._sounds_path .. sound_name .. self._AUDIO_FILE_FORMAT)
+		--[[
+		if not buffer then 
+			self._audio_buffers[sound_name] = {
+				disabled = true
+			}
+		end
+		--]]
+		
+		self._audio_buffers[sound_name] = {
+			name = sound_name,
+			looping = should_loop,
+			buffer = buffer
+		}
+	end
+	if snd and audio_source then
+		if should_loop ~= nil then
+--			self._audio_queue[source_name][#self._audio_queue[source_name] + 1] = {self._audio_buffers[sound_name].buffer, should_loop = should_loop}
+			table.insert(self._audio_queue[source_name],{name = sound_name,buffer = self._audio_buffers[sound_name].buffer, should_loop = should_loop})
+		else
+--			self._audio_queue[source_name][#self._audio_queue[source_name] + 1] = self._audio_buffers[sound_name]
+			table.insert(self._audio_queue[source_name],self._audio_buffers[sound_name])
+		end
+	elseif snd then
+		self:log("ERROR: PlaySound(" .. table.concat({source_name,sound_name,should_loop},",") .. "): Sound sources are not initialized!")
+	end
+end
+
+function HEVHUD:Setup()
+	--init blt xaudio (doesn't matter if another mod has already set it up)
+	if blt.xaudio then
+		blt.xaudio.setup()
+		self:RegisterSounds()
+	end
+--		self:CreateHUD()
+	BeardLib:AddUpdater("HEVHUD_update",callback(self,self,"Update"))
+end
+
+function HEVHUD:OnPlayerSpawned()
+	self:CreateSoundSources()
 end
 
 function HEVHUD:ShouldUseLoadoutSelectionNumber()
@@ -1026,7 +1240,12 @@ function HEVHUD:ShouldUseLoadoutSelectionNumber()
 	7: zip ties
 	else, shows the keybind for the selected item (if a keybind exists)
 	--]]
-	return true
+	return not self.settings.SHOW_LOADOUT_KEYBINDS
+end
+
+function HEVHUD:ShouldPlayWeaponSwitchSounds()
+	return false
+--	return self.settings.PLAY_WEAPON_SWITCH_SOUNDS --disabled because it keeps randomly playing
 end
 
 function HEVHUD:TestIcon()
@@ -1136,16 +1355,20 @@ function HEVHUD:TestIcon()
 	local function get_deployable(slot)
 	local equipment = managers.player._equipment.selections[slot]
 		if equipment and equipment.amount then
+			local amount_string = ""
 			for i = 1, #equipment.amount do
-				local amount = Application:digest_value(equipment.amount[i], false)
-				if amount > 0 then
-					return equipment.equipment,amount
+				local amount = tostring(Application:digest_value(equipment.amount[i], false))
+				if i == 1 then 
+					amount_string = amount
+				else
+					amount_string = amount_string .. " | " .. amount
 				end
 			end
+			return equipment.equipment,amount_string
 		end
 	end
-	local primary_deployable,primary_deployable_amount = get_deployable(1)
-	local secondary_deployable,secondary_deployable_amount = get_deployable(2)
+	local primary_deployable,primary_deployable_amount_string = get_deployable(1)
+	local secondary_deployable,secondary_deployable_amount_string = get_deployable(2)
 	local selected_equipment = managers.player._equipment.selected_index
 	local primary_bind = "change_equipment"
 	local secondary_bind = "change_equipment"
@@ -1171,11 +1394,11 @@ function HEVHUD:TestIcon()
 	
 	local primary_deployable_icon,primary_deployable_name = get_deployable_icon(primary_deployable)
 	if primary_deployable then 
-		set_box_simple(5,primary_deployable_icon,nil,primary_deployable_amount,primary_deployable_name,0.75,primary_bind)
+		set_box_simple(5,primary_deployable_icon,nil,primary_deployable_amount_string,primary_deployable_name,0.75,primary_bind)
 	end
 	local secondary_deployable_icon,secondary_deployable_name = get_deployable_icon(secondary_deployable)
 	if secondary_deployable_icon then 
-		set_box_simple(6,secondary_deployable_icon,nil,secondary_deployable_amount,secondary_deployable_name,0.75,secondary_bind)
+		set_box_simple(6,secondary_deployable_icon,nil,secondary_deployable_amount_string,secondary_deployable_name,0.75,secondary_bind)
 	end
 	
 	local ties_texture,ties_rect = tweak_data.hud_icons:get_icon_data("equipment_cable_ties")
@@ -1267,11 +1490,6 @@ function HEVHUD:SetLoadoutPanelVisible(visible,instant,play_sound)
 	end
 	if play_sound then 
 		self:PlaySound("sfx","wpn_moveselect",false)
---		if visible then 
---			self:PlaySound("sfx","wpn_hudon",false)
---		else
---			self:PlaySound("sfx","wpn_hudoff",false)
---		end
 	end
 end
 
@@ -1442,12 +1660,12 @@ end
 
 function HEVHUD:ShouldShowHealthValue()
 	--determines if HUD should show the actual health value, or a percentage of total
-	return true
+	return self.settings.SHOW_REAL_VITALS
 end
 
 function HEVHUD:ShouldShowArmorValue()
 	--determines if HUD should show the actual armor value, or a percentage of total
-	return true
+	return self.settings.SHOW_REAL_VITALS
 end
 
 function HEVHUD:SetRevives(id,revives)
@@ -1992,14 +2210,19 @@ function HEVHUD:SetSelectedWeapon(selection)
 	local player = managers.player:local_player()
 	if player then 
 		selection = (selection and tonumber(selection)) or player:inventory():equipped_selection()
-
+		
 		if selection == 1 then
 			self._panel:child("primary"):hide()
 			self._panel:child("secondary"):show()
-			
+			if self:ShouldPlayWeaponSwitchSounds() then 
+				self:PlaySound("sfx","wpn_hudoff")
+			end
 		elseif selection == 2 then 
 			self._panel:child("primary"):show()
 			self._panel:child("secondary"):hide()
+			if self:ShouldPlayWeaponSwitchSounds() then 
+				self:PlaySound("sfx","wpn_hudoff")
+			end
 		end
 	end
 end
@@ -2148,10 +2371,7 @@ function HEVHUD.animate_scanlines(o,t,dt,start_t,alpha_table)
 		
 		if alive(scanline) then 
 			local j = math.floor((i + elapsed) % #alpha_table) + 1
-			if not alpha_table[j] then 
---				Log(j)
---				Log(#alpha_table,{color=Color.green})
---				logall(alpha_table)
+			if not alpha_table[j] then
 				return true
 			end
 			scanline:set_alpha(math.sin(180 * (j / #alpha_table) * alpha_table[j]))
@@ -2326,98 +2546,8 @@ function HEVHUD.animate_flicker_alpha(o,t,dt,start_t,duration)
 	end
 end
 
-function HEVHUD:SayTime()
-	self:PlaySound("suit","time_is_now")
-	local TWELVE_HOUR = true
-	--i don't plan to include an option to disable twelve-hour format because... see below comments
-	local c_h
-	if TWELVE_HOUR then 
-		c_h = os.date("%I")
-	else
-		c_h = os.date("%H")
-	end
-	local c_m = os.date("%M")
-	
-	local h_1 = string.sub(c_h,1,1) or ""
-	local h_2 = string.sub(c_h,2,2) or ""
-	if c_h == "00" then
-		--times with hour 00 (midnight, when not using twelve-hour will say "12" because the HEV suit has no voice line for "zero" or "oh" )
-		self:PlaySound("suit",self._suit_number_vox["12"])
-	elseif (h_2 == "0") or (h_1 == "1") then 
-		self:PlaySound("suit",self._suit_number_vox[c_h] or self._suit_number_vox[h_2])
-	else
-		self:PlaySound("suit",self._suit_number_vox[h_1 .. "0"])
-		self:PlaySound("suit",self._suit_number_vox[h_2])
-	end
-	local m_1 = string.sub(c_m,1,1) or ""
-	local m_2 = string.sub(c_m,2,2) or ""
-	
-	if m_1 ~= "0" then --times with minutes 00-09 are just not said, again because the HEV suit can't say "zero"		
-		if tonumber(c_m) < 20 then 
-			self:PlaySound("suit",self._suit_number_vox[tostring(c_m)])
-		else
-			self:PlaySound("suit",self._suit_number_vox[m_1 .. "0"])
-			self:PlaySound("suit",self._suit_number_vox[m_2])
-		end
-	end
-	if TWELVE_HOUR then 
-		self:PlaySound("suit",self._suit_number_vox[os.date("%p")])
-	end
-end
-
-function HEVHUD:PlaySound(source_name,sound_name,should_loop)
-	if not self._cache.sound_sources_setup then 
-		self:CreateSoundSources()
-	end
-
-	if not sound_name then 
-		return
-	end
-	sound_name = tostring(sound_name)
-	local audio_source = self._audio_sources[tostring(source_name)]
-	
-	local snd = self._audio_buffers[sound_name]
-	if type(snd) == "table" and snd.disabled then 
-		self:log("PlaySound(): sound [" .. sound_name .. "] not found",{color = Color.red})
-	elseif not snd then
-		local sound_data = self._sounds[sound_name]
-		if not sound_data then 
-			self:log("ERROR: Bad sound data for sound " .. tostring(sound_name))
-			return
-		end
-		if not sound_data.buffer then 
-			sound_data.buffer = XAudio.Buffer:new(sound_data.path .. sound_name .. self._AUDIO_FILE_FORMAT)
-		end
-		local buffer = sound_data.buffer
---		local buffer = XAudio.Buffer:new(self._sounds_path .. sound_name .. self._AUDIO_FILE_FORMAT)
-		--[[
-		if not buffer then 
-			self._audio_buffers[sound_name] = {
-				disabled = true
-			}
-		end
-		--]]
-		
-		self._audio_buffers[sound_name] = {
-			name = sound_name,
-			looping = should_loop,
-			buffer = buffer
-		}
-	end
-	if snd and audio_source then
-		if should_loop ~= nil then
---			self._audio_queue[source_name][#self._audio_queue[source_name] + 1] = {self._audio_buffers[sound_name].buffer, should_loop = should_loop}
-			table.insert(self._audio_queue[source_name],{name = sound_name,buffer = self._audio_buffers[sound_name].buffer, should_loop = should_loop})
-		else
---			self._audio_queue[source_name][#self._audio_queue[source_name] + 1] = self._audio_buffers[sound_name]
-			table.insert(self._audio_queue[source_name],self._audio_buffers[sound_name])
-		end
-	end
-end
-
 function HEVHUD:Update(t,dt)
 	--Audio sources
-	
 	self:UpdateHints(t,dt)
 	
 	self:UpdateAnimate(t,dt)
@@ -2426,17 +2556,7 @@ function HEVHUD:Update(t,dt)
 	if not player then 
 		return
 	end
-	for source_name,audio_queue in pairs(self._audio_queue) do 
-		local audio_source = self._audio_sources[source_name] and self._audio_sources[source_name]
-		if audio_source and not audio_source._closed and audio_source:get_state() ~= 1 then 
-			local snd_data = table.remove(audio_queue,1)
-			if snd_data and type(snd_data) == "table" then
-				audio_source:set_buffer(snd_data.buffer)
-				audio_source:set_looping(snd_data.should_loop)
-				audio_source:play()
-			end
-		end
-	end
+	self:UpdateSounds(t,dt)
 	
 	if player and self._cache.stamina_update_t > self.settings.STAMINA_UPDATE_INTERVAL then 
 		self._cache.stamina_update_t = self._cache.stamina_update_t - self.settings.STAMINA_UPDATE_INTERVAL
@@ -2551,8 +2671,6 @@ function HEVHUD.animate_text_color_ripple(o,t,dt,start_t,duration,start_color,en
 	duration = duration or 1
 	local progress = (t - start_t) / duration
 	
---	Console:SetTrackerValue("trackera",tostring(progress))
---	Console:SetTrackerValue("trackerb",tostring(t - start_t)) --elapsed
 	if progress >= 1 then
 		if end_alpha then 
 			o:set_alpha(end_alpha)
@@ -2663,7 +2781,7 @@ function HEVHUD:UpdateAnimate(t,dt)
 end
 
 
-Hooks:Add("BaseNetworkSessionOnLoadComplete","HEVHUD_OnLoadComplete",callback(HEVHUD,HEVHUD,"Setup"))
+--Hooks:Add("BaseNetworkSessionOnLoadComplete","HEVHUD_OnLoadComplete",callback(HEVHUD,HEVHUD,"Setup"))
 
 
 --[[
