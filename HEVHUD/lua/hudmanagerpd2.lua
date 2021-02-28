@@ -2,7 +2,7 @@ Hooks:PostHook(HUDManager,"_setup_player_info_hud_pd2","hevhud_hudmanager_create
 	local hm = managers.hud:script(PlayerBase.PLAYER_INFO_HUD_PD2)
 	local parent_panel = hm and hm.panel
 	if alive(parent_panel) then 
-		HEVHUD:CreateHUD(parent_panel)
+		HEVHUD:CreateHUD(parent_panel,HEVHUD:CheckFontResourcesReady(false,callback(HEVHUD,HEVHUD,"OnDelayedLoad")))
 	end
 	HEVHUD:Setup()
 end)

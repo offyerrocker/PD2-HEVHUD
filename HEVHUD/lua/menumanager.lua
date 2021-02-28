@@ -116,8 +116,7 @@ HEVHUD._suit_number_vox = HEVHUD._suit_number_vox or {
 HEVHUD._fonts = {
 	hl2_icons = "fonts/halflife2", 
 	hl2_text = "fonts/trebuchet",
-	hl2_vitals = "fonts/tahoma_bold", --ui numbers 
-	not_hl2 = "fonts/myriad" --yeah turns out myriad is not the ui font used in half-life 
+	hl2_vitals = "fonts/tahoma_bold" --ui numbers 
 }
 HEVHUD._animate_targets = {}
 HEVHUD._panel = HEVHUD._panel or nil --basically just for name reference for me, the dev
@@ -235,7 +234,8 @@ HEVHUD._cache = { --slight misnomer but basically intended as an unorganized buc
 		[2] = nil
 	},
 	objectives = {},
-	stamina_update_t = 0
+	stamina_update_t = 0,
+	loading_assets = {}
 }
 
 HEVHUD._SETUP_COMPLETE = false
@@ -391,11 +391,56 @@ function HEVHUD:log(...)
 	end
 end
 
-function HEVHUD:CreateHUD(parent_hud)
+function HEVHUD:OnDelayedLoad()
+	--todo resize the affected hud components
+end
+
+function HEVHUD:CheckFontResourcesReady(skip_load,load_complete_clbk)
+	do return end
+	local font_ids = Idstring("font")
+	local dyn_pkg = DynamicResourceManager.DYN_RESOURCES_PACKAGE
+	
+	
+	local function register_loading(ids)
+		if not table.contains(self._cache.loading_assets) then 
+			table.insert(self._cache.loading_assets,ids)
+		end
+	end
+	local function done_loading_cb(is_done,resource_type,resource_name)
+		if is_done then 
+			for i,j in ipairs(self._cache.loading_assets) do 
+				if j == resource_name then 
+					table.remove(self._cache.loading_assets,i)
+					break
+				end
+			end
+			if complete_clbk and #self._cache.loading_assets == 0 then 
+				complete_clbk()
+				complete_clbk = nil
+			end
+		end
+	end
+	
+	local font_resources_ready = true
+	for font_id,font_path in pairs(self._fonts) do 
+		if managers.dyn_resource:is_resource_ready(font_ids,Idstring(font_path),dyn_pkg) then 
+			if not skip_load then 
+				register_loading(font_path)
+				managers.dyn_resource:load(font_ids, Idstring(font_path), DynamicResourceManager.DYN_RESOURCES_PACKAGE, done_loading_cb)
+			end
+			self:log("Font " .. tostring(font_id) .. " is not ready!" .. (skip_load and " Skipped loading." or " Queued manual load and delaying HUD creation."))
+			font_resources_ready = false
+		end
+	end
+	return font_resources_ready
+end
+
+function HEVHUD:CreateHUD(parent_hud,assets_loaded)
 	self._ws = managers.hud._workspace --managers.gui_data:create_fullscreen_workspace()
 	if not parent_hud then 
 		return
 	end
+	
 	
 --		local teammate_panels = managers.hud._teammate_panels
 --		if not (teammate_panels and teammate_panels[managers.hud.PLAYER_PANEL]) then 
@@ -968,7 +1013,13 @@ function HEVHUD:CreateHUD(parent_hud)
 			alpha = 2/3,
 			layer = 2
 		})
-		local ammo_name_x,ammo_name_y,ammo_name_w,ammo_name_h = ammo_name:text_rect()
+		local ammo_name_x,ammo_name_y,ammo_name_w,ammo_name_h = 0,0,32,0
+		
+		if assets_loaded then  --temp
+			ammo_name_x,ammo_name_y,ammo_name_w,ammo_name_h = ammo_name:text_rect()
+		end
+
+
 		local ammo_icon = ammo:text({
 			name = "ammo_icon",
 			text = "",
@@ -1014,8 +1065,8 @@ function HEVHUD:CreateHUD(parent_hud)
 			y = (self.settings.WEAPON_FIREMODE_Y_OFFSET + ammo:h() - self.settings.WEAPON_FIREMODE_H) / 2, 
 --			w = self.settings.WEAPON_FIREMODE_W,
 --			h = self.settings.WEAPON_FIREMODE_H,
-w = 0,
-h = 0,
+			w = 0,
+			h = 0,
 			alpha = 2/3,
 			layer = 2
 		})
@@ -1709,6 +1760,9 @@ function HEVHUD:ShouldUseOriginalHUDPresenter()
 end
 
 function HEVHUD:ShowHint(params)
+	if not alive(self._panel) then 
+		return
+	end
 	if type(params) ~= "table" then return end
 	local text = params.text
 	if text and self.settings.USE_ALLCAPS_HINT_TEXT then 
@@ -1738,7 +1792,13 @@ function HEVHUD:ShowHint(params)
 	})
 	
 	local HINT_MARGIN = 12
-	local tx,ty,tw,th = sample_sizer:text_rect()
+	
+	local tx,ty,tw,th = 0,0,0,0
+	if #self._cache.loading_assets == 0 then  --temp
+		tx,ty,tw,th = sample_sizer:text_rect()
+	end
+	
+	
 	new_hint:set_size(tw + HINT_MARGIN,th + HINT_MARGIN)
 	new_hint:set_y(self.settings.HINT_FOCUS_Y + (2 * new_hint:h()))
 	
@@ -1848,7 +1908,11 @@ function HEVHUD:ShowCarry(carry_id,value)
 		visible = false
 	})
 	--todo value
-	local tx,ty,tw,th = sample_sizer:text_rect()
+	
+	local tx,ty,tw,th = 0,0,0,0
+	if #self._cache.loading_assets == 0 then  --temp
+		tx,ty,tw,th = sample_sizer:text_rect()
+	end
 	self._panel:remove(sample_sizer)
 	
 	local bag_w = tw + text_margin
@@ -2406,7 +2470,10 @@ function HEVHUD:AddObjective(data)
 				visible = true
 			})
 			
-			local tx,ty,tw,th = objective.objective_text:text_rect()
+			local tx,ty,tw,th = 0,0,0,0
+			if #self._cache.loading_assets == 0 then  --temp
+				tx,ty,tw,th = objective.objective_text:text_rect()
+			end
 			
 			self._panel:child("objectives"):child("objectives_bg"):set_size(tw + tmargin,th + tmargin)
 			
@@ -2487,7 +2554,10 @@ function HEVHUD:ShowPopup(id,text,timer)
 		font_size = self.settings.POPUP_FONT_SIZE,
 		visible = false
 	})
-	local tx,ty,tw,th = sizer:text_rect()
+	local tx,ty,tw,th = 0,0,0,0
+	if #self._cache.loading_assets == 0 then  --temp
+		tx,ty,tw,th = sizer:text_rect()
+	end
 	popup:remove(sizer)
 	local margin = 4
 	popup:set_size(tw + margin,th + margin)
@@ -2621,6 +2691,9 @@ function HEVHUD.animate_flicker_alpha(o,t,dt,start_t,duration)
 end
 
 function HEVHUD:Update(t,dt)
+	if not alive(self._panel) then 
+		return
+	end
 	--Audio sources
 	self:UpdateHints(t,dt)
 	
