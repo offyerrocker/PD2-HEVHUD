@@ -393,6 +393,7 @@ end
 
 function HEVHUD:OnDelayedLoad()
 	--todo resize the affected hud components
+	--todo reapply the font for affected resources
 end
 
 function HEVHUD:CheckFontResourcesReady(skip_load,load_complete_clbk)
@@ -1148,10 +1149,15 @@ function HEVHUD:RegisterSounds()
 	self:ClearAudioQueue() --also functions to create the audio queue tables
 	
 	local path_util = BeardLib.Utils.Path
+	if not (FileIO and path_util) then 
+		self:log("ERROR: Failed to register sounds! path_util and FileIO are not present.") 
+		return
+	end
 	
-	for _,subfolder in pairs(SystemFS:list(self._sounds_path,true)) do 
+	
+	for _,subfolder in pairs(FileIO:GetFolders(self._sounds_path,true)) do 
 		local path = path_util:Combine(self._sounds_path,subfolder)
-		for _,_snd in pairs(SystemFS:list(path,false)) do 
+		for _,_snd in pairs(FileIO:GetFiles(path,false)) do 
 			local snd = _snd
 			local extension = path_util:GetFileExtension(path .. snd)
 			if table.contains(self._AUDIO_FILE_FORMATS,extension) then --is valid file extension
