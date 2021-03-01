@@ -48,6 +48,8 @@ HEVHUD._localization_path = HEVHUD._localization_path or (HEVHUD._path .. "local
 HEVHUD._assets_path = HEVHUD._assets_path or (HEVHUD._path .. "assets/")
 HEVHUD._sounds_path = HEVHUD._sounds_path or (HEVHUD._assets_path .. "snd/")
 
+HEVHUD.ALLOW_TEXT_RECT = false --temp while i figure out crashing issues with text_rect() on linux
+
 HEVHUD._AUDIO_FILE_FORMATS = {
 	"ogg" --whitelist for valid formats; currently only ogg is supported 
 }
@@ -1016,7 +1018,7 @@ function HEVHUD:CreateHUD(parent_hud,assets_loaded)
 		})
 		local ammo_name_x,ammo_name_y,ammo_name_w,ammo_name_h = 0,0,32,0
 		
-		if assets_loaded then  --temp
+		if assets_loaded and self.ALLOW_TEXT_RECT then  --temp
 			ammo_name_x,ammo_name_y,ammo_name_w,ammo_name_h = ammo_name:text_rect()
 		end
 
@@ -1027,7 +1029,6 @@ function HEVHUD:CreateHUD(parent_hud,assets_loaded)
 --			x = 8,
 			y = 0,
 			x = ammo_name:x() + ((ammo_name_w - ammo_icon_size) / 1),
---			y = ammo_name_y + ammo_name_h,
 			font = self._fonts.hl2_icons,
 			font_size = ammo_icon_size,
 			color = self.color_data.hl2_yellow,
@@ -1799,8 +1800,8 @@ function HEVHUD:ShowHint(params)
 	
 	local HINT_MARGIN = 12
 	
-	local tx,ty,tw,th = 0,0,0,0
-	if #self._cache.loading_assets == 0 then  --temp
+	local tx,ty,tw,th = 0,0,200,self.settings.HINT_FONT_SIZE * 2
+	if self.ALLOW_TEXT_RECT and #self._cache.loading_assets == 0 then  --temp
 		tx,ty,tw,th = sample_sizer:text_rect()
 	end
 	
@@ -1916,7 +1917,7 @@ function HEVHUD:ShowCarry(carry_id,value)
 	--todo value
 	
 	local tx,ty,tw,th = 0,0,0,0
-	if #self._cache.loading_assets == 0 then  --temp
+	if self.ALLOW_TEXT_RECT and #self._cache.loading_assets == 0 then  --temp
 		tx,ty,tw,th = sample_sizer:text_rect()
 	end
 	self._panel:remove(sample_sizer)
@@ -2477,7 +2478,7 @@ function HEVHUD:AddObjective(data)
 			})
 			
 			local tx,ty,tw,th = 0,0,0,0
-			if #self._cache.loading_assets == 0 then  --temp
+			if self.ALLOW_TEXT_RECT and #self._cache.loading_assets == 0 then  --temp
 				tx,ty,tw,th = objective.objective_text:text_rect()
 			end
 			
@@ -2561,7 +2562,7 @@ function HEVHUD:ShowPopup(id,text,timer)
 		visible = false
 	})
 	local tx,ty,tw,th = 0,0,0,0
-	if #self._cache.loading_assets == 0 then  --temp
+	if self.ALLOW_TEXT_RECT and #self._cache.loading_assets == 0 then  --temp
 		tx,ty,tw,th = sizer:text_rect()
 	end
 	popup:remove(sizer)
