@@ -48,8 +48,6 @@ HEVHUD._localization_path = HEVHUD._localization_path or (HEVHUD._path .. "local
 HEVHUD._assets_path = HEVHUD._assets_path or (HEVHUD._path .. "assets/")
 HEVHUD._sounds_path = HEVHUD._sounds_path or (HEVHUD._assets_path .. "snd/")
 
-HEVHUD.ALLOW_TEXT_RECT = false --temp while i figure out crashing issues with text_rect() on linux
-
 HEVHUD._AUDIO_FILE_FORMATS = {
 	"ogg" --whitelist for valid formats; currently only ogg is supported 
 }
@@ -236,8 +234,7 @@ HEVHUD._cache = { --slight misnomer but basically intended as an unorganized buc
 		[2] = nil
 	},
 	objectives = {},
-	stamina_update_t = 0,
-	loading_assets = {}
+	stamina_update_t = 0
 }
 
 HEVHUD._SETUP_COMPLETE = false
@@ -385,9 +382,9 @@ for k,v in pairs(HEVHUD.default_settings) do
 	end
 end
 
-function HEVHUD:log(...)
+function HEVHUD:log(a,...)
 	if Console then 
-		Console:Log(...)
+		Console:Log("HEVHUD: " .. tostring(a),...)
 	else
 		log(...)
 	end
@@ -398,41 +395,61 @@ function HEVHUD:OnDelayedLoad()
 	--todo reapply the font for affected resources
 end
 
-function HEVHUD:CheckFontResourcesReady(skip_load,load_complete_clbk)
-	do return end
+--Registers assets into the game's db so that they can be loaded later 
+function HEVHUD:CheckFontResourcesAdded(skip_load)
+
 	local font_ids = Idstring("font")
-	local dyn_pkg = DynamicResourceManager.DYN_RESOURCES_PACKAGE
+	local texture_ids = Idstring("texture")
 	
-	
-	local function register_loading(ids)
-		if not table.contains(self._cache.loading_assets) then 
-			table.insert(self._cache.loading_assets,ids)
+	for font_id,font_path in pairs(self._fonts) do 
+		if DB:has(font_ids, font_path) then 
+			self:log("Font " .. font_id .. " at path " .. font_path .. " is verified.")
+		else
+			--assume that if the .font is not loaded, then the .texture is not either (both are needed anyway)
+			self:log("Font " .. font_id .. " at path " .. font_path .. " is not created!")
+			if not skip_load then 
+				DB:create_entry(font_ids,Idstring(font_path),self._assets_path .. font_path .. ".font")
+				DB:create_entry(texture_ids,Idstring(font_path),self._assets_path .. font_path .. ".texture")
+			end
 		end
 	end
-	local function done_loading_cb(is_done,resource_type,resource_name)
-		if is_done then 
-			for i,j in ipairs(self._cache.loading_assets) do 
-				if j == resource_name then 
-					table.remove(self._cache.loading_assets,i)
-					break
-				end
-			end
-			if complete_clbk and #self._cache.loading_assets == 0 then 
-				complete_clbk()
-				complete_clbk = nil
+	
+end
+
+--Loads assets into memory so that they can be used in-game
+function HEVHUD:CheckFontResourcesReady(skip_load,done_loading_cb)
+	self:log("HEVHUD Checking font assets...")
+	local font_ids = Idstring("font")
+	local texture_ids = Idstring("texture")
+	
+	local dyn_pkg = DynamicResourceManager.DYN_RESOURCES_PACKAGE
+
+	if done_loading_cb and done_loading_cb ~= false then 
+	
+		done_loading_cb = function(done,resource_type_ids,resource_ids)
+			if done then 
+				self:log("Completed manual asset loading for " .. tostring(resource_ids))
 			end
 		end
+		
 	end
 	
 	local font_resources_ready = true
 	for font_id,font_path in pairs(self._fonts) do 
-		if managers.dyn_resource:is_resource_ready(font_ids,Idstring(font_path),dyn_pkg) then 
+		if not managers.dyn_resource:is_resource_ready(font_ids,Idstring(font_path),dyn_pkg) then 
 			if not skip_load then 
-				register_loading(font_path)
+				--register_loading(font_path)
+
+				self:log("Creating DB entry for " .. tostring(font_ids) .. ", " .. tostring(font_path) .. ", " .. tostring(self._assets_path .. font_path .. ".font"))
+				
 				managers.dyn_resource:load(font_ids, Idstring(font_path), DynamicResourceManager.DYN_RESOURCES_PACKAGE, done_loading_cb)
+				managers.dyn_resource:load(texture_ids, Idstring(font_path), DynamicResourceManager.DYN_RESOURCES_PACKAGE, done_loading_cb)
+				
 			end
-			self:log("Font " .. tostring(font_id) .. " is not ready!" .. (skip_load and " Skipped loading." or " Queued manual load and delaying HUD creation."))
+			self:log("Font " .. tostring(font_id) .. " is not ready!" .. (skip_load and " Skipped loading for " or " Started manual load for ") .. font_path)
 			font_resources_ready = false
+		else
+			self:log("Font asset " .. font_id .. " at path " .. font_path .. " is ready.")
 		end
 	end
 	return font_resources_ready
@@ -1018,7 +1035,7 @@ function HEVHUD:CreateHUD(parent_hud,assets_loaded)
 		})
 		local ammo_name_x,ammo_name_y,ammo_name_w,ammo_name_h = 0,0,32,0
 		
-		if assets_loaded and self.ALLOW_TEXT_RECT then  --temp
+		if assets_loaded then  --temp
 			ammo_name_x,ammo_name_y,ammo_name_w,ammo_name_h = ammo_name:text_rect()
 		end
 
@@ -1037,7 +1054,7 @@ function HEVHUD:CreateHUD(parent_hud,assets_loaded)
 		})
 		local magazine = ammo:text({
 			name = "magazine",
-			text = "18",
+			text = "0",
 			align = "center",
 			y = label_ver_offset + ammo:h() - magazine_font_size,
 			font = self._fonts.hl2_icons,
@@ -1049,7 +1066,7 @@ function HEVHUD:CreateHUD(parent_hud,assets_loaded)
 		
 		local reserve = ammo:text({
 			name = "reserve",
-			text = "60",
+			text = "0",
 			align = "right",
 			x = -reserve_font_size,
 			y = label_ver_offset + ammo:h() - reserve_font_size,
@@ -1800,10 +1817,7 @@ function HEVHUD:ShowHint(params)
 	
 	local HINT_MARGIN = 12
 	
-	local tx,ty,tw,th = 0,0,200,self.settings.HINT_FONT_SIZE * 2
-	if self.ALLOW_TEXT_RECT and #self._cache.loading_assets == 0 then  --temp
-		tx,ty,tw,th = sample_sizer:text_rect()
-	end
+	local tx,ty,tw,th = sample_sizer:text_rect()
 	
 	
 	new_hint:set_size(tw + HINT_MARGIN,th + HINT_MARGIN)
@@ -1916,10 +1930,8 @@ function HEVHUD:ShowCarry(carry_id,value)
 	})
 	--todo value
 	
-	local tx,ty,tw,th = 0,0,0,0
-	if self.ALLOW_TEXT_RECT and #self._cache.loading_assets == 0 then  --temp
-		tx,ty,tw,th = sample_sizer:text_rect()
-	end
+	local tx,ty,tw,th = sample_sizer:text_rect()
+	
 	self._panel:remove(sample_sizer)
 	
 	local bag_w = tw + text_margin
@@ -2477,10 +2489,7 @@ function HEVHUD:AddObjective(data)
 				visible = true
 			})
 			
-			local tx,ty,tw,th = 0,0,0,0
-			if self.ALLOW_TEXT_RECT and #self._cache.loading_assets == 0 then  --temp
-				tx,ty,tw,th = objective.objective_text:text_rect()
-			end
+			local tx,ty,tw,th = objective.objective_text:text_rect()
 			
 			self._panel:child("objectives"):child("objectives_bg"):set_size(tw + tmargin,th + tmargin)
 			
@@ -2561,10 +2570,8 @@ function HEVHUD:ShowPopup(id,text,timer)
 		font_size = self.settings.POPUP_FONT_SIZE,
 		visible = false
 	})
-	local tx,ty,tw,th = 0,0,0,0
-	if self.ALLOW_TEXT_RECT and #self._cache.loading_assets == 0 then  --temp
-		tx,ty,tw,th = sizer:text_rect()
-	end
+	local tx,ty,tw,th = sizer:text_rect()
+	
 	popup:remove(sizer)
 	local margin = 4
 	popup:set_size(tw + margin,th + margin)
@@ -2937,6 +2944,9 @@ end
 
 --Hooks:Add("BaseNetworkSessionOnLoadComplete","HEVHUD_OnLoadComplete",callback(HEVHUD,HEVHUD,"Setup"))
 
+Hooks:Add( "MenuManagerInitialize", "hevhud_MenuManagerInitialize", function(menu_manager)
+	HEVHUD:CheckFontResourcesReady(false)
+end)
 
 --[[
 Hooks:Add("LocalizationManagerPostInit", "hevhud_addlocalization", function( loc )
@@ -2946,3 +2956,5 @@ Hooks:Add("LocalizationManagerPostInit", "hevhud_addlocalization", function( loc
 end)
 --]]
 
+HEVHUD:CheckFontResourcesAdded(false)
+HEVHUD:log("Current OS: " .. tostring(jit.os))
