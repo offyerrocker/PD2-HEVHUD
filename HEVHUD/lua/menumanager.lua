@@ -397,7 +397,6 @@ end
 
 --Registers assets into the game's db so that they can be loaded later 
 function HEVHUD:CheckFontResourcesAdded(skip_load)
-
 	local font_ids = Idstring("font")
 	local texture_ids = Idstring("texture")
 	
@@ -408,7 +407,11 @@ function HEVHUD:CheckFontResourcesAdded(skip_load)
 			--assume that if the .font is not loaded, then the .texture is not either (both are needed anyway)
 			self:log("Font " .. font_id .. " at path " .. font_path .. " is not created!")
 			if not skip_load then 
-				DB:create_entry(font_ids,Idstring(font_path),self._assets_path .. font_path .. ".font")
+				if blt.db_create_entry then 
+					blt:db_create_entry(font_ids, Idstring(font_path), self._assets_path .. font_path .. ".font", { recode_type="font" } )
+				else
+					DB:create_entry(font_ids,Idstring(font_path),self._assets_path .. font_path .. ".font")
+				end
 				DB:create_entry(texture_ids,Idstring(font_path),self._assets_path .. font_path .. ".texture")
 			end
 		end
@@ -2946,6 +2949,7 @@ end
 
 Hooks:Add( "MenuManagerInitialize", "hevhud_MenuManagerInitialize", function(menu_manager)
 	HEVHUD:CheckFontResourcesReady(false)
+	HEVHUD:log("Current OS: " .. tostring(jit.os))
 end)
 
 --[[
@@ -2957,4 +2961,3 @@ end)
 --]]
 
 HEVHUD:CheckFontResourcesAdded(false)
-HEVHUD:log("Current OS: " .. tostring(jit.os))
