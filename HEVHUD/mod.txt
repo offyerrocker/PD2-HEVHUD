@@ -3,7 +3,7 @@
 	"description" : "Adds a HUD styled after Half-Life 2 (2004).\nIncludes audio assets from Half-Life 1.",
 	"author" : "Offyerrocker",
 	"contact" : "Discord: Offyerrocker#3878",
-	"version" : "0.5",
+	"version" : "0.51",
 	"blt_version" : 2,
 	"image" : "icon.png",
 	"priority" : 1,

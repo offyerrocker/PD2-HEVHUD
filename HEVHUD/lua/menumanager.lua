@@ -2147,10 +2147,11 @@ function HEVHUD:GetUnderbarrelInSlot(slot,underbarrel_slot)
 	
 	slot = tonumber(slot)
 	local player = managers.player:local_player()
-	if not (slot and player) then return end
-	local equipped_in_slot = player:inventory():unit_by_selection(slot)
+	local inventory = player and player:inventory()
+	if not (slot and inventory) then return end
+	local equipped_in_slot = inventory:unit_by_selection(slot)
 	if not equipped_in_slot then return end	
-	local weapon_id = equipped_in_slot:get_name_id()
+--	local weapon_id = equipped_in_slot:get_name_id()
 	if self._cache.underbarrel[slot] == nil then 
 		local underbarrel_weapons = equipped_in_slot:base():get_all_override_weapon_gadgets()
 		if #underbarrel_weapons > 0 then 
@@ -2284,10 +2285,10 @@ function HEVHUD:SetWeaponMagazine(slot_name,mag_current,mag_max)
 	end
 	
 	local player = managers.player:local_player()
+	local inventory = player and player:inventory()
 	local underbarrel = self:GetUnderbarrelInSlot(slot)
 	if underbarrel and player then 
 		--set underbarrel count if current weapon has an underbarrel
-		
 --		if slot == player:inventory():equipped_selection() then
 --		end
 		local ammo_max = underbarrel._ammo:get_ammo_max_per_clip()
@@ -2327,7 +2328,7 @@ function HEVHUD:SetWeaponMagazine(slot_name,mag_current,mag_max)
 	Hooks:Call("HEVHUD_Crosshair_Listener","weapon",{
 		variant = "magazine",
 		slot_name = slot_name,
-		is_equipped = slot == player:inventory():equipped_selection(),
+		is_equipped = slot == inventory and inventory:equipped_selection(),
 		value = ammo_ratio,
 		color = color
 	})
