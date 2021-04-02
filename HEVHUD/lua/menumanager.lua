@@ -407,12 +407,17 @@ function HEVHUD:CheckFontResourcesAdded(skip_load)
 			--assume that if the .font is not loaded, then the .texture is not either (both are needed anyway)
 			self:log("Font " .. font_id .. " at path " .. font_path .. " is not created!")
 			if not skip_load then 
-				if blt.db_create_entry then 
-					blt:db_create_entry(font_ids, Idstring(font_path), self._assets_path .. font_path .. ".font", { recode_type="font" } )
-				else
-					DB:create_entry(font_ids,Idstring(font_path),self._assets_path .. font_path .. ".font")
-				end
-				DB:create_entry(texture_ids,Idstring(font_path),self._assets_path .. font_path .. ".texture")
+				local full_asset_path = self._assets_path .. font_path
+				BLT.AssetManager:CreateEntry(Idstring(font_path),font_ids,full_asset_path .. ".font")
+				BLT.AssetManager:CreateEntry(Idstring(font_path),texture_ids,full_asset_path .. ".texture")
+				
+				
+--				if blt.db_create_entry then 
+--					blt:db_create_entry(font_ids, Idstring(font_path), self._assets_path .. font_path .. ".font", { recode_type="font" } )
+--				else
+--					DB:create_entry(font_ids,Idstring(font_path),self._assets_path .. font_path .. ".font")
+--				end
+--				DB:create_entry(texture_ids,Idstring(font_path),self._assets_path .. font_path .. ".texture")
 			end
 		end
 	end
@@ -2207,28 +2212,33 @@ function HEVHUD:SetWeaponReserve(slot_name,current_reserve,max_reserve)
 	end
 	
 	local player = managers.player:local_player()
+	local inventory = player:inventory()
+	local equipped_unit = inventory and inventory:equipped_unit()
 	local underbarrel = self:GetUnderbarrelInSlot(slot)
-	if underbarrel and player then 
-		if slot == player:inventory():equipped_selection() then			
-			self:SetUnderbarrel(slot_name,underbarrel._ammo:get_ammo_total())
-			local weapon_category = self:GetHLGunAmmoIcon(player:inventory():equipped_unit():base():categories())
-			
-			--set underbarrel count if current weapon has an underbarrel
-			if not underbarrel._on and weapon_category then 
+	if equipped_unit then 
+		local categories = equipped_unit:base():categories()
+		if underbarrel then 
+			if slot == inventory:equipped_selection() then			
+				self:SetUnderbarrel(slot_name,underbarrel._ammo:get_ammo_total())
+				local weapon_category = self:GetHLGunAmmoIcon(categories)
+				
+				--set underbarrel count if current weapon has an underbarrel
+				if not underbarrel._on and weapon_category then 
+					self:SetAmmoIcon(slot_name,self._font_icons[weapon_category])
+				end
+			end
+			if underbarrel._on then 
+				--if underbarrel is active then don't overwrite the normal reserve ammo counter with underbarrel values
+				return
+			end
+		elseif not underbarrel then 
+			self:SetUnderbarrel(slot_name,false)
+			local weapon_category = self:GetHLGunAmmoIcon(categories)
+			if weapon_category then 
 				self:SetAmmoIcon(slot_name,self._font_icons[weapon_category])
 			end
+			--hide underbarrel panel if none exists
 		end
-		if underbarrel._on then 
-			--if underbarrel is active then don't overwrite the normal reserve ammo counter with underbarrel values
-			return
-		end
-	elseif not underbarrel then 
-		self:SetUnderbarrel(slot_name,false)
-		local weapon_category = self:GetHLGunAmmoIcon(player:inventory():equipped_unit():base():categories())
-		if weapon_category then 
-			self:SetAmmoIcon(slot_name,self._font_icons[weapon_category])
-		end
-		--hide underbarrel panel if none exists
 	end
 	
 
@@ -2917,6 +2927,7 @@ end
 
 function HEVHUD:animate_stop(name,do_cb)
 	local item = self._animate_targets[tostring(name)]
+	self._animate_targets[tostring(name)] = nil
 	if item and do_cb and (type(item.done_cb) == "function") then 
 		return item.done_cb(item.target,unpack(item.params))
 	end
