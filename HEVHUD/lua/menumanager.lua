@@ -1352,13 +1352,14 @@ function HEVHUD:ShouldPlayWeaponSwitchSounds()
 --	return self.settings.PLAY_WEAPON_SWITCH_SOUNDS --disabled because it keeps randomly playing
 end
 
-function HEVHUD:TestIcon()
+function HEVHUD:TestIcon() --for testing the loadout panel only; shouldn't be used, if possible
 	local player = managers.player and managers.player:local_player()
 	if not alive(player) then 
 		return
 	end
-	local primary = player:inventory():unit_by_selection(2)
-	local secondary = player:inventory():unit_by_selection(1)
+	local inventory = player and player:inventory()
+	local primary = inventory:unit_by_selection(2)
+	local secondary = inventory:unit_by_selection(1)
 	self:SetLoadoutWeaponIcon(1,primary:base())
 	self:SetLoadoutWeaponIcon(2,secondary:base())
 	
@@ -2140,6 +2141,12 @@ function HEVHUD:GetHLGunAmmoIcon(categories,weapon_id,fallback)
 	return fallback
 end
 
+
+--if the player and inventory are loaded/exist:
+--	checks for an underbarrel weapon on the units
+--	indexes the weapon underbarrel data by the weapon unit key in the cache with the underbarrel data if present,
+--	or false if the underbarrel does not exist
+--if the player/inventory does not exist, does nothing (so that the underbarrel state can be checked again when they are loaded)
 function HEVHUD:GetUnderbarrelInSlot(slot,underbarrel_slot)
 	
 	--there is currently no precedent for multiple underbarrel gadgets on a single weapon... yet
@@ -2213,13 +2220,16 @@ function HEVHUD:SetWeaponReserve(slot_name,current_reserve,max_reserve)
 	end
 	
 	local player = managers.player:local_player()
-	local inventory = player:inventory()
+	local inventory = player and player:inventory()
 	local equipped_unit = inventory and inventory:equipped_unit()
+	local equipped_selection = inventory and inventory:equipped_selection()
 	local underbarrel = self:GetUnderbarrelInSlot(slot)
+	local is_equipped = slot == equipped_selection --if the weapon is the one selected and in your hands
+	
 	if equipped_unit then 
 		local categories = equipped_unit:base():categories()
 		if underbarrel then 
-			if slot == inventory:equipped_selection() then			
+			if is_equipped then			
 				self:SetUnderbarrel(slot_name,underbarrel._ammo:get_ammo_total())
 				local weapon_category = self:GetHLGunAmmoIcon(categories)
 				
@@ -2232,7 +2242,7 @@ function HEVHUD:SetWeaponReserve(slot_name,current_reserve,max_reserve)
 				--if underbarrel is active then don't overwrite the normal reserve ammo counter with underbarrel values
 				return
 			end
-		elseif not underbarrel then 
+		else
 			self:SetUnderbarrel(slot_name,false)
 			local weapon_category = self:GetHLGunAmmoIcon(categories)
 			if weapon_category then 
@@ -2243,9 +2253,7 @@ function HEVHUD:SetWeaponReserve(slot_name,current_reserve,max_reserve)
 	end
 	
 
-	
 	self:SetWeaponPanelState(slot_name,true)
-	
 	
 	
 	local ammo_ratio = 1
@@ -2262,9 +2270,10 @@ function HEVHUD:SetWeaponReserve(slot_name,current_reserve,max_reserve)
 	end
 	
 	Hooks:Call("HEVHUD_Crosshair_Listener","weapon",{
+		source = "weapon",
 		variant = "reserve",
 		slot_name = slot_name,
-		is_equipped = slot == player:inventory():equipped_selection(),
+		is_equipped = is_equipped,
 		value = ammo_ratio,
 		color = color
 	})
@@ -2287,28 +2296,34 @@ function HEVHUD:SetWeaponMagazine(slot_name,mag_current,mag_max)
 	local player = managers.player:local_player()
 	local inventory = player and player:inventory()
 	local underbarrel = self:GetUnderbarrelInSlot(slot)
-	if underbarrel and player then 
-		--set underbarrel count if current weapon has an underbarrel
---		if slot == player:inventory():equipped_selection() then
---		end
-		local ammo_max = underbarrel._ammo:get_ammo_max_per_clip()
-		local underbarrel_ammo_ratio = 1
-		
-		if ammo_max > 0 then 
-			underbarrel_ammo_ratio = underbarrel._ammo:get_ammo_remaining_in_clip() / ammo_max
-		end
+	local equipped_selection = inventory and inventory:equipped_selection()
+	
+	local is_equipped = equipped_selection == slot
+	
+	if player then 
+		if underbarrel then 
+			--set underbarrel count if current weapon has an underbarrel
+	--		if slot == equipped_selection then
+	--		end
+			local ammo_max = underbarrel._ammo:get_ammo_max_per_clip()
+			local underbarrel_ammo_ratio = 1
+			
+			if ammo_max > 0 then 
+				underbarrel_ammo_ratio = underbarrel._ammo:get_ammo_remaining_in_clip() / ammo_max
+			end
 
-		self:SetUnderbarrelPanelState(slot_name,underbarrel._on,underbarrel_ammo_ratio)
-		if underbarrel._on then 
-			self:SetWeaponPanelState(slot_name,false)
-			--if underbarrel is active then don't overwrite the normal magazine ammo counter with underbarrel values
-			return
-		else
-			self:SetUnderbarrelPanelState(slot_name,false)
+			self:SetUnderbarrelPanelState(slot_name,underbarrel._on,underbarrel_ammo_ratio)
+			if underbarrel._on then 
+				self:SetWeaponPanelState(slot_name,false)
+				--if underbarrel is active then don't overwrite the normal magazine ammo counter with underbarrel values
+				return
+			else
+				self:SetUnderbarrelPanelState(slot_name,false)
+			end
+		else 
+			--hide underbarrel panel if none exists
+			self:SetUnderbarrel(slot_name,false)
 		end
-	elseif not underbarrel then 
-		--hide underbarrel panel if none exists
-		self:SetUnderbarrel(slot_name,false)
 	end
 	
 	
@@ -2326,9 +2341,10 @@ function HEVHUD:SetWeaponMagazine(slot_name,mag_current,mag_max)
 	end	
 	
 	Hooks:Call("HEVHUD_Crosshair_Listener","weapon",{
+		source = "weapon",
 		variant = "magazine",
 		slot_name = slot_name,
-		is_equipped = slot == inventory and inventory:equipped_selection(),
+		is_equipped = is_equipped,
 		value = ammo_ratio,
 		color = color
 	})
@@ -2378,8 +2394,9 @@ end
 
 function HEVHUD:SetSelectedWeapon(selection)
 	local player = managers.player:local_player()
-	if player then 
-		selection = (selection and tonumber(selection)) or player:inventory():equipped_selection()
+	local inventory = player and player:inventory()
+	if player and inventory then 
+		selection = (selection and tonumber(selection)) or inventory:equipped_selection()
 		
 		if selection == 1 then
 			self._panel:child("primary"):hide()
@@ -2405,7 +2422,7 @@ function HEVHUD:SetRightCrosshair(value,color)
 	local INDICATOR_SIZE = self.settings.CROSSHAIR_INDICATOR_SIZE
 	if value then 
 		crosshair:set_texture_rect(0,IMAGE_SIZE * (1 - value),IMAGE_SIZE,IMAGE_SIZE * (value))
-		crosshair:set_h(self.settings.CROSSHAIR_INDICATOR_SIZE * (value))
+		crosshair:set_h(INDICATOR_SIZE * (value))
 		crosshair:set_y(((crosshair_master:h() - INDICATOR_SIZE) / 2) + ((1 - value) * INDICATOR_SIZE))
 	end
 	if color then 
