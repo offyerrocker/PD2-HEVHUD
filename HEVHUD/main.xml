@@ -1,5 +1,5 @@
 <mod name="Half-Life 2 HUD" author="Offyerrocker" global_key="HEVHUD" color="Color(0.6,0.9,1)" core_class="hevhud_core.lua">
-	<AssetUpdates id="27954" version="0.51" provider="modworkshop" install_directory = "mods/" version_is_number="false"/>
+	<AssetUpdates id="27954" version="0.52" provider="modworkshop" install_directory = "mods/" version_is_number="false"/>
 	<AddFiles directory="assets">
 	
 <!-- .font loading must be done differently on Linux, so I'm implementing that directly through Lua to avoid interference in loading methods.
