@@ -450,8 +450,8 @@ function HEVHUD:CheckFontResourcesReady(skip_load,done_loading_cb)
 
 				self:log("Creating DB entry for " .. tostring(font_ids) .. ", " .. tostring(font_path) .. ", " .. tostring(self._assets_path .. font_path .. ".font"))
 				
-				managers.dyn_resource:load(font_ids, Idstring(font_path), DynamicResourceManager.DYN_RESOURCES_PACKAGE, done_loading_cb)
-				managers.dyn_resource:load(texture_ids, Idstring(font_path), DynamicResourceManager.DYN_RESOURCES_PACKAGE, done_loading_cb)
+				managers.dyn_resource:load(font_ids, Idstring(font_path), dyn_pkg, done_loading_cb)
+				managers.dyn_resource:load(texture_ids, Idstring(font_path), dyn_pkg, done_loading_cb)
 				
 			end
 			self:log("Font " .. tostring(font_id) .. " is not ready!" .. (skip_load and " Skipped loading for " or " Started manual load for ") .. font_path)
