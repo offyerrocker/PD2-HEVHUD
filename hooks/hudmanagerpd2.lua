@@ -15,3 +15,11 @@ end)
 Hooks:PostHook(HUDManager,"set_player_armor","hevhud_hudmanager_set_player_armor",function(self,data)
 	HEVHUD._hud_vitals:set_armor(data.current,data.total)
 end)
+
+Hooks:PostHook(HUDManager,"set_stamina_value","hevhud_hudmanager_set_stamina_current",function(self,value)
+	HEVHUD._hud_vitals:set_stamina_current(value)
+end)
+
+Hooks:PostHook(HUDManager,"set_max_stamina","hevhud_hudmanager_set_stamina_max",function(self,value)
+	HEVHUD._hud_vitals:set_stamina_max(value)
+end)

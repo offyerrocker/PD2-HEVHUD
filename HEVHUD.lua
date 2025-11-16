@@ -45,7 +45,10 @@ end
 
 function HEVHUD:UpdateGame(t,dt)
 	-- game update
-	
+	local player = managers.player:local_player()
+	if player then
+		self._hud_vitals:set_sprint_on(player:movement():current_state():running())
+	end
 end
 Hooks:Add("GameSetupUpdate","hevhud_updategame",callback(HEVHUD,HEVHUD,"UpdateGame"))
 
