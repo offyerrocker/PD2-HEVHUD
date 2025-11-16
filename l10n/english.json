@@ -1,0 +1,25 @@
+{
+	"menu_hevhud_language_name" : "English",
+	
+	"menu_hevhud_main_title" : "HEVHUD Options",
+	"menu_hevhud_main_desc" : "Change settings and customization for HEVHUD",
+	"menu_hevhud_general_title" : "General Options",
+	"menu_hevhud_general_desc" : "Miscellaneous settings for HEVHUD",
+	
+	"menu_hevhud_language_name_title" : "Language",
+	"menu_hevhud_language_name_desc" : "Choose the localization language for HEVHUD.",
+	"menu_hevhud_sounds_enabled_title" : "Sounds Enabled",
+	"menu_hevhud_sounds_enabled_desc" : "Enable or disable classic sound effects from Half-Life and Half-Life 2.",
+	
+	
+	
+	"menu_hevhud_toggle_loadout_title" : "Toggle Loadout View",
+	"menu_hevhud_toggle_loadout_desc" : "Show your current weapons, deployables, throwables, cable ties, and mission equipment.",
+	"hevhud_objective_amount_progress" : "[$1 / $2]",
+	
+	"hevhud_hud_aux_power" : "AUX POWER",
+	"hevhud_hud_health" : "HEALTH",
+	"hevhud_hud_suit" : "SUIT",
+	"hevhud_hud_alt" : "ALT",
+	"hevhud_hud_ammo" : "AMMO"
+}
