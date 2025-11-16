@@ -8,18 +8,43 @@ if HEVHUDCore and HEVHUDCore.setup_load_done then
 end
 
 HEVHUDCore.default_settings = {
+	color_hl2_yellow = 0xFFD040,
+	color_hl2_yellow_bright = 0xF0D210,
+	color_hl2_red = 0xbb2d12,
+	color_hl2_red_bright = 0xBB0200, --80000?
+	color_hl2_orange = 0xFFA000,
 	sounds_enabled = true,
 	language_name = "english.json",	 	-- The name of the localization file being used
 	_language_index = 1, 			-- Internally used to display the current language option; do not change
 }
 HEVHUDCore.MOD_PATH = HEVHUDCore.GetPath and HEVHUDCore:GetPath() or ModPath
 HEVHUDCore.settings = table.deep_map_copy(HEVHUDCore.default_settings)
-HEVHUDCore._data = {}											-- Loaded from hevhud_vars.ini
+HEVHUDCore.config = { -- Loaded from hevhud_vars.ini
+	--Player = {},
+	--Teammate = {},
+	General = {},
+	Vitals = {},
+	Carry = {},
+	Hint = {},
+	Crosshair = {},
+	Chat = {},
+	Assault = {},
+	TabScreen = {}
+}
+HEVHUDCore._sort_config = { -- order to sort ini file during write
+	"General",
+	"Vitals",
+	"Carry",
+	"Hint",
+	"Crosshair",
+	"Chat",
+	"Assault",
+	"TabScreen"
+}
+
 HEVHUDCore.languages = {}
 -- This will hold data for each of the available languages that HEVHUDCore has been translated to (including english)
-HEVHUDCore._sort_config = { -- order to sort ini file during write
-	
-}
+HEVHUDCore.ASSETS_PATH = HEVHUDCore.MOD_PATH .. "assets/" 	-- Path to the mod assets (textures, fonts, etc)
 HEVHUDCore.USER_SETTINGS_PATH = SavePath .. "hevhud_settings.json" 	-- Path to the user-defined settings
 HEVHUDCore.USER_CONFIG_PATH = SavePath .. "hevhud_vars.ini"			-- Path to the advanced config file
 HEVHUDCore.DEFAULT_USER_CONFIG_PATH = HEVHUDCore.MOD_PATH .. "hevhud_vars.ini"	-- Path to the defaults for the advanced config file
@@ -49,6 +74,7 @@ function HEVHUDCore:require(path) -- local only; relative path to HEVHUD folder
 	end
 	
 	self._libraries[path] = result
+	return result
 end
 
 function HEVHUDCore:Log(a,...)
@@ -63,21 +89,29 @@ function HEVHUDCore:Print(...)
 	end
 end
 
-function HEVHUDCore:LoadConfig()
-	if file.FileExists(self.USER_CONFIG_PATH) then
+function HEVHUDCore:LoadConfig(path)
+	if file.FileExists(path) then
 		local LIP = self:require("classes/LIP")
-		local config = LIP.load(self.USER_CONFIG_PATH)
+		local config = LIP.load(path)
 		if config then
-			for k,v in pairs(config) do 
-				self.config[k] = v
+			for cat,data in pairs(config) do 
+				if self.config[cat] and type(data) == "table" then
+					for k,v in pairs(data) do
+						self.config[cat][k] = v
+					end
+				else
+					--self.config[k] = v
+				end
 			end
 		else
-			self:Log("Invalid config file!",self.USER_CONFIG_FILE)
+			self:Log("Invalid config file!",path)
 		end
+	else
+		self:Log("No config file",path)
 	end
 end
 
-function HEVHUDCore:SaveConfig()
+function HEVHUDCore:SaveConfig() -- this is not used anywhere (and honestly it shouldn't be) but it does work!
 	local LIP = self:require("classes/LIP")
 	LIP.save(self.USER_CONFIG_PATH,self.config,self._sort_config)
 end
@@ -100,6 +134,78 @@ function HEVHUDCore:SaveSettings()
 		file:close()
 	end
 end
+
+	--Registers assets into the game's db so that they can be loaded later 
+function HEVHUDCore:CheckFontResourcesAdded(skip_load)
+	local font_ids = Idstring("font")
+	local texture_ids = Idstring("texture")
+	
+	local fonts = {
+		hl2_icons = "fonts/halflife2", 
+		hl2_text = "fonts/trebuchet",
+		hl2_vitals = "fonts/tahoma_bold"
+	}
+	
+	for font_id,font_path in pairs(fonts) do 
+		if DB:has(font_ids, font_path) then 
+			self:Log("Font " .. font_id .. " at path " .. font_path .. " is verified.")
+		else
+			--assume that if the .font is not loaded, then the .texture is not either (both are needed anyway)
+			self:Log("Font " .. font_id .. " at path " .. font_path .. " is not created!")
+			if not skip_load then 
+				local full_asset_path = self.ASSETS_PATH .. font_path
+				BLT.AssetManager:CreateEntry(Idstring(font_path),font_ids,full_asset_path .. ".font")
+				BLT.AssetManager:CreateEntry(Idstring(font_path),texture_ids,full_asset_path .. ".texture")
+			end
+		end
+	end
+end
+
+--Loads assets into memory so that they can be used in-game
+function HEVHUDCore:CheckFontResourcesReady(skip_load,done_loading_cb)
+	self:Log("Checking font assets...")
+	local font_ids = Idstring("font")
+	local texture_ids = Idstring("texture")
+	
+	local dyn_pkg = DynamicResourceManager.DYN_RESOURCES_PACKAGE
+
+	if done_loading_cb and done_loading_cb ~= false then 
+	
+		done_loading_cb = function(done,resource_type_ids,resource_ids)
+			if done then 
+				self:Log("Completed manual asset loading for " .. tostring(resource_ids))
+			end
+		end
+		
+	end
+	
+	local fonts = {
+		hl2_icons = "fonts/halflife2", 
+		hl2_text = "fonts/trebuchet",
+		hl2_vitals = "fonts/tahoma_bold"
+	}
+	
+	local font_resources_ready = true
+	for font_id,font_path in pairs(fonts) do 
+		if not managers.dyn_resource:is_resource_ready(font_ids,Idstring(font_path),dyn_pkg) then 
+			if not skip_load then 
+				--register_loading(font_path)
+
+				self:Log("Creating DB entry for " .. tostring(font_ids) .. ", " .. tostring(font_path) .. ", " .. tostring(self.ASSETS_PATH .. font_path .. ".font"))
+				
+				managers.dyn_resource:load(font_ids, Idstring(font_path), dyn_pkg, done_loading_cb)
+				managers.dyn_resource:load(texture_ids, Idstring(font_path), dyn_pkg, done_loading_cb)
+				
+			end
+			self:Log("Font " .. tostring(font_id) .. " is not ready!" .. (skip_load and " Skipped loading for " or " Started manual load for ") .. font_path)
+			font_resources_ready = false
+		else
+			self:Log("Font asset " .. font_id .. " at path " .. font_path .. " is ready.")
+		end
+	end
+	return font_resources_ready
+end
+
 
 function HEVHUDCore:LoadLanguage(localizationmanager,user_language)
 	localizationmanager = localizationmanager or managers.localization
@@ -273,7 +379,7 @@ Hooks:Add("MenuManagerInitialize", "hevhud_initmenu", function(menu_manager)
 	end
 	
 	HEVHUDCore:LoadSettings()
-	HEVHUDCore:LoadConfig()
+	HEVHUDCore:LoadConfig(HEVHUDCore.USER_CONFIG_PATH)
 	--[[
 	--creates colorpicker menu for AdvancedCrosshair mod; this menu is reused for all color-related callbacks in this mod,
 	--so it's also necessary to also update the callback whenever calling the menu
@@ -282,6 +388,8 @@ Hooks:Add("MenuManagerInitialize", "hevhud_initmenu", function(menu_manager)
 	end
 	--]]
 	--MenuHelper:LoadFromJsonFile(AdvancedCrosshair.path .. "menu/menu_compat.json", AdvancedCrosshair, AdvancedCrosshair.settings)
+	
+	HEVHUDCore:CheckFontResourcesReady()
 end)
 
 
@@ -289,5 +397,9 @@ end)
 
 
 
+HEVHUDCore:LoadConfig(HEVHUDCore.DEFAULT_USER_CONFIG_PATH)
 HEVHUDCore:LoadLanguageFiles()
+_G.HEVHUD = HEVHUDCore:require("HEVHUD")
+HEVHUDCore:CheckFontResourcesAdded()
 HEVHUDCore.setup_load_done = true
+

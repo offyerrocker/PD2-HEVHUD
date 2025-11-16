@@ -18,6 +18,8 @@
 	"hevhud_objective_amount_progress" : "[$1 / $2]",
 	
 	"hevhud_hud_aux_power" : "AUX POWER",
+	"hevhud_hud_sprint" : "SPRINT",
+	"hevhud_hud_flashlight" : "FLASHLIGHT",
 	"hevhud_hud_health" : "HEALTH",
 	"hevhud_hud_suit" : "SUIT",
 	"hevhud_hud_alt" : "ALT",
