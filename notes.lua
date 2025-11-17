@@ -2,10 +2,11 @@
 TODO:
 
 	Vitals
-		Revives counter (needs design too)
+		Neater revives counter (needs design too)
 		Workaround for no mul on bitmap	(check alpha channel in asset?)
-		fold-out energy
-
+	Weapons
+		Neater firemode readout
+		
 	OnSettings/Config Changed hooks
 
 

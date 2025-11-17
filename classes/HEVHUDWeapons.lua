@@ -1,6 +1,22 @@
 local HEVHUDWeapons = blt_class(HEVHUDCore:require("classes/HEVHUDBase"))
 local AnimateLibrary = HEVHUDCore:require("classes/AnimateLibrary")
 
+HEVHUDWeapons.FIREMODE_TEXTURE = "guis/textures/hevhud_icons"
+HEVHUDWeapons.FIREMODE_RECTS = {
+	single = {
+		0,32,32,32
+	},
+	burst = {
+		32,32,32,32
+	},
+	auto = {
+		64,32,32,32
+	},
+	volley = {
+		96,32,32,32
+	}
+}
+
 function HEVHUDWeapons:init(panel,settings,config,...)
 	HEVHUDWeapons.super.init(self,panel,settings,config,...)
 	
@@ -62,8 +78,9 @@ function HEVHUDWeapons:setup()
 		name = "ammo_name",
 		text = managers.localization:text("hevhud_hud_ammo"),
 		align = "left",
+		vertical = "bottom",
 		x = vars.WEAPONS_NAME_HOR_OFFSET,
-		y = vars.WEAPONS_NAME_VER_OFFSET + main_ammo:h() - vars.NAME_FONT_SIZE,
+		y = vars.WEAPONS_NAME_VER_OFFSET,
 		font = vars.AMMO_FONT_NAME,
 		font_size = vars.NAME_FONT_SIZE,
 		color = self._TEXT_COLOR_FULL,
@@ -105,6 +122,21 @@ function HEVHUDWeapons:setup()
 		layer = 2
 	})
 	
+	local firemode_icon = main_ammo:bitmap({
+		name = "firemode_icon",
+		texture = "guis/textures/hevhud_icons",
+		texture_rect = {0,32,32,32}, -- single
+		w = vars.FIREMODE_ICON_W,
+		h = vars.FIREMODE_ICON_H,
+		x = vars.FIREMODE_ICON_HOR_OFFSET,
+		y = vars.FIREMODE_ICON_VER_OFFSET,
+		color = self._TEXT_COLOR_FULL,
+		valign = "bottom",
+		halign = "right",
+		visible = true,
+		layer = 3
+	})
+	
 	local underbarrel_ammo = self._panel:panel({
 		name = "underbarrel_ammo",
 		w = vars.UNDERBARREL_AMMO_W,
@@ -131,9 +163,9 @@ function HEVHUDWeapons:setup()
 		name = "underbarrel_name",
 		text = managers.localization:text("hevhud_hud_alt"),
 		align = "left",
-		vertical = "top",
+		vertical = "bottom",
 		x = vars.WEAPONS_NAME_HOR_OFFSET,
-		y = vars.WEAPONS_NAME_VER_OFFSET + underbarrel_ammo:h() - vars.NAME_FONT_SIZE,
+		y = vars.WEAPONS_NAME_VER_OFFSET,
 		font = vars.AMMO_FONT_NAME,
 		font_size = vars.NAME_FONT_SIZE,
 		color = self._TEXT_COLOR_FULL,
@@ -186,7 +218,7 @@ function HEVHUDWeapons:set_underbarrel_visible(state)
 			self._anim_underbarrel_ammo_swap_thread = self._underbarrel_ammo:animate(AnimateLibrary.animate_alpha_lerp,nil,self._AMMO_SWAP_ANIM_DURATION,self._underbarrel_ammo:alpha(),0)
 		else
 			self._anim_main_ammo_swap_thread = self._main_ammo:animate(AnimateLibrary.animate_move_lerp,nil,self._AMMO_SWAP_ANIM_DURATION,self._underbarrel_ammo:left()-(self._main_ammo:w() + self._MAIN_AMMO_HOR_OFFSET))
-			self._anim_underbarrel_ammo_swap_thread = self._underbarrel_ammo:animate(AnimateLibrary.animate_alpha_lerp,nil,self._AMMO_SWAP_ANIM_DURATION,self._underbarrel_ammo:alpha(),1)
+			self._anim_underbarrel_ammo_swap_thread = self._underbarrel_ammo:animate(AnimateLibrary.animate_alpha_lerp,nil,self._AMMO_SWAP_ANIM_DURATION,self._underbarrel_ammo:alpha(),self._underbarrel_on and self._AMMO_PANEL_ACTIVE_ALPHA or self._AMMO_PANEL_INACTIVE_ALPHA)
 		end
 		self._underbarrel_visible = state
 	end
@@ -223,10 +255,12 @@ function HEVHUDWeapons:_set_main_weapon_magazine(current,total)
 	-- todo set color here
 end
 
-function HEVHUDWeapons:set_main_weapon_firemode(firemode)
+function HEVHUDWeapons:set_main_weapon_firemode(firemode,can_toggle)
+	self._main_ammo:child("firemode_icon"):set_image(HEVHUDWeapons.FIREMODE_TEXTURE,unpack(HEVHUDWeapons.FIREMODE_RECTS[firemode]))
 end
 
-function HEVHUDWeapons:set_underbarrel_weapon_firemode(firemode)
+-- can_toggle is not used
+function HEVHUDWeapons:set_underbarrel_weapon_firemode(firemode,can_toggle)
 end
 
 function HEVHUDWeapons:set_underbarrel_ammo(magazine_max,magazine_current,reserves_current,reserves_max)

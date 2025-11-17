@@ -98,6 +98,13 @@ HEVHUD._font_icons = {
 	flashlight_off = "®" -- registered trademark symbol (circled r)
 }
 
+HEVHUD.FIRE_MODE_IDS = {
+	single = Idstring("single"),
+	auto = Idstring("auto"),
+	burst = Idstring("burst"),
+	volley = Idstring("volley")
+}
+
 function HEVHUD:GetHLGunAmmoIcon(categories,weapon_id,fallback)
 	fallback = fallback or "pistol_ammo"
 	local overrides = {
@@ -153,6 +160,7 @@ function HEVHUD:GetHLGunAmmoIcon(categories,weapon_id,fallback)
 end
 
 
+
 function HEVHUD.color_to_colorstring(color) -- from colorpicker; serialize a Color userdata as a hexadecimal string
 	return string.format("%02x%02x%02x", math.min(math.max(color.r * 255,0),0xff),math.min(math.max(color.g * 255,0),0xff),math.min(math.max(color.b * 255,0),0xff))
 end
@@ -205,6 +213,13 @@ function HEVHUD:UpdateGame(t,dt)
 end
 Hooks:Add("GameSetupUpdate","hevhud_updategame",callback(HEVHUD,HEVHUD,"UpdateGame"))
 
+function HEVHUD:CheckWeaponFiremode(weap_base)
+	local firemode = self:GetFiremodeName(weap_base._fire_mode)
+	if firemode then
+		self._hud_weapons:set_main_weapon_firemode(firemode,not weap_base._locked_fire_mode and weap_base:can_toggle_firemode())
+	end
+end
+
 function HEVHUD:CheckWeaponGadgets(weap_base)
 	if not weap_base._assembly_complete then
 		return nil
@@ -236,6 +251,15 @@ end
 
 --function HEVHUD:CheckAmmoIcons(weap_base) end
 
+function HEVHUD:GetFiremodeName(ids)
+	for name,v in pairs(self.FIRE_MODE_IDS) do 
+		if v == ids then
+			return name
+		end
+	end
+end
+
+-- also checks underbarrel firemode
 function HEVHUD:CheckUnderbarrelAmmo(weap_base)
 	for _,underbarrel_base in pairs(weap_base:get_all_override_weapon_gadgets()) do 
 		local magazine_max,magazine_current,reserves_current,reserves_max = RaycastWeaponBase.ammo_info(underbarrel_base)
@@ -248,6 +272,12 @@ function HEVHUD:CheckUnderbarrelAmmo(weap_base)
 		local underbarrel_icon = self:GetHLGunAmmoIcon(categories,weapon_id,nil)
 		if underbarrel_icon then
 			self._hud_weapons:set_underbarrel_ammo_icon(self._font_icons[underbarrel_icon])
+		end
+		
+--		local firemode = weap_base:gadget_function_override("fire_mode") -- only works if the underbarrel is active
+		local firemode = self:GetFiremodeName(underbarrel_base._fire_mode)
+		if firemode then 
+			self._hud_weapons:set_underbarrel_weapon_firemode(firemode,false) -- i actually don't know if underbarrels are allowed to toggle firemodes, or what that check looks like
 		end
 		break
 	end
@@ -295,6 +325,7 @@ function HEVHUD:SetAmmoAmount(index,magazine_max,magazine_current,reserves_curre
 		elseif inv_ext:equipped_selection() ~= index then
 			return
 		else
+			self:CheckWeaponFiremode(weap_base)
 			local categories = weap_base.categories and weap_base:categories()
 			local weapon_id = weap_base.get_name_id and weap_base:get_name_id()
 			local icon = self:GetHLGunAmmoIcon(categories,weapon_id,nil)
