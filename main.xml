@@ -20,6 +20,8 @@
 		<texture path="textures/hevhud_firemode_2" />
 		<texture path="textures/hevhud_firemode_3" />
 		
+		<texture path="guis/textures/hevhud_icons" />
+		
 		<texture path="guis/textures/hevhud_bgbox_atlas" />
 		
 	</AddFiles>

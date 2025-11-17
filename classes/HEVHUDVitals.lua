@@ -83,7 +83,7 @@ function HEVHUDVitals:setup()
 	})
 	self._panel:set_bottom(self._panel:parent():h() + vars.VITALS_VER_OFFSET)
 	
---HEALTH	
+--HEALTH
 	local health = self._panel:panel({
 		name = "health",
 		layer = 3,
@@ -157,6 +157,51 @@ function HEVHUDVitals:setup()
 		alpha = LABEL_ALPHA_HIGH,
 		layer = 2
 	})
+	
+-- REVIVES
+	local revives = self._panel:panel({
+		name = "revives",
+		layer = 3,
+		w = vars.REVIVES_W,
+		h = vars.REVIVES_H,
+		x = suit:right() + vars.REVIVES_HOR_OFFSET,
+		y = vars.REVIVES_VER_OFFSET + self._panel:h() - vars.REVIVES_H
+	})
+	self._revives = revives
+	self._revives_bgbox = self.CreateBGBox(revives,nil,nil,bgbox_panel_config,{color=self._BG_BOX_COLOR})
+	local revives_icon = revives:bitmap({
+		name = "revives_icon",
+		w = vars.REVIVES_ICON_W,
+		h = vars.REVIVES_ICON_H,
+		x = vars.REVIVES_ICON_HOR_OFFSET,
+		y = vars.REVIVES_ICON_VER_OFFSET,
+		texture = "guis/textures/hevhud_icons",
+		valign = "grow",
+		halign = "grow",
+		texture_rect = {
+			0,0,
+			32,32
+		},
+		color = DEFAULT_COLOR
+	})
+	
+	local revives_label = revives:text({
+		name = "revives_label",
+		text = "3",
+		align = "left",
+		vertical = "top",
+		valign = "grow",
+		halign = "grow",
+		x = vars.REVIVES_TEXT_LABEL_HOR_OFFSET,
+		y = vars.REVIVES_TEXT_LABEL_VER_OFFSET,
+		--blend_mode = "add",
+		font = ICONS_FONT_NAME,
+		font_size = vars.REVIVES_TEXT_LABEL_SIZE,
+		color = DEFAULT_COLOR,
+		alpha = LABEL_ALPHA_HIGH,
+		layer = 2
+	})
+	
 	
 --POWER (sprint/flashlight)
 	local power = self._panel:panel({
@@ -425,11 +470,18 @@ function HEVHUDVitals:upd_power_visible()
 	end
 end
 
+function HEVHUDVitals:set_revives(revives)
+	self._revives:child("revives_label"):set_text(string.format("%i",revives))
+end
+
 function HEVHUDVitals:set_health(current,total,revives)
 	self._health:child("health_label"):set_text(string.format("%i",current*tweak_data.gui.stats_present_multiplier))
 	
 	-- todo disable with berserker
 	self:set_low_health(current/total <= self._HEALTH_RATIO_LOW_THRESHOLD)
+	if revives then
+		self:set_revives(revives)
+	end
 end
 
 function HEVHUDVitals:set_armor(current,total)
