@@ -1,5 +1,157 @@
 local HEVHUD = {}
 
+HEVHUD._font_icons = {
+	physgun_fill = "!",
+	pound = "#",
+	revolver_fill = "$",
+	pistol = "%",
+	smg = "&",
+	supers2 = "'", --superscript 2 from half life 2 title
+	shotgun_fill = "(",
+	crossbow_fill = ")",
+	energy_box = "*",
+	health_box = "+",
+	comma = ",",
+	hyphen = "-",
+	period = ".",
+	slash = "/",
+	zero = "0",
+	one = "1",
+	two = "2",
+	three = "3",
+	four = "4",
+	five = "5",
+	six = "6",
+	seven = "7",
+	eight = "8",
+	nine = "9",
+	pulse_fill = ":",
+	rpg_fill = ";",
+	arrow_left = "<",
+	arrow_up = "=",
+	arrow_right = ">",
+	arrow_down = "?",
+	halflife2_icon = "@",
+	lambda = "A",
+	demo_d = "B",
+	follower = "C",
+	follower_run = "D",
+	hl_e = "E",
+	hl_f = "F",
+	demo_e = "G",
+	hl_h = "H",
+	hl_i = "I",
+	demo_m = "J",
+	demo_o = "K",
+	hl_l = "L",
+	medic = "M",
+	medic_run = "N",
+	cross_pair_thin = "O",
+	pause = "P",
+	cross_dots = "Q",
+	play = "R",
+	ffwd = "S",
+	stop = "T",
+	rev = "U",
+	valve = "V",
+	frev = "W",
+	next_chapter = "X",
+	prev_chapter = "Y",
+	rec = "Z",
+	cross_left_fill = "[",
+	crouch = "\\",
+	cross_right_fill = "]",
+	crowbar_fill = "^",
+	grenade_fill = "_",
+	toilet = "`",
+	smg_empty = "a",
+	shotgun_empty = "b",
+	crowbar_empty = "c",
+	pistol_empty = "d",
+	revolver_empty = "e",
+	oicw_empty = "f",
+	crossbow_empty = "g",
+	tau_empty = "h",
+	rpg_empty = "i",
+	bait_empty = "j",
+	grenade_empty = "k",
+	pulse_empty = "l",
+	physgun_empty = "m",
+	baton_empty = "n",
+	slam_empty = "o",
+	pistol_ammo = "p",
+	revolver_ammo = "q",
+	smg_ammo = "r",
+	shotgun_ammo = "s",
+	grenadelauncher_ammo = "t",
+	pulse_ammo = "u",
+	grenade_ammo = "v", --very similar to grenade_fill but horizontally flat
+	crossbow_rebar = "w", --at least, i think it's rebar.
+	rpg_ammo = "x",
+	gauss_ammo = "y", --placeholder for cut content, evidently
+	darkenergy_ammo = "z", 
+	cross_left_empty = "{",
+	crossbow_bolt = "|", --not sure why there's two versions?
+	cross_right_empty = "}",
+	bait_fill = "~",
+	flashlight_on = "©", --copyright symbol (circled c)
+	flashlight_off = "®" -- registered trademark symbol (circled r)
+}
+
+function HEVHUD:GetHLGunAmmoIcon(categories,weapon_id,fallback)
+	fallback = fallback or "pistol_ammo"
+	local overrides = {
+		rpg7 = "rpg_ammo", --rocket launchers in pd2 don't have a separate category; they're all classed as grenade_launcher
+		ray = "rpg_ammo" --commando rocket launcher
+	}
+	if weapon_id and overrides[weapon_id] then 
+		return overrides[weapon_id]
+	end
+	if type(categories) ~= "table" then 
+		return fallback
+	end
+	local is_revolver
+	local is_pistol 
+	for _,cat in pairs(categories) do 
+		if cat == "revolver" then 
+			is_revolver = true
+		end
+		if cat == "crossbow" then 
+			return "crossbow_rebar"
+		elseif cat == "bow" then 
+			return "crossbow_bolt"
+		elseif cat == "grenade_launcher" then 
+			return "grenadelauncher_ammo"
+		elseif cat == "shotgun" then 
+			return "shotgun_ammo"
+		elseif cat == "smg" then 
+			return "smg_ammo"
+		elseif cat == "lmg" then 
+			return "pulse_ammo"
+		elseif cat == "minigun" then
+			return "pulse_ammo"
+		elseif cat == "snp" then 
+			return "pulse_ammo"
+		elseif cat == "assault_rifle" then 
+			return "smg_ammo"
+		elseif cat == "pistol" then 
+			is_pistol = true
+		elseif cat == "saw" then 
+			return "darkenergy_ammo"
+		elseif cat == "flamethrower" then
+			return "darkenergy_ammo"
+		end
+	end
+	if is_pistol then 
+		if is_revolver then 
+			return "revolver_ammo"
+		else
+			return "pistol_ammo"
+		end
+	end
+	return fallback
+end
+
 
 function HEVHUD.color_to_colorstring(color) -- from colorpicker; serialize a Color userdata as a hexadecimal string
 	return string.format("%02x%02x%02x", math.min(math.max(color.r * 255,0),0xff),math.min(math.max(color.g * 255,0),0xff),math.min(math.max(color.b * 255,0),0xff))
@@ -34,6 +186,7 @@ function HEVHUD:CreateHUD(parent_hud)
 	local config = HEVHUDCore.config
 	
 	self._hud_vitals = HEVHUDCore:require("classes/HEVHUDVitals"):new(hl2,settings,config)
+	self._hud_weapons = HEVHUDCore:require("classes/HEVHUDWeapons"):new(hl2,settings,config)
 	--self._hud_carry = HEVHUDCore:require("classes/HEVHUDCarry"):new(hl2,settings,config)
 	--self._hud_hint = HEVHUDCore:require("classes/HEVHUDHint"):new(hl2,settings,config)
 	--self._hud_objectives = HEVHUDCore:require("classes/HEVHUDObjectives"):new(hl2,settings,config)
@@ -80,6 +233,94 @@ function HEVHUD:SetFlashlightState(state)
 	self._hud_vitals:set_flashlight_on(state)
 	return state
 end
+
+--function HEVHUD:CheckAmmoIcons(weap_base) end
+
+function HEVHUD:CheckUnderbarrelAmmo(weap_base)
+	for _,underbarrel_base in pairs(weap_base:get_all_override_weapon_gadgets()) do 
+		local magazine_max,magazine_current,reserves_current,reserves_max = RaycastWeaponBase.ammo_info(underbarrel_base)
+		
+		self._hud_weapons:set_underbarrel_ammo(magazine_max,magazine_current,reserves_current,reserves_max)
+		
+		local weapon_id = underbarrel_base.name_id
+		local wtd = weapon_id and tweak_data.weapon[weapon_id]
+		local categories = wtd and wtd.categories 
+		local underbarrel_icon = self:GetHLGunAmmoIcon(categories,weapon_id,nil)
+		if underbarrel_icon then
+			self._hud_weapons:set_underbarrel_ammo_icon(self._font_icons[underbarrel_icon])
+		end
+		break
+	end
+end
+
+
+
+function HEVHUD:CheckWeaponUnderbarrelActive(weap_base)
+	local underbarrel_base = weap_base and weap_base:gadget_overrides_weapon_functions()
+	if underbarrel_base then
+		return self._hud_weapons:set_underbarrel_on(true)
+	end
+	return self._hud_weapons:set_underbarrel_on(false)
+end
+
+-- check whether there is an underbarrel on this weapon at all, regardless of active state
+function HEVHUD:CheckWeaponHasUnderbarrel(weap_base)
+	for _,underbarrel_base in pairs(weap_base:get_all_override_weapon_gadgets()) do
+		return self._hud_weapons:set_underbarrel_visible(true)
+	end
+	return self._hud_weapons:set_underbarrel_visible(false)
+end
+
+function HEVHUD:SetAmmoAmount(index,magazine_max,magazine_current,reserves_current,reserves_max)
+	local turret_unit = managers.player:get_local_player_turret()
+	local weapon_unit
+	local inv_ext = managers.player:local_player():inventory()
+	if alive(turret_unit) then
+		weapon_unit = turret_unit
+	else
+		local _weapon_unit = inv_ext:equipped_unit()
+		if alive(_weapon_unit) then
+			weapon_unit = _weapon_unit
+		end
+	end
+	
+	if weapon_unit then
+		local weap_base = weapon_unit:base()
+		local underbarrel = weap_base:gadget_overrides_weapon_functions()
+		if underbarrel then
+			self:CheckUnderbarrelAmmo(weap_base)
+			--magazine_max,magazine_current,reserves_current,reserves_max = weap_base:ammo_info()
+			-- specifically use the individual getters; ammo_info() will return the underbarrel ammo data
+			magazine_max,magazine_current,reserves_current,reserves_max = weap_base:get_ammo_max_per_clip(),weap_base:get_ammo_remaining_in_clip(),weap_base:get_ammo_total(),weap_base:get_ammo_max()
+		elseif inv_ext:equipped_selection() ~= index then
+			return
+		else
+			local categories = weap_base.categories and weap_base:categories()
+			local weapon_id = weap_base.get_name_id and weap_base:get_name_id()
+			local icon = self:GetHLGunAmmoIcon(categories,weapon_id,nil)
+			if icon then
+				self._hud_weapons:set_main_ammo_icon(self._font_icons[icon])
+			end
+		end
+	end
+	
+	self._hud_weapons:set_main_ammo(magazine_max,magazine_current,reserves_current,reserves_max)
+	--[[
+	local player = managers.player:local_player()
+	if alive(player) then
+		local mov_ext = player:movement()
+		local state_name = mov_ext:current_state_name()
+		if state_name == "player_turret" then
+			--local state = mov_ext:current_state()
+		else
+			
+		end
+	end
+	--]]
+	--local equipped_weapon = 
+end
+
+
 
 --[[
 function HEVHUD:UpdatePaused(t,dt)

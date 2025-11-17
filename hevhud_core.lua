@@ -16,6 +16,7 @@ HEVHUDCore.default_settings = {
 	sounds_enabled = true,
 	language_name = "english.json",	 	-- The name of the localization file being used
 	_language_index = 1, 			-- Internally used to display the current language option; do not change
+	hud_teammate_enabled = true
 }
 HEVHUDCore.MOD_PATH = HEVHUDCore.GetPath and HEVHUDCore:GetPath() or ModPath
 HEVHUDCore.settings = table.deep_map_copy(HEVHUDCore.default_settings)
@@ -24,6 +25,7 @@ HEVHUDCore.config = { -- Loaded from hevhud_vars.ini
 	--Teammate = {},
 	General = {},
 	Vitals = {},
+	Weapons = {},
 	Carry = {},
 	Hint = {},
 	Crosshair = {},

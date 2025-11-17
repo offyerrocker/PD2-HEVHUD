@@ -66,4 +66,40 @@ function AnimateLibrary.animate_grow_y(o,cb,duration,from_h,to_h)
 	end
 end
 
+function AnimateLibrary.animate_move_lerp(o,cb,duration,to_x,to_y,from_x,from_y)
+	local dx,dy
+	if to_x then
+		from_x = from_x or o:x()
+		dx = to_x - from_x
+	end
+	if to_y then
+		from_y = from_y or o:y()
+		dy = to_y - from_y
+	end
+	local bez = {0,0,1,1}
+	local t,dt = 0,0
+	while t < duration do
+		local progress = t/duration
+		if dx then
+			o:set_x(from_x + dx * math.bezier(bez, progress))
+		end
+		if dy then
+			o:set_y(from_y + dy * math.bezier(bez, progress))
+		end
+		dt = coroutine.yield()
+		t = t + dt
+	end
+	
+	if dx then
+		o:set_x(to_x)
+	end
+	if dy then
+		o:set_y(to_y)
+	end
+	
+	if cb then 
+		cb(o)
+	end
+end
+
 return AnimateLibrary

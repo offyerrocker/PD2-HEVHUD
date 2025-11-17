@@ -40,7 +40,6 @@ end
 
 
 function HEVHUDVitals:setup()
-
 	local vars = self._config.Vitals
 	self._LABEL_ALPHA_LOW = self._config.General.LABEL_ALPHA_LOW
 	self._LABEL_ALPHA_HIGH = self._config.General.LABEL_ALPHA_HIGH
@@ -98,8 +97,10 @@ function HEVHUDVitals:setup()
 	local health_name = health:text({
 		name = "health_name",
 		text = managers.localization:text("hevhud_hud_health"),
-		x = vars.TEXT_NAME_HOR_MARGIN,
-		y = vars.VITALS_NAME_VER_OFFSET + health:h() - vars.TEXT_NAME_SIZE,
+		align = "left",
+		vertical = "bottom",
+		x = vars.TEXT_NAME_HOR_OFFSET,
+		y = vars.TEXT_NAME_VER_OFFSET,
 		font = vars.VITALS_FONT_NAME,
 		font_size = vars.TEXT_NAME_SIZE,
 		color = DEFAULT_COLOR,
@@ -110,8 +111,9 @@ function HEVHUDVitals:setup()
 		name = "health_label",
 		text = "690",
 		align = "left",
+		vertical = "bottom",
 		x = vars.LABEL_HOR_OFFSET,
-		y = vars.LABEL_VER_OFFSET + health:h() - vars.TEXT_LABEL_SIZE, -- bottom() doesn't work as well since custom fonts don't seem to have correct font height detection
+		y = vars.LABEL_VER_OFFSET,
 		--blend_mode = "add",
 		font = ICONS_FONT_NAME,
 		font_size = vars.TEXT_LABEL_SIZE,
@@ -135,8 +137,10 @@ function HEVHUDVitals:setup()
 	local suit_name = suit:text({
 		name = "suit_name",
 		text = managers.localization:text("hevhud_hud_suit"),
-		x = vars.TEXT_NAME_HOR_MARGIN,
-		y = vars.VITALS_NAME_VER_OFFSET + suit:h() - vars.TEXT_NAME_SIZE,
+		x = vars.TEXT_NAME_HOR_OFFSET,
+		y = vars.TEXT_NAME_VER_OFFSET,
+		align = "left",
+		vertical = "bottom",
 		font = vars.VITALS_FONT_NAME,
 		font_size = vars.TEXT_NAME_SIZE,
 		color = DEFAULT_COLOR,
@@ -148,8 +152,9 @@ function HEVHUDVitals:setup()
 		name = "suit_label",
 		text = "420",
 		align = "left",
+		vertical = "bottom",
 		x = vars.LABEL_HOR_OFFSET,
-		y = vars.LABEL_VER_OFFSET + health:h() - vars.TEXT_LABEL_SIZE, -- bottom() doesn't work as well since custom fonts don't seem to have correct font height detection
+		y = vars.LABEL_VER_OFFSET,
 		--blend_mode = "add",
 		font = ICONS_FONT_NAME,
 		font_size = vars.TEXT_LABEL_SIZE,
@@ -228,7 +233,7 @@ function HEVHUDVitals:setup()
 	local power_name = power_frame:text({
 		name = "power_name",
 		text = managers.localization:text("hevhud_hud_aux_power"),
-		x = vars.TEXT_NAME_HOR_MARGIN,
+		x = vars.TEXT_NAME_HOR_OFFSET,
 		y = vars.POWER_NAME_VER_OFFSET,
 		font = VITALS_FONT_NAME,
 		font_size = vars.TEXT_NAME_SIZE,
@@ -270,7 +275,7 @@ function HEVHUDVitals:setup()
 	local flashlight_name = power_frame:text({
 		name = "flashlight_name",
 		text = managers.localization:text("hevhud_hud_flashlight"),
-		x = vars.TEXT_NAME_HOR_MARGIN,
+		x = vars.TEXT_NAME_HOR_OFFSET,
 		y = self._NAME_Y_1, -- dynamically positioned
 		font = VITALS_FONT_NAME,
 		font_size = vars.TEXT_NAME_SIZE,
@@ -285,7 +290,7 @@ function HEVHUDVitals:setup()
 	local sprint_name = power_frame:text({
 		name = "sprint_name",
 		text = managers.localization:text("hevhud_hud_sprint"),
-		x = vars.TEXT_NAME_HOR_MARGIN,
+		x = vars.TEXT_NAME_HOR_OFFSET,
 		y = self._NAME_Y_2, -- dynamically positioned
 		font = VITALS_FONT_NAME,
 		font_size = vars.TEXT_NAME_SIZE,
