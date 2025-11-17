@@ -195,6 +195,7 @@ function HEVHUD:CreateHUD(parent_hud)
 	
 	self._hud_vitals = HEVHUDCore:require("classes/HEVHUDVitals"):new(hl2,settings,config)
 	self._hud_weapons = HEVHUDCore:require("classes/HEVHUDWeapons"):new(hl2,settings,config)
+	--self._hud_teammates = HEVHUDCore:require("classes/HEVHUDTeammates"):new(hl2,settings,config)
 	--self._hud_carry = HEVHUDCore:require("classes/HEVHUDCarry"):new(hl2,settings,config)
 	--self._hud_hint = HEVHUDCore:require("classes/HEVHUDHint"):new(hl2,settings,config)
 	--self._hud_objectives = HEVHUDCore:require("classes/HEVHUDObjectives"):new(hl2,settings,config)

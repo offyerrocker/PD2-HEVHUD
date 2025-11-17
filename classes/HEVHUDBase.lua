@@ -10,6 +10,11 @@ function HEVHUDBase:init(parent,settings,config)
 	Hooks:Add("hevhud_on_config_changed","hevhud_on_config_changed_" .. key,callback(self,self,"clbk_on_config_changed"))
 end
 
+-- setup should be called whenever settings or config are changed;
+-- this should recreate the panel
+function HEVHUDBase:setup()
+end
+
 function HEVHUDBase:pre_destroy()
 	if alive(self._panel) then
 		self._panel:parent():remove(self._panel)

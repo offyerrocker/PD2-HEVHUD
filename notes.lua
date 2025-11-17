@@ -1,5 +1,8 @@
 --[[
 TODO:
+	Assets
+		Find a font that works for teammate names (support wide variety of characters)
+	
 	General
 		OnSettings/Config Changed hooks
 	Vitals
