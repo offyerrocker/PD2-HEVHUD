@@ -52,6 +52,35 @@ function HEVHUD:UpdateGame(t,dt)
 end
 Hooks:Add("GameSetupUpdate","hevhud_updategame",callback(HEVHUD,HEVHUD,"UpdateGame"))
 
+function HEVHUD:CheckWeaponGadgets(weap_base)
+	if not weap_base._assembly_complete then
+		return nil
+	end
+	
+	local gadgets = managers.weapon_factory:get_parts_from_weapon_by_type_or_perk("gadget", weap_base._factory_id, weap_base._blueprint)
+	if gadgets then
+		for i, id in ipairs(gadgets) do
+			local gadget = weap_base._parts[id]
+			local gadget_base = gadget and gadget.unit:base()
+			if gadget_base then
+				local gadget_type = gadget_base.GADGET_TYPE
+				if gadget_type == WeaponFlashLight.GADGET_TYPE then -- "flashlight"
+					if gadget_base:is_on() then
+						-- if any flashlights are on in the current weapon, show flashlight indicator in hud
+						return self:SetFlashlightState(true)
+					end
+				end
+			end
+		end
+	end
+	return self:SetFlashlightState(false)
+end
+
+function HEVHUD:SetFlashlightState(state)
+	self._hud_vitals:set_flashlight_on(state)
+	return state
+end
+
 --[[
 function HEVHUD:UpdatePaused(t,dt)
 	-- paused update

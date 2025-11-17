@@ -18,16 +18,22 @@ function HEVHUDVitals:init(panel,settings,config,...)
 	self._lowhealth_pulse_on = false
 	self._sprint_on = false
 	self._flashlight_on = false
+	self._power_visible = false
 	self._anim_power_tick_threads = { -- holds visual state of each power tick
 		[0] = { -- 0 is for the name/label text objects (bundled together)
 			state = nil,
 			color_thread = nil
 		}
 	}
-	
+	self._anim_power_resize_thread = nil -- Thread; anim for the flashlight/sprint name drawer opening or closing
+	self._anim_power_visible_thread = nil -- Thread; anim for the entire AUX POWER panel fading in or out 
 	-- set later
 	self._stamina_current = 50
 	self._stamina_max = 50
+	
+	-- set later in setup()
+	self._NUM_POWER_TICKS = 10
+	self._num_power_ticks_current = self._NUM_POWER_TICKS
 	
 	self:setup()
 end
@@ -41,6 +47,7 @@ function HEVHUDVitals:setup()
 	self._POWER_TICK_ANIM_DURATION = vars.POWER_TICK_ANIM_DURATION
 	self._POWER_RATIO_LOW_THRESHOLD = vars.POWER_RATIO_LOW_THRESHOLD
 	self._POWER_FRAME_ANIM_DURATION = vars.POWER_FRAME_ANIM_DURATION
+	self._POWER_FADE_ANIM_DURATION = vars.POWER_FADE_ANIM_DURATION
 	self._TEXT_COLOR_FULL = HEVHUD.colordecimal_to_color(self._settings.color_hl2_yellow)
 	self._TEXT_COLOR_HALF = HEVHUD.colordecimal_to_color(self._settings.color_hl2_orange)
 	self._TEXT_COLOR_NONE = HEVHUD.colordecimal_to_color(self._settings.color_hl2_red)
@@ -226,7 +233,7 @@ function HEVHUDVitals:setup()
 		align = "left",
 		color = DEFAULT_COLOR,
 		alpha = vars.TEXT_NAME_ALPHA,
---		visible = false,
+		visible = false,
 		layer = 2
 	})
 	
@@ -241,7 +248,7 @@ function HEVHUDVitals:setup()
 		align = "left",
 		color = DEFAULT_COLOR,
 		alpha = vars.TEXT_NAME_ALPHA,
---		visible = false,
+		visible = false,
 		layer = 2
 	})
 	
@@ -304,6 +311,7 @@ function HEVHUDVitals:set_sprint_amount(current,total)
 	local ticks_current = math.ceil(self._NUM_POWER_TICKS*ratio)
 	local POWER_RATIO_LOW_THRESHOLD = self._POWER_RATIO_LOW_THRESHOLD
 	if ticks_current ~= self._num_power_ticks_current then
+		self:upd_power_visible()
 		--local descending = ticks_current < self._num_power_ticks_current
 		local low_stamina = ratio < POWER_RATIO_LOW_THRESHOLD
 		local TICK_EMPTY_ALPHA = self._TICK_EMPTY_ALPHA
@@ -342,7 +350,7 @@ function HEVHUDVitals:set_sprint_amount(current,total)
 				self._anim_power_tick_threads[i] = anim_data
 			end
 			
-			if i >= ticks_current then -- set this tick to empty
+			if i > ticks_current then -- set this tick to empty
 				if anim_data.alpha_state ~= false then
 					anim_data.alpha_state = false
 					if anim_data.alpha_thread then
@@ -397,8 +405,24 @@ function HEVHUDVitals:upd_power_size()
 			h = self._NAME_H_0
 		end
 	end
-	
-	self._power:animate(AnimateLibrary.animate_grow_y,nil,self._POWER_FRAME_ANIM_DURATION,self._power:h(),h)
+	if self._anim_power_resize_thread then 
+		self._power:stop(self._anim_power_resize_thread)
+		self._anim_power_resize_thread = nil
+	end
+	self._anim_power_resize_thread = self._power:animate(AnimateLibrary.animate_grow_y,nil,self._POWER_FRAME_ANIM_DURATION,self._power:h(),h)
+	self:upd_power_visible()
+end
+
+function HEVHUDVitals:upd_power_visible()
+	local visible = self._sprint_on or self._flashlight_on or (self._num_power_ticks_current < self._NUM_POWER_TICKS)
+	if visible ~= self._power_visible then
+		if self._anim_power_visible_thread then 
+			self._power:stop(self._anim_power_visible_thread)
+			self._anim_power_visible_thread = nil
+		end
+		self._anim_power_visible_thread = self._power:animate(AnimateLibrary.animate_alpha_lerp,nil,self._POWER_FADE_ANIM_DURATION,self._power:alpha(),visible and 1 or 0)
+		self._power_visible = visible
+	end
 end
 
 function HEVHUDVitals:set_health(current,total,revives)
