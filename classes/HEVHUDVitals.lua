@@ -368,7 +368,7 @@ function HEVHUDVitals:set_sprint_amount(current,total)
 						anim_data.alpha_thread = nil
 					end
 					
-					anim_data.alpha_thread = tick:animate(AnimateLibrary.animate_alpha_lerp,function() anim_data.alpha_thread = nil end,self._POWER_TICK_ANIM_DURATION,tick:alpha(),TICK_FULL_ALPHA)
+					anim_data.alpha_thread = tick:animate(AnimateLibrary.animate_alpha_lerp,function() anim_data.alpha_thread = nil; self:upd_power_visible() end,self._POWER_TICK_ANIM_DURATION,tick:alpha(),TICK_FULL_ALPHA)
 				end
 			end
 			
