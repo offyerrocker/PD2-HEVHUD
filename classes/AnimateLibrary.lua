@@ -102,4 +102,19 @@ function AnimateLibrary.animate_move_lerp(o,cb,duration,to_x,to_y,from_x,from_y)
 	end
 end
 
+function AnimateLibrary.animate_text_gradual(o,cb,duration,text)
+	o:set_text("")
+	local num_chars = string.len(text) -- use utf8?
+	if num_chars == 0 then
+		o:set_text(text)
+		return
+	end
+	local t = 0
+	while t < duration do 
+		o:set_text(string.sub(text,1,math.round(num_chars * t/duration)))
+		t = t + coroutine.yield()
+	end
+	o:set_text(text)
+end
+
 return AnimateLibrary
