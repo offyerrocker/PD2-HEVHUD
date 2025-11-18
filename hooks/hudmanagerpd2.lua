@@ -35,3 +35,10 @@ Hooks:PostHook(HUDManager,"set_ammo_amount","hevhud_hudmanager_set_ammo_amount",
 	HEVHUD:SetAmmoAmount(index,magazine_max,magazine_current,reserves_current,reserves_max)
 end)
 
+Hooks:OverrideFunction(HUDManager,"temp_show_carry_bag",function(self, carry_id, value)
+	HEVHUD:ShowCarry(carry_id,value)
+end)
+
+Hooks:OverrideFunction(HUDManager,"temp_hide_carry_bag",function(self)
+	HEVHUD:HideCarry()
+end)

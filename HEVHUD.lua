@@ -196,7 +196,7 @@ function HEVHUD:CreateHUD(parent_hud)
 	self._hud_vitals = HEVHUDCore:require("classes/HEVHUDVitals"):new(hl2,settings,config)
 	self._hud_weapons = HEVHUDCore:require("classes/HEVHUDWeapons"):new(hl2,settings,config)
 	--self._hud_teammates = HEVHUDCore:require("classes/HEVHUDTeammates"):new(hl2,settings,config)
-	--self._hud_carry = HEVHUDCore:require("classes/HEVHUDCarry"):new(hl2,settings,config)
+	self._hud_carry = HEVHUDCore:require("classes/HEVHUDCarry"):new(hl2,settings,config)
 	--self._hud_hint = HEVHUDCore:require("classes/HEVHUDHint"):new(hl2,settings,config)
 	--self._hud_objectives = HEVHUDCore:require("classes/HEVHUDObjectives"):new(hl2,settings,config)
 	
@@ -352,7 +352,13 @@ function HEVHUD:SetAmmoAmount(index,magazine_max,magazine_current,reserves_curre
 	--local equipped_weapon = 
 end
 
+function HEVHUD:ShowCarry(carry_id,value,...)
+	self._hud_carry:show_carry_bag(carry_id,value,...)
+end
 
+function HEVHUD:HideCarry(...)
+	self._hud_carry:hide_carry_bag(...)
+end
 
 --[[
 function HEVHUD:UpdatePaused(t,dt)
