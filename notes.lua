@@ -19,9 +19,6 @@ TODO:
 		Deployables
 			Primary/secondary
 		Cable Ties
-	Carry
-		animate bottom up frame
-		carry stacker support? nah prob not
 	Special crosshair (customizable target)
 		1: health
 		2: armor

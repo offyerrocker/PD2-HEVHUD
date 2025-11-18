@@ -170,7 +170,8 @@ function HEVHUDVitals:setup()
 		w = vars.REVIVES_W,
 		h = vars.REVIVES_H,
 		x = suit:right() + vars.REVIVES_HOR_OFFSET,
-		y = vars.REVIVES_VER_OFFSET + self._panel:h() - vars.REVIVES_H
+		y = vars.REVIVES_VER_OFFSET + self._panel:h() - vars.REVIVES_H,
+		visible = vars.REVIVES_ENABLED
 	})
 	self._revives = revives
 	self._revives_bgbox = self.CreateBGBox(revives,nil,nil,bgbox_panel_config,{color=self._BG_BOX_COLOR})
