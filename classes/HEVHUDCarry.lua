@@ -31,6 +31,7 @@ function HEVHUDCarry:setup()
 	self._TEXT_COLOR_FULL = HEVHUD.colordecimal_to_color(self._settings.color_hl2_yellow)
 	self._BAG_AUTO_W_ENABLED = vars.BAG_AUTO_W_ENABLED
 	self._BAG_AUTO_W_HOR_MARGIN = vars.BAG_AUTO_W_HOR_MARGIN + vars.BAG_LABEL_HOR_OFFSET
+	self._BAG_ANIM_ALPHA_ENABLED = vars.BAG_ANIM_ALPHA_ENABLED
 	local BG_BOX_ALPHA = self._config.General.BG_BOX_ALPHA
 	self._BG_BOX_COLOR = HEVHUD.colordecimal_to_color(self._config.General.BG_BOX_COLOR)
 	
@@ -118,7 +119,10 @@ function HEVHUDCarry:show_carry_bag(carry_id,value)
 	end
 	bag:set_x(self._panel:w())
 	bag:animate(AnimateLibrary.animate_move_lerp,nil,self._CARRY_INTRO_ANIM_DURATION,self._panel:w() - bag:w()) -- appear from left
-	bag:animate(AnimateLibrary.animate_alpha_lerp,cb,self._CARRY_INTRO_ANIM_DURATION,nil,1)
+	
+	if self._BAG_ANIM_ALPHA_ENABLED then
+		bag:animate(AnimateLibrary.animate_alpha_lerp,cb,self._CARRY_INTRO_ANIM_DURATION,nil,1)
+	end
 --	bag:animate(AnimateLibrary.animate_grow_w_right,cb,self._CARRY_INTRO_ANIM_DURATION,nil,self._BAG_W)
 end
 
@@ -134,7 +138,10 @@ function HEVHUDCarry:hide_carry_bag()
 	end
 	
 	bag:animate(AnimateLibrary.animate_move_lerp,cb,self._CARRY_OUTRO_ANIM_DURATION,self._panel:w()) -- move right offscreen
-	bag:animate(AnimateLibrary.animate_alpha_lerp,cb,self._CARRY_OUTRO_ANIM_DURATION,nil,0)
+	
+	if self._BAG_ANIM_ALPHA_ENABLED then
+		bag:animate(AnimateLibrary.animate_alpha_lerp,cb,self._CARRY_OUTRO_ANIM_DURATION,nil,0)
+	end
 --	bag:animate(AnimateLibrary.animate_grow_w_right,cb,self._CARRY_OUTRO_ANIM_DURATION,nil,1)
 end
 
