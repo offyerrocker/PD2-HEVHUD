@@ -1,20 +1,11 @@
 local HEVHUDWeapons = blt_class(HEVHUDCore:require("classes/HEVHUDBase"))
 local AnimateLibrary = HEVHUDCore:require("classes/AnimateLibrary")
 
-HEVHUDWeapons.FIREMODE_TEXTURE = "guis/textures/hevhud_icons"
-HEVHUDWeapons.FIREMODE_RECTS = {
-	single = {
-		0,32,32,32
-	},
-	burst = {
-		32,32,32,32
-	},
-	auto = {
-		64,32,32,32
-	},
-	volley = {
-		96,32,32,32
-	}
+HEVHUDWeapons.FIREMODE_ICONS = {
+	single = "firemode_single",
+	burst = "firemode_burst",
+	auto = "firemode_auto",
+	volley = "firemode_volley"
 }
 
 function HEVHUDWeapons:init(panel,settings,config,...)
@@ -256,7 +247,10 @@ function HEVHUDWeapons:_set_main_weapon_magazine(current,total)
 end
 
 function HEVHUDWeapons:set_main_weapon_firemode(firemode,can_toggle)
-	self._main_ammo:child("firemode_icon"):set_image(HEVHUDWeapons.FIREMODE_TEXTURE,unpack(HEVHUDWeapons.FIREMODE_RECTS[firemode]))
+	local texture,texture_rect = HEVHUD:GetIconData(self.FIREMODE_ICONS[firemode])
+	if texture then
+		self._main_ammo:child("firemode_icon"):set_image(texture,unpack(texture_rect))
+	end
 end
 
 -- can_toggle is not used

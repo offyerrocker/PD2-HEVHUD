@@ -7,6 +7,16 @@ Hooks:PostHook(HUDManager,"_setup_player_info_hud_pd2","hevhud_hudmanager_create
 	end
 end)
 
+
+--[[
+Hooks:PostHook(HUDManager,"add_teammate_panel","hevhud_hudmanager_addteammate",function(self, character_name, player_name, ai, peer_id)
+	HEVHUD:AddTeammatePanel(character_name,player_name,ai,peer_id)
+end)
+
+
+--]]
+
+
 Hooks:PostHook(HUDManager,"set_disabled","hevhud_hudmanager_hidehud",function(self)
 	HEVHUD._panel:hide()
 end)

@@ -105,6 +105,32 @@ HEVHUD.FIRE_MODE_IDS = {
 	volley = Idstring("volley")
 }
 
+HEVHUD.HEVHUD_ICONS = {
+	revives = {0,0,32,32},
+	teammate_vitals_fill = {32,0,32,32},
+	teammate_vitals_line = {64,0,32,32},
+	EMPTY4 = {96,0,32,32},
+	firemode_single = {0,32,32,32},
+	firemode_burst = {32,32,32,32},
+	firemode_auto = {64,32,32,32},
+	firemode_volley = {96,32,32,32},
+	teammate_ammo = {0,64,32,32},
+	triangle_line = {32,64,32,32},
+	EMPTY11 = {64,64,32,32},
+	EMPTY12 = {96,64,32,32},
+	EMPTY13 = {0,96,32,32},
+	EMPTY14 = {32,96,32,32},
+	EMPTY15 = {64,96,32,32},
+	EMPTY16 = {96,96,32,32}
+}
+
+function HEVHUD:GetIconData(icon_id)
+	local rect = self.HEVHUD_ICONS[icon_id]
+	if rect then
+		return "guis/textures/hevhud_icons",rect
+	end
+end
+
 function HEVHUD:GetHLGunAmmoIcon(categories,weapon_id,fallback)
 	fallback = fallback or "pistol_ammo"
 	local overrides = {
@@ -195,15 +221,44 @@ function HEVHUD:CreateHUD(parent_hud)
 	
 	self._hud_vitals = HEVHUDCore:require("classes/HEVHUDVitals"):new(hl2,settings,config)
 	self._hud_weapons = HEVHUDCore:require("classes/HEVHUDWeapons"):new(hl2,settings,config)
-	--self._hud_teammates = HEVHUDCore:require("classes/HEVHUDTeammates"):new(hl2,settings,config)
 	self._hud_carry = HEVHUDCore:require("classes/HEVHUDCarry"):new(hl2,settings,config)
+	
+	self._teammate_panels = {}
+	
+	self:CreateTeammatesPanel(hl2) -- create separate panel to hold each individual teammate panel
+	
 	--self._hud_hint = HEVHUDCore:require("classes/HEVHUDHint"):new(hl2,settings,config)
 	--self._hud_objectives = HEVHUDCore:require("classes/HEVHUDObjectives"):new(hl2,settings,config)
 	
-	
-	
+	local HEVHUDTeammate = HEVHUDCore:require("classes/HEVHUDTeammate")
+	for i=1,3 do 
+		local teammate = HEVHUDTeammate:new(hl2,settings,config,i)
+		self._teammate_panels[i] = teammate 
+		teammate._panel:set_y(i * 90)
+	end
+end
+
+function HEVHUD:CreateTeammatesPanel(parent)
+	if alive(self._teammates_panel) then
+		self._teammates_panel:parent():remove(self._teammates_panel)
+		self._teammates_panel = nil
+	end
+	self._teammates_panel = parent:panel({
+		name = "teammates",
+		valign = "grow",
+		halign = "grow",
+		layer = 1
+	})
+end
+--[[
+function HEVHUD:AddTeammatePanel(character_name,player_name,ai,peer_id)
+	local HUDTeammateClass = HEVHUDCore:require("classes/HEVHUDTeammate")
 	
 end
+
+function HEVHUD:RemoveTeammatePanel(character_name,player_name,ai,peer_id)
+end
+--]]
 
 function HEVHUD:UpdateGame(t,dt)
 	-- game update

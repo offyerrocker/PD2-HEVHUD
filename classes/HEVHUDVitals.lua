@@ -175,19 +175,18 @@ function HEVHUDVitals:setup()
 	})
 	self._revives = revives
 	self._revives_bgbox = self.CreateBGBox(revives,nil,nil,bgbox_panel_config,{color=self._BG_BOX_COLOR})
+	
+	local revives_icon_texture,revives_icon_texture_rect = HEVHUD:GetIconData("revives")
 	local revives_icon = revives:bitmap({
 		name = "revives_icon",
 		w = vars.REVIVES_ICON_W,
 		h = vars.REVIVES_ICON_H,
 		x = vars.REVIVES_ICON_HOR_OFFSET,
 		y = vars.REVIVES_ICON_VER_OFFSET,
-		texture = "guis/textures/hevhud_icons",
+		texture = revives_icon_texture,
 		valign = "grow",
 		halign = "grow",
-		texture_rect = {
-			0,0,
-			32,32
-		},
+		texture_rect = revives_icon_texture_rect,
 		color = DEFAULT_COLOR
 	})
 	
