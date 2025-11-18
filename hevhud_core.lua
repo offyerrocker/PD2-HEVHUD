@@ -111,6 +111,7 @@ function HEVHUDCore:LoadConfig(path)
 	else
 		self:Log("No config file",path)
 	end
+	Hooks:Call("hevhud_on_settings_changed",self.config)
 end
 
 function HEVHUDCore:SaveConfig() -- this is not used anywhere (and honestly it shouldn't be) but it does work!
@@ -124,9 +125,9 @@ function HEVHUDCore:LoadSettings()
 		for k, v in pairs(json.decode(file:read("*all"))) do
 			self.settings[k] = v
 		end
-	else
-		self:SaveSettings()
 	end
+	
+	Hooks:Call("hevhud_on_config_changed",self.settings)
 end
 
 function HEVHUDCore:SaveSettings()
@@ -332,6 +333,10 @@ Hooks:Add("MenuManagerBuildCustomMenus", "hevhud_MenuManagerBuildCustomMenus", f
 end)
 
 Hooks:Add("MenuManagerInitialize", "hevhud_initmenu", function(menu_manager)
+	-- anything that changes settings should then call:
+	-- Hooks:Add("hevhud_on_config_changed",self.settings)
+	
+	
 	MenuCallbackHandler.callback_hevhud_menu_general_focus = function(self,focus)
 		if focus then
 			if HEVHUDCore.menu_data.populated_languages_menu then
