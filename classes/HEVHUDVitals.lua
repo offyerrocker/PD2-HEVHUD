@@ -459,7 +459,7 @@ function HEVHUDVitals:upd_power_size()
 		self._power:stop(self._anim_power_resize_thread)
 		self._anim_power_resize_thread = nil
 	end
-	self._anim_power_resize_thread = self._power:animate(AnimateLibrary.animate_grow_y,nil,self._POWER_FRAME_ANIM_DURATION,self._power:h(),h)
+	self._anim_power_resize_thread = self._power:animate(AnimateLibrary.animate_grow_h_bottom,nil,self._POWER_FRAME_ANIM_DURATION,self._power:h(),h)
 	self:upd_power_visible()
 end
 

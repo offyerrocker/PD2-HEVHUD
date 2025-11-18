@@ -49,8 +49,10 @@ function AnimateLibrary.animate_color_oscillate(o,speed,color_1,color_2)
 --	o:set_color(color_2)
 end
 
-function AnimateLibrary.animate_grow_y(o,cb,duration,from_h,to_h)
+-- grow height, align to bottom
+function AnimateLibrary.animate_grow_h_bottom(o,cb,duration,from_h,to_h)
 	local bottom = o:bottom()
+	from_h = from_h or o:h()
 	local dh = to_h - from_h
 	local t,dt = 0,0
 	while t < duration do 
