@@ -10,7 +10,7 @@ end
 HEVHUDCore.default_settings = {
 	color_hl2_yellow = 0xFFD040,
 	color_hl2_yellow_bright = 0xF0D210,
-	color_hl2_red = 0xbb2d12,
+	color_hl2_red = 0xBB0200, -- 0xbb2d12
 	color_hl2_red_bright = 0xBB0200, --80000?
 	color_hl2_orange = 0xFFA000,
 	sounds_enabled = true,

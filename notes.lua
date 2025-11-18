@@ -8,10 +8,13 @@ TODO:
 	Vitals
 		Neater revives counter (needs design too)
 		Workaround for no mul on bitmap	(check alpha channel in asset?)
+			- Yep it's the alpha channel, that has to be explicit
 	Weapons
 		Neater firemode readout
 		Weapon icons?
 		Melee
+	Teammates
+		- colors need to be tweaked; white should probably be normal, instead of orange, otherwise it blends too much
 	Equipment
 		?????????
 		Special equipment
@@ -34,8 +37,6 @@ TODO:
 	Ammo Pickup in HUD
 	Hints/Popups
 		ez
-	Teammates
-		???
 	Jokers
 		??
 	Objectives

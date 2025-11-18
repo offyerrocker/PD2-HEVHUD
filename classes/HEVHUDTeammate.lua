@@ -22,6 +22,7 @@ function HEVHUDTeammate:setup()
 	local vars = self._config.Teammate
 	self._panel:set_size(vars.TEAMMATE_W,vars.TEAMMATE_H)
 	self._TEXT_COLOR_FULL = HEVHUD.colordecimal_to_color(self._settings.color_hl2_yellow)
+	self._TEXT_COLOR_HALF = HEVHUD.colordecimal_to_color(self._settings.color_hl2_orange)
 	self._TEXT_COLOR_NONE = HEVHUD.colordecimal_to_color(self._settings.color_hl2_red)
 	
 	self._peer_id = nil
@@ -31,7 +32,19 @@ function HEVHUDTeammate:setup()
 	local BG_BOX_ALPHA = self._config.General.BG_BOX_ALPHA
 	self._BG_BOX_COLOR = HEVHUD.colordecimal_to_color(self._config.General.BG_BOX_COLOR)
 	self._bgbox = self.CreateBGBox(panel,nil,nil,{alpha=BG_BOX_ALPHA,valign="grow",halign="grow"},{color=self._BG_BOX_COLOR})
-	
+
+	self._TEAMMATE_VITALS_HEALTH_LOW_THRESHOLD = vars.TEAMMATE_VITALS_HEALTH_LOW_THRESHOLD
+	self._TEAMMATE_VITALS_HEALTH_EMPTY_THRESHOLD = vars.TEAMMATE_VITALS_HEALTH_EMPTY_THRESHOLD
+	self._TEAMMATE_VITALS_REVIVES_LOW_THRESHOLD = vars.TEAMMATE_VITALS_REVIVES_LOW_THRESHOLD
+	self._TEAMMATE_VITALS_REVIVES_EMPTY_THRESHOLD = vars.TEAMMATE_VITALS_REVIVES_EMPTY_THRESHOLD
+	self._MISSION_EQ_ICON_W = vars.MISSION_EQ_ICON_W
+	self._MISSION_EQ_ICON_H = vars.MISSION_EQ_ICON_H
+	self._MISSION_EQ_ICON_HOR_MARGIN = vars.MISSION_EQ_ICON_HOR_MARGIN
+	self._MISSION_EQ_AMOUNT_VERTICAL = vars.MISSION_EQ_AMOUNT_VERTICAL
+	self._MISSION_EQ_AMOUNT_ALIGN = vars.MISSION_EQ_AMOUNT_ALIGN
+	self._ANIM_SORT_MISSION_EQ_ICON_DURATION = vars.ANIM_SORT_MISSION_EQ_ICON_DURATION
+	self._TEAMMATE_MISSION_EQ_LABEL_FONT_SIZE = vars. TEAMMATE_MISSION_EQ_LABEL_FONT_SIZE
+	self._TEAMMATE_MISSION_EQ_LABEL_FONT_NAME = vars.TEAMMATE_MISSION_EQ_LABEL_FONT_NAME
 	
 	local name = panel:text({
 		name = "name",
@@ -98,7 +111,7 @@ function HEVHUDTeammate:setup()
 		h = vars.TEAMMATE_AMMO_ICON_H,
 		x = vars.TEAMMATE_AMMO_ICON_X,
 		y = vars.TEAMMATE_AMMO_ICON_Y,
-		color = self._TEXT_COLOR_FULL,
+		color = self._TEXT_COLOR_NONE,
 		blend_mode = "add",
 		layer = 2
 	})
@@ -113,7 +126,7 @@ function HEVHUDTeammate:setup()
 		color = self._TEXT_COLOR_FULL,
 		layer = 2
 	})
-	
+	self._mission_equipment = mission_equipment_bar
 	
 	
 	-- vitals icon (w/ visual shield/health/revives indicator)
@@ -122,14 +135,77 @@ function HEVHUDTeammate:setup()
 	-- deployables
 	-- mission equipment
 	
+end
+
+function HEVHUDTeammate:add_special_equipment(id,amount,skip_sort)
 	
-	
-	
-	
-	
-	
-	
-	
+	local equipment = self._mission_equipment:child(id)
+	if not amount or tostring(amount) == "1" then
+		amount = ""
+	end
+	if alive(equipment) then 
+		equipment:child("amount"):set_text(amount)
+	else
+		--local num_eq = #self._mission_equipment:children()
+		equipment = self._mission_equipment:panel({
+			name = id,
+			w = self._MISSION_EQ_ICON_W,
+			h = self._MISSION_EQ_ICON_H,
+			x = -self._MISSION_EQ_ICON_W,
+			y = 0,
+			layer = 2
+		})
+		
+		local eq_td = tweak_data.equipments[id]
+		local texture,rect = tweak_data.hud_icons:get_icon_data(eq_td.icon)
+		local icon = equipment:bitmap({
+			name = "icon",
+			texture = texture,
+			texture_rect = rect,
+			w = self._MISSION_EQ_ICON_W,
+			h = self._MISSION_EQ_ICON_H,
+			layer = 3
+		})
+		
+		local amount = equipment:text({
+			name = "amount",
+			font = self._TEAMMATE_MISSION_EQ_LABEL_FONT_NAME,
+			font_size = self._TEAMMATE_MISSION_EQ_LABEL_FONT_SIZE,
+			text = amount,
+			align = self._MISSION_EQ_AMOUNT_ALIGN,
+			vertical = self._MISSION_EQ_AMOUNT_VERTICAL,
+			layer = 4
+		})
+		if not skip_sort then
+			self:sort_special_equipment()
+		end
+	end
+end
+
+function HEVHUDTeammate:remove_special_equipment(id,skip_sort)
+	local equipment = self._mission_equipment:child(id)
+	if alive(equipment) then 
+		self._mission_equipment:remove(equipment)
+		if not skip_sort then
+			self:sort_special_equipment()
+		end
+	end
+end
+
+--
+function HEVHUDTeammate:sort_special_equipment(instant)
+	-- todo sort options?
+	-- todo ensure reliable sort
+	local x = 0
+	for i,child in ipairs(self._mission_equipment:children()) do 
+		child:stop() -- todo stop only motion thread
+		if instant then
+			child:set_x(x)
+		else
+			child:animate(AnimateLibrary.animate_move_lerp,nil,self._ANIM_SORT_MISSION_EQ_ICON_DURATION,x)
+		end
+		x = x + self._MISSION_EQ_ICON_W + self._MISSION_EQ_ICON_HOR_MARGIN
+	end
 end
 
 function HEVHUDTeammate:set_name(name)
@@ -145,13 +221,49 @@ function HEVHUDTeammate:hide()
 end
 
 function HEVHUDTeammate:set_health(data)
+	local ratio = data.current/data.total
+	
+	local vitals_icon_fill = self._panel:child("vitals_icon_fill")
+	
+	-- todo option for smooth lerp color
+	if ratio <= self._TEAMMATE_VITALS_HEALTH_EMPTY_THRESHOLD then
+		vitals_icon_fill:set_color(self._TEXT_COLOR_NONE)
+	elseif ratio <= self._TEAMMATE_VITALS_HEALTH_LOW_THRESHOLD then
+		vitals_icon_fill:set_color(self._TEXT_COLOR_HALF)
+	else
+		vitals_icon_fill:set_color(self._TEXT_COLOR_FULL)
+	end
+	
+	self:_set_vitals_fill(ratio)
+	
 	self:_set_revives(data.revives)
+end
+
+function HEVHUDTeammate:_set_vitals_fill(ratio)
+	--[[
+		local vitals_icon_fill_texture,vitals_icon_fill_rect = HEVHUD:GetIconData("teammate_vitals_fill")
+		local rect = {
+			vitals_icon_fill_rect[1],vitals_icon_fill_rect[2],
+			vitals_icon_fill_rect[3],vitals_icon_fill_rect[4] * 
+		}
+		vitals_icon_fill:set_image(vitals_icon_fill_texture,unpack(vitals_icon_fill_rect))
+		vitals_icon_fill:set_bottom(TEAMMATE_VITALS_ICON_Y+TEAMMATE_VITALS_ICON_H)
+	--]]
 end
 
 function HEVHUDTeammate:set_armor(data)
 end
 
 function HEVHUDTeammate:_set_revives(revives)
+	local vitals_icon_line = self._panel:child("vitals_icon_line")
+	
+	if revives <= self._TEAMMATE_VITALS_REVIVES_EMPTY_THRESHOLD then
+		vitals_icon_line:set_color(self._TEXT_COLOR_NONE)
+	elseif revives <= self._TEAMMATE_VITALS_REVIVES_LOW_THRESHOLD then
+		vitals_icon_line:set_color(self._TEXT_COLOR_HALF)
+	else
+		vitals_icon_line:set_color(self._TEXT_COLOR_FULL)
+	end
 end
 
 function HEVHUDTeammate:set_ai(state)
