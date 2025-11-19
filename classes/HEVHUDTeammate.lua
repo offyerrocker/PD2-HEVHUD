@@ -9,7 +9,8 @@ function HEVHUDTeammate:init(panel,settings,config,i,...)
 		name = string.format("teammate_%i",i),
 		w = vars.TEAMMATE_W,
 		h = vars.TEAMMATE_H,
-		layer = 1
+		layer = 1,
+		visible = false
 	})
 --	self._panel:rect({color=Color.red,alpha=0.1,name="debug"})
 	self._id = i

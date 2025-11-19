@@ -231,12 +231,14 @@ function HEVHUD:CreateHUD(parent_hud)
 	--self._hud_objectives = HEVHUDCore:require("classes/HEVHUDObjectives"):new(hl2,settings,config)
 	
 	local HEVHUDTeammate = HEVHUDCore:require("classes/HEVHUDTeammate")
-	for i=1,3 do 
+	for i=1,4 do 
 		local teammate = HEVHUDTeammate:new(hl2,settings,config,i)
 		self._teammate_panels[i] = teammate 
 		teammate._panel:set_y(i * 90)
 	end
 end
+
+
 
 function HEVHUD:CreateTeammatesPanel(parent)
 	if alive(self._teammates_panel) then
