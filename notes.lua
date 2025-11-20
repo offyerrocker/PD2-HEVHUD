@@ -53,6 +53,25 @@ TODO:
 
 
 
+[X][v]NAMEHERE
+[1][2][G][Z]
+[B][M]
+
+----
+
+[b] =  bag
+[x]=status (custody/downed/swansong/throwable/low ammo)
+[v] = vitals
+[1] = deployable 1
+[2] = deployable 2
+[g] = grenade
+[z] = zipties
+[m] = missionequipment
+
+* name must be character limited
+	* or width limited?
+- which element to use peercolor?
+	
 
 
 

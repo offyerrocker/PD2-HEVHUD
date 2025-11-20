@@ -51,7 +51,7 @@ function HEVHUDCarry:setup()
 	
 	self._bag_bgbox = self.CreateBGBox(bag,nil,nil,{alpha=BG_BOX_ALPHA,valign="grow",halign="grow"},{color=self._BG_BOX_COLOR})
 	
-	local texture,texture_rect = tweak_data.hud_icons:get_icon_data("wp_bag")
+	local texture,texture_rect = tweak_data.hud_icons:get_icon_data("pd2_loot")
 	local bag_icon = bag:bitmap({
 		name = "bag_icon",
 		texture = texture,

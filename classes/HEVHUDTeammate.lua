@@ -46,83 +46,251 @@ function HEVHUDTeammate:setup()
 	self._TEAMMATE_MISSION_EQ_LABEL_FONT_SIZE = vars. TEAMMATE_MISSION_EQ_LABEL_FONT_SIZE
 	self._TEAMMATE_MISSION_EQ_LABEL_FONT_NAME = vars.TEAMMATE_MISSION_EQ_LABEL_FONT_NAME
 	
-	local name = panel:text({
-		name = "name",
-		text = "futurecar",
-		font = vars.TEAMMATE_NAMEPLATE_FONT_NAME,
-		font_size = vars.TEAMMATE_NAMEPLATE_FONT_SIZE,
-		x = vars.TEAMMATE_NAMEPLATE_X,
-		y = vars.TEAMMATE_NAMEPLATE_Y,
-		valign = "grow",
+	
+	local status = panel:panel({
+		name = "status",
+		w = vars.STATUS_ICON_W,
+		h = vars.STATUS_ICON_H,
+		x = vars.STATUS_ICON_X,
+		y = vars.STATUS_ICON_Y,
+		layer = 3
+	})
+	local state_icon_texture,state_icon_rect = HEVHUD:GetIconData("triangle")
+	status:bitmap({
+		name = "status_icon",
+		texture = state_icon_texture,
+		texture_rect = state_icon_rect,
+		w = status:w(),
+		h = status:h(),
 		halign = "grow",
-		color = self._TEXT_COLOR_FULL,
+		valign = "grow",
 		layer = 3
 	})
 	
-	local vitals_icon_fill_texture,vitals_icon_fill_rect = HEVHUD:GetIconData("teammate_vitals_fill")
-	local vitals_icon_line_texture,vitals_icon_line_rect = HEVHUD:GetIconData("teammate_vitals_line")
-	
-	local vitals_icon_fill = panel:bitmap({
-		name = "vitals_icon_fill",
-		texture = vitals_icon_fill_texture,
-		texture_rect = vitals_icon_fill_rect,
-		w = vars.TEAMMATE_VITALS_ICON_W,
-		h = vars.TEAMMATE_VITALS_ICON_H,
-		x = vars.TEAMMATE_VITALS_ICON_X,
-		y = vars.TEAMMATE_VITALS_ICON_Y,
-		color = self._TEXT_COLOR_FULL,
-		valign = "grow",
+	local ammo = status:panel({
+		name = "ammo",
+		w = status:w(),
+		h = status:h(),
 		halign = "grow",
-		layer = 2
-	})
-	local vitals_icon_line = panel:bitmap({
-		name = "vitals_icon_line",
-		texture = vitals_icon_line_texture,
-		texture_rect = vitals_icon_line_rect,
-		w = vars.TEAMMATE_VITALS_ICON_W,
-		h = vars.TEAMMATE_VITALS_ICON_H,
-		x = vars.TEAMMATE_VITALS_ICON_X,
-		y = vars.TEAMMATE_VITALS_ICON_Y,
-		color = self._TEXT_COLOR_FULL,
 		valign = "grow",
-		halign = "grow",
-		layer = 2
+		layer = 3
 	})
-	
-	local triangle_icon_texture,triangle_icon_rect = HEVHUD:GetIconData("triangle_line")
 	local ammo_icon_texture,ammo_icon_rect = HEVHUD:GetIconData("teammate_ammo")
-	local ammo_icon = panel:bitmap({
+	ammo_icon = ammo:bitmap({
 		name = "ammo_icon",
 		texture = ammo_icon_texture,
 		texture_rect = ammo_icon_rect,
-		w = vars.TEAMMATE_AMMO_ICON_W,
-		h = vars.TEAMMATE_AMMO_ICON_H,
-		x = vars.TEAMMATE_AMMO_ICON_X,
-		y = vars.TEAMMATE_AMMO_ICON_Y,
+		w = ammo:w(),
+		h = ammo:h(),
+		halign = "grow",
+		valign = "grow",
 		color = self._TEXT_COLOR_FULL,
 		layer = 3
 	})
-	
-	local triangle_icon = panel:bitmap({
+	local triangle_icon_texture,triangle_icon_rect = HEVHUD:GetIconData("triangle_line")
+	ammo:bitmap({
 		name = "triangle_icon",
 		texture = triangle_icon_texture,
 		texture_rect = triangle_icon_rect,
-		w = vars.TEAMMATE_AMMO_ICON_W,
-		h = vars.TEAMMATE_AMMO_ICON_H,
-		x = vars.TEAMMATE_AMMO_ICON_X,
-		y = vars.TEAMMATE_AMMO_ICON_Y,
+		w = ammo:w(),
+		h = ammo:h(),
+		halign = "grow",
+		valign = "grow",
 		color = self._TEXT_COLOR_NONE,
 		blend_mode = "add",
 		layer = 2
 	})
 	
+	local vitals = panel:panel({
+		name = "vitals",
+		w = vars.VITALS_ICON_W,
+		h = vars.VITALS_ICON_H,
+		x = vars.VITALS_ICON_X,
+		y = vars.VITALS_ICON_Y,
+		layer = 3
+	})
+	
+	local vitals_icon_fill_texture,vitals_icon_fill_rect = HEVHUD:GetIconData("teammate_vitals_fill")
+	local vitals_icon_line_texture,vitals_icon_line_rect = HEVHUD:GetIconData("teammate_vitals_line")
+	vitals:bitmap({
+		name = "vitals_icon_fill",
+		texture = vitals_icon_fill_texture,
+		texture_rect = vitals_icon_fill_rect,
+		w = vitals:w(),
+		h = vitals:h(),
+		color = self._TEXT_COLOR_FULL,
+		valign = "grow",
+		halign = "grow",
+		layer = 2
+	})
+	vitals:bitmap({
+		name = "vitals_icon_line",
+		texture = vitals_icon_line_texture,
+		texture_rect = vitals_icon_line_rect,
+		w = vitals:w(),
+		h = vitals:h(),
+		color = self._TEXT_COLOR_FULL,
+		valign = "grow",
+		halign = "grow",
+		layer = 2
+	})
+	
+	panel:text({
+		name = "name",
+		text = "futurecar",
+		font = vars.NAMEPLATE_FONT_NAME,
+		font_size = vars.NAMEPLATE_FONT_SIZE,
+		x = vars.NAMEPLATE_X,
+		y = vars.NAMEPLATE_Y,
+		valign = "grow",
+		halign = "grow",
+		color = self._TEXT_COLOR_FULL,
+		layer = 3
+	})
+	
+	local deployable = panel:panel({
+		name = "deployable",
+		w = vars.DEPLOYABLE_ICON_W,
+		h = vars.DEPLOYABLE_ICON_H,
+		x = vars.DEPLOYABLE_ICON_X,
+		y = vars.DEPLOYABLE_ICON_Y,
+		layer = 3
+	})
+	deployable:texture({
+		name = "icon",
+		w = deployable:w(),
+		w = deployable:h(),
+		valign = "grow",
+		halign = "grow",
+		layer = 3
+	})
+	deployable:text({
+		name = "amount",
+		x = vars.DEPLOYABLE_LABEL_X,
+		y = vars.DEPLOYABLE_LABEL_Y,
+		font = vars.DEPLOYABLE_LABEL_FONT_NAME,
+		font_size = vars.DEPLOYABLE_LABEL_FONT_SIZE,
+		text = "14",
+		align = vars.DEPLOYABLE_LABEL_ALIGN,
+		vertical = vars.DEPLOYABLE_LABEL_VERTICAL,
+	})
+	
+	
+	local grenades_icon_texture,grenades_icon_rect = tweak_data.hud_icons:get_icon_data("frag_grenade")
+	local grenades = panel:panel({
+		name = "grenades",
+		x = vars.GRENADES_ICON_X,
+		y = vars.GRENADES_ICON_Y,
+		w = vars.GRENADES_ICON_W,
+		h = vars.GRENADES_ICON_H,
+		color = self._TEXT_COLOR_FULL,
+		valign = "grow",
+		halign = "grow",
+		layer = 2
+	})
+	grenades:bitmap({
+		name = "icon",
+		texture = grenades_icon_texture,
+		texture_rect = grenades_icon_rect,
+		w = grenades:w(),
+		h = grenades:h(),
+		color = self._TEXT_COLOR_FULL,
+		valign = "grow",
+		halign = "grow",
+		layer = 2
+	})
+	grenades:text({
+		name = "amount",
+		x = vars.GRENADES_LABEL_X,
+		y = vars.GRENADES_LABEL_Y,
+		font = vars.GRENADES_LABEL_FONT_NAME,
+		font_size = vars.GRENADES_LABEL_FONT_SIZE,
+		text = "14",
+		align = vars.GRENADES_LABEL_ALIGN,
+		vertical = vars.GRENADES_LABEL_VERTICAL,
+	})
+	
+	
+	local zipties_icon_texture,zipties_icon_rect = tweak_data.hud_icons:get_icon_data("equipment_cable_ties")
+	local zipties = panel:panel({
+		name = "zipties",
+		x = vars.ZIPTIES_ICON_X,
+		y = vars.ZIPTIES_ICON_Y,
+		w = vars.ZIPTIES_ICON_W,
+		h = vars.ZIPTIES_ICON_H,
+		color = self._TEXT_COLOR_FULL,
+		valign = "grow",
+		halign = "grow",
+		layer = 2
+	})
+	zipties:bitmap({
+		name = "icon",
+		texture = zipties_icon_texture,
+		texture_rect = zipties_icon_rect,
+		w = zipties:w(),
+		h = zipties:h(),
+		color = self._TEXT_COLOR_FULL,
+		valign = "grow",
+		halign = "grow",
+		layer = 2
+	})
+	zipties:text({
+		name = "amount",
+		x = vars.ZIPTIES_LABEL_X,
+		y = vars.ZIPTIES_LABEL_Y,
+		font = vars.ZIPTIES_LABEL_FONT_NAME,
+		font_size = vars.ZIPTIES_LABEL_FONT_SIZE,
+		text = "14",
+		align = vars.ZIPTIES_LABEL_ALIGN,
+		vertical = vars.ZIPTIES_LABEL_VERTICAL,
+	})
+	
+	
+	local carry_icon_texture,carry_icon_rect = tweak_data.hud_icons:get_icon_data("pd2_loot")
+	local carry = panel:panel({
+		name = "carry",
+		x = vars.CARRY_ICON_X,
+		y = vars.CARRY_ICON_Y,
+		w = vars.CARRY_ICON_W,
+		h = vars.CARRY_ICON_H,
+		color = self._TEXT_COLOR_FULL,
+		valign = "grow",
+		halign = "grow",
+		layer = 2
+	})
+	carry:bitmap({
+		name = "icon",
+		texture = carry_icon_texture,
+		texture_rect = carry_icon_rect,
+		w = carry:w(),
+		h = carry:h(),
+		color = self._TEXT_COLOR_FULL,
+		valign = "grow",
+		halign = "grow",
+		layer = 2
+	})
+	
+	
+	--[[
+	all vars standardized to eqbox
+
+-- slight layering of equipment icons?
+-- or scrolling bar?
+	
+	
+[X][v]NAMEHERE
+[1][G][Z]
+[B][M]
+	
+	--]]
+	
 	
 	local mission_equipment_bar = panel:panel({
 		name = "mission_equipment_bar",
-		w = TEAMMATE_MISSION_EQ_W,
-		h = TEAMMATE_MISSION_EQ_H,
-		x = TEAMMATE_MISSION_EQ_X,
-		y = TEAMMATE_MISSION_EQ_Y,
+		w = vars.MISSION_EQ_W,
+		h = vars.MISSION_EQ_H,
+		x = vars.MISSION_EQ_X,
+		y = vars.MISSION_EQ_Y,
 		color = self._TEXT_COLOR_FULL,
 		layer = 2
 	})
@@ -247,7 +415,7 @@ function HEVHUDTeammate:_set_vitals_fill(ratio)
 			vitals_icon_fill_rect[3],vitals_icon_fill_rect[4] * 
 		}
 		vitals_icon_fill:set_image(vitals_icon_fill_texture,unpack(vitals_icon_fill_rect))
-		vitals_icon_fill:set_bottom(TEAMMATE_VITALS_ICON_Y+TEAMMATE_VITALS_ICON_H)
+		vitals_icon_fill:set_bottom(VITALS_ICON_Y+VITALS_ICON_H)
 	--]]
 end
 
@@ -289,6 +457,16 @@ return HEVHUDTeammate
 
 
 --[[
+
+
+
+
+
+
+
+
+
+
 function HEVHUDTeammate:arrange_teammates()
 	for _,child in pairs(self._teammates) do
 		-- todo sort by peer num or join order?
