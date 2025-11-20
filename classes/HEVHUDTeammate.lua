@@ -157,7 +157,7 @@ function HEVHUDTeammate:setup()
 		y = vars.DEPLOYABLE_ICON_Y,
 		layer = 3
 	})
-	deployable:texture({
+	deployable:bitmap({
 		name = "icon",
 		w = deployable:w(),
 		w = deployable:h(),
