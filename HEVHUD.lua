@@ -222,7 +222,7 @@ function HEVHUD:CreateHUD(parent_hud)
 	self._hud_vitals = HEVHUDCore:require("classes/HEVHUDVitals"):new(hl2,settings,config)
 	self._hud_weapons = HEVHUDCore:require("classes/HEVHUDWeapons"):new(hl2,settings,config)
 	self._hud_carry = HEVHUDCore:require("classes/HEVHUDCarry"):new(hl2,settings,config)
-	
+	self._hud_followers = HEVHUDCore:require("classes/HEVHUDFollowers"):new(hl2,settings,config)
 	self._teammate_panels = {}
 	
 	self:CreateTeammatesPanel(hl2) -- create separate panel to hold each individual teammate panel
@@ -415,6 +415,30 @@ end
 
 function HEVHUD:HideCarry(...)
 	self._hud_carry:hide_carry_bag(...)
+end
+
+
+function HEVHUD:AddMinion(ukey,unit)
+	self._hud_followers:add_follower(ukey)
+	if alive(unit) then
+		-- add damage listeners
+		local dmg_ext = unit:character_damage()
+		if dmg_ext then
+			dmg:add_listener(
+				"hevhud_on_minion_damaged",
+				{
+					"dmg_rcv"
+				},
+				function(hit_unit,dmg_info)
+					self._hud_followers:set_follower_hp(ukey,hit_unit:health_ratio())
+				end
+			)
+		end
+	end
+end
+	
+function HEVHUD:RemoveMinion(ukey)
+	self._hud_followers:remove_follower(ukey)
 end
 
 --[[

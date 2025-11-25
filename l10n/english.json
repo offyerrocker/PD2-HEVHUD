@@ -17,6 +17,7 @@
 	"menu_hevhud_toggle_loadout_desc" : "Show your current weapons, deployables, throwables, cable ties, and mission equipment.",
 	"hevhud_objective_amount_progress" : "[$1 / $2]",
 	
+	"hevhud_hud_followers" : "SQUAD FOLLOWING",
 	"hevhud_hud_aux_power" : "AUX POWER",
 	"hevhud_hud_sprint" : "SPRINT",
 	"hevhud_hud_flashlight" : "FLASHLIGHT",

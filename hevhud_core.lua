@@ -22,11 +22,12 @@ HEVHUDCore.MOD_PATH = HEVHUDCore.GetPath and HEVHUDCore:GetPath() or ModPath
 HEVHUDCore.settings = table.deep_map_copy(HEVHUDCore.default_settings)
 HEVHUDCore.config = { -- Loaded from hevhud_vars.ini
 	--Player = {},
-	Teammate = {},
 	General = {},
+	Teammate = {},
 	Vitals = {},
 	Weapons = {},
 	Carry = {},
+	Followers = {},
 	Hint = {},
 	Crosshair = {},
 	Chat = {},
@@ -35,8 +36,11 @@ HEVHUDCore.config = { -- Loaded from hevhud_vars.ini
 }
 HEVHUDCore._sort_config = { -- order to sort ini file during write
 	"General",
+	"Teammate",
 	"Vitals",
+	"Weapons",
 	"Carry",
+	"Followers",
 	"Hint",
 	"Crosshair",
 	"Chat",

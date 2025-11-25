@@ -10,7 +10,7 @@ function HEVHUDTeammate:init(panel,settings,config,i,...)
 		w = vars.TEAMMATE_W,
 		h = vars.TEAMMATE_H,
 		layer = 1,
-		visible = false
+		visible = true
 	})
 --	self._panel:rect({color=Color.red,alpha=0.1,name="debug"})
 	self._id = i
@@ -166,7 +166,7 @@ function HEVHUDTeammate:setup()
 	
 	self._nameplate = panel:text({
 		name = "name",
-		text = "futurecar",
+		text = "WWWWWWWWWWWWQWWW",
 		font = vars.NAMEPLATE_FONT_NAME,
 		font_size = vars.NAMEPLATE_FONT_SIZE,
 		x = vars.NAMEPLATE_X,
@@ -370,7 +370,7 @@ function HEVHUDTeammate:setup()
 		for i=1,8,1 do 
 			local id = table.remove(keys,math.random(1,#keys))
 			if tweak_data.equipments[id] and tweak_data.equipments[id].icon then
-				local amount = math.random(1,20)
+				local amount = tostring(math.random(1,20))
 				self:add_special_equipment(id,amount,true)
 			end
 		end
@@ -389,7 +389,7 @@ function HEVHUDTeammate:add_special_equipment(id,amount,skip_sort)
 		amount = ""
 	end
 	if alive(equipment) then 
-		equipment:child("amount"):set_text(amount)
+		equipment:child("label"):set_text(amount)
 	else
 		equipment = self._mission_equipment:panel({
 			name = id,
@@ -415,8 +415,8 @@ function HEVHUDTeammate:add_special_equipment(id,amount,skip_sort)
 			layer = 3
 		})
 		
-		local amount = equipment:text({
-			name = "amount",
+		local label = equipment:text({
+			name = "label",
 			font = self._MISSION_EQ_LABEL_FONT_NAME,
 			font_size = self._MISSION_EQ_LABEL_FONT_SIZE,
 			text = amount,
