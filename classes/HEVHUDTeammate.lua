@@ -24,6 +24,7 @@ function HEVHUDTeammate:setup()
 	self._ai = nil
 	self._ammo_state_primary = false
 	self._ammo_state_secondary = false
+	self._condition_state = false
 	self._status_panel_state = false
 	
 	-- vars for layout
@@ -103,7 +104,7 @@ function HEVHUDTeammate:setup()
 		texture_rect = ammo_icon_rect,
 		w = ammo:w(),
 		h = ammo:h(),
-		halign = "grow",
+		halign = "left",
 		valign = "grow",
 		color = self._TEXT_COLOR_FULL,
 		layer = 3
@@ -115,7 +116,7 @@ function HEVHUDTeammate:setup()
 		texture_rect = triangle_icon_rect,
 		w = ammo:w(),
 		h = ammo:h(),
-		halign = "grow",
+		halign = "left",
 		valign = "grow",
 		color = self._TEXT_COLOR_NONE,
 		blend_mode = "add",
@@ -564,10 +565,12 @@ end
 
 function HEVHUDTeammate:set_ammo(selection_index, max_clip, current_clip, current_left, max)
 	if selection_index == 2 then
-		self._ammo_state_primary = current_left / max > self._AMMO_LOW_THRESHOLD
+		self._ammo_state_primary = current_left / max < self._AMMO_LOW_THRESHOLD
 	else
-		self._ammo_state_secondary = current_left / max > self._AMMO_LOW_THRESHOLD
+		self._ammo_state_secondary = current_left / max < self._AMMO_LOW_THRESHOLD
 	end
+
+	self:chk_condition_panel()
 end
 
 function HEVHUDTeammate:set_ai(state)
@@ -598,27 +601,46 @@ function HEVHUDTeammate:stop_carry()
 
 end
 
+function HEVHUDTeammate:chk_condition_panel()
+	local ammo_visible = self._ammo_state_primary or self._ammo_state_secondary
+	local state = ammo_visible or self._condition_state
+	
+	self._ammo_panel:set_visible(ammo_visible and not self._condition_state)
+	
+	if self._status_panel_state ~= state then
+		self._status_panel_state = state
+		if not state then
+			-- shrink status panel, then hide
+			self._status_panel:stop()
+			self._status_panel:animate(AnimateLibrary.animate_grow_w_left,function(o) o:hide() end,self._ANIM_STATUS_PANEL_FADE_DURATION,nil,1)
+			
+			self._nameplate:stop()
+			self._nameplate:animate(AnimateLibrary.animate_move_lerp,nil,self._ANIM_STATUS_PANEL_FADE_DURATION,self._config.Teammate.NAMEPLATE_X)
+		else
+			-- show and grow status panel
+			self._status_panel:stop()
+			self._status_panel:show()
+			self._status_panel:animate(AnimateLibrary.animate_grow_w_left,nil,self._ANIM_STATUS_PANEL_FADE_DURATION,1,self._config.Teammate.STATUS_ICON_W)
+		
+			self._nameplate:stop()
+			self._nameplate:animate(AnimateLibrary.animate_move_lerp,nil,self._ANIM_STATUS_PANEL_FADE_DURATION,self._config.Teammate.STATUS_ICON_W)
+		end
+	end
+end
+
 function HEVHUDTeammate:set_condition(icon_id,text)
 	--Print(icon_id,">",text,"<")
 	local status_icon = self._status_panel:child("status_icon")
 	if icon_id == "mugshot_normal" then
-		local ammo_visible = self._ammo_state_primary or self._ammo_state_secondary
-		
-		self._ammo_panel:set_visible(ammo_visible)
-		--status_icon:hide()
-		if self._status_panel_state and not ammo_visible then
-			-- shrink status panel, then hide
-			self._status_panel_state = false
-			self._status_panel:stop()
-			self._status_panel:animate(AnimateLibrary.animate_grow_w_left,function(o) o:hide() end,self._ANIM_STATUS_PANEL_FADE_DURATION,nil,1)
+		if self._condition_state then
+			self._condition_state = false
+			self:chk_condition_panel()
 		end
-		
-		self._nameplate:stop()
-		self._nameplate:animate(AnimateLibrary.animate_move_lerp,nil,self._ANIM_STATUS_PANEL_FADE_DURATION,self._config.Teammate.NAMEPLATE_X)
-		
 	else
-		-- show icon
-		
+		if not self._condition_state then
+			self._condition_state = true
+			self:chk_condition_panel()
+		end
 		--HEVHUDCore:Print("condition icon",icon_id)
 		
 		local texture,rect
@@ -638,21 +660,7 @@ function HEVHUDTeammate:set_condition(icon_id,text)
 	mugshot_electrified
 		--]]
 		
-		self._ammo_panel:hide()
-		
 		status_icon:set_image(texture,unpack(rect))
-		--status_icon:show()
-		
-		if not self._status_panel_state then
-			-- show and grow status panel
-			self._status_panel_state = true
-			self._status_panel:stop()
-			self._status_panel:show()
-			self._status_panel:animate(AnimateLibrary.animate_grow_w_left,nil,self._ANIM_STATUS_PANEL_FADE_DURATION,1,self._config.Teammate.STATUS_ICON_W)
-		end
-		
-		self._nameplate:stop()
-		self._nameplate:animate(AnimateLibrary.animate_move_lerp,nil,self._ANIM_STATUS_PANEL_FADE_DURATION,self._config.Teammate.STATUS_ICON_W)
 	end
 end
 
