@@ -7,9 +7,7 @@ Hooks:PostHook(PlayerStandard,"_check_action_deploy_underbarrel","hevhud_players
 	if Hooks:GetReturn() then
 		local weap_base = alive(self._equipped_unit) and self._equipped_unit:base()
 		if weap_base then
-			HEVHUD:CheckWeaponUnderbarrelActive(weap_base)
-			HEVHUD:CheckWeaponHasUnderbarrel(weap_base)
-			HEVHUD:CheckUnderbarrelAmmo(weap_base)
+			HEVHUD:OnSwitchWeapon(weap_base)
 		end
 	end
 end)

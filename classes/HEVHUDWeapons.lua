@@ -48,7 +48,12 @@ function HEVHUDWeapons:setup()
 	self._TEXT_COLOR_HALF = HEVHUD.colordecimal_to_color(self._settings.color_hl2_orange)
 	self._TEXT_COLOR_NONE = HEVHUD.colordecimal_to_color(self._settings.color_hl2_red)
 	
+	self._ANIM_BGBOX_FLASH_DURATION = vars.ANIM_BGBOX_FLASH_DURATION
+	self._ANIM_BGBOX_ALPHA = vars.ANIM_BGBOX_ALPHA
+	
+	self._BG_BOX_COLOR = HEVHUD.colordecimal_to_color(self._config.General.BG_BOX_COLOR)
 	local BG_BOX_ALPHA = self._config.General.BG_BOX_ALPHA
+	self._BG_BOX_ALPHA = BG_BOX_ALPHA
 	local ICONS_FONT_NAME = self._config.General.ICONS_FONT_NAME
 	local bgbox_panel_config = {alpha=BG_BOX_ALPHA,valign="grow",halign="grow"}
 	local bgbox_item_config = {color=self._BG_BOX_COLOR}
@@ -190,6 +195,12 @@ function HEVHUDWeapons:set_underbarrel_on(state)
 		
 		self._anim_underbarrel_ammo_equip_thread = self._underbarrel_ammo:animate(AnimateLibrary.animate_alpha_lerp,nil,self._EQUIP_UNDERBARREL_ANIM_DURATION,self._underbarrel_ammo:alpha(),state and self._AMMO_PANEL_ACTIVE_ALPHA or self._AMMO_PANEL_INACTIVE_ALPHA)
 		self._underbarrel_on = state
+		
+	end
+	if state then
+		self:animate_flash_bgbox_underbarrel()
+	else
+		self:animate_flash_bgbox_main()
 	end
 	return state
 end
@@ -297,6 +308,31 @@ function HEVHUDWeapons:set_main_ammo_icon(icon_name)
 	self._main_ammo:child("ammo_icon"):set_text(icon_name)
 end
 
+function HEVHUDWeapons:animate_flash_bgbox_main()
+	for _,child in pairs(self._main_ammo_bgbox:children()) do 
+		child:stop()
+		child:animate(AnimateLibrary.animate_color_lerp,nil,self._ANIM_BGBOX_FLASH_DURATION,self._TEXT_COLOR_FULL,self._BG_BOX_COLOR)
+	end
+	self._main_ammo_bgbox:stop()
+	self._main_ammo_bgbox:animate(AnimateLibrary.animate_alpha_lerp,nil,self._ANIM_BGBOX_FLASH_DURATION,self._ANIM_BGBOX_ALPHA,self._BG_BOX_ALPHA)
+end
+
+function HEVHUDWeapons:animate_flash_bgbox_underbarrel()
+	for _,child in pairs(self._underbarrel_ammo_bgbox:children()) do 
+		child:stop()
+		child:animate(AnimateLibrary.animate_color_lerp,nil,self._ANIM_BGBOX_FLASH_DURATION,self._TEXT_COLOR_FULL,self._BG_BOX_COLOR)
+	end
+	self._underbarrel_ammo_bgbox:stop()
+	self._underbarrel_ammo_bgbox:animate(AnimateLibrary.animate_alpha_lerp,nil,self._ANIM_BGBOX_FLASH_DURATION,self._ANIM_BGBOX_ALPHA,self._BG_BOX_ALPHA)
+end
+
+-- todo
+function HEVHUDWeapons:animate_flash_bgbox_grenades()
+--	for _,child in pairs(self._underbarrel_ammo_bgbox:children()) do 
+--		child:stop()
+--	end
+--	self._underbarrel_ammo_bgbox:animate(AnimateLibrary.animate_color_lerp,nil,self._ANIM_BGBOX_FLASH_DURATION,self._TEXT_COLOR_FULL,self._BG_BOX_COLOR)
+end
 
 
 

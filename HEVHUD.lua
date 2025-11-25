@@ -272,6 +272,12 @@ function HEVHUD:UpdateGame(t,dt)
 end
 Hooks:Add("GameSetupUpdate","hevhud_updategame",callback(HEVHUD,HEVHUD,"UpdateGame"))
 
+function HEVHUD:OnSwitchWeapon(weap_base) -- called when swapping weapons or when swapping underbarrel
+	self:CheckWeaponUnderbarrelActive(weap_base)
+	self:CheckWeaponHasUnderbarrel(weap_base)
+	self:CheckUnderbarrelAmmo(weap_base)
+end
+
 function HEVHUD:CheckWeaponFiremode(weap_base)
 	local firemode = self:GetFiremodeName(weap_base._fire_mode)
 	if firemode then
@@ -338,11 +344,13 @@ function HEVHUD:CheckUnderbarrelAmmo(weap_base)
 		if firemode then 
 			self._hud_weapons:set_underbarrel_weapon_firemode(firemode,false) -- i actually don't know if underbarrels are allowed to toggle firemodes, or what that check looks like
 		end
+		
+		-- only perform this check for the "first" of the underbarrels;
+		-- assume there is only one underbarrel per weapon
+		-- (i hope.)
 		break
 	end
 end
-
-
 
 function HEVHUD:CheckWeaponUnderbarrelActive(weap_base)
 	local underbarrel_base = weap_base and weap_base:gadget_overrides_weapon_functions()
@@ -361,6 +369,10 @@ function HEVHUD:CheckWeaponHasUnderbarrel(weap_base)
 end
 
 function HEVHUD:SetAmmoAmount(index,magazine_max,magazine_current,reserves_current,reserves_max)
+	-- since HEVHUD has a separate counter for the underbarrel which is non-exclusive with the ordinary ammo counter,
+	-- HEVHUD just gets the ammo info for whatever the equipped (main, not underbarrel) weapon is
+	-- and updates the underbarrel info separately
+	
 	local turret_unit = managers.player:get_local_player_turret()
 	local weapon_unit
 	local inv_ext = managers.player:local_player():inventory()
@@ -373,15 +385,27 @@ function HEVHUD:SetAmmoAmount(index,magazine_max,magazine_current,reserves_curre
 		end
 	end
 	
+	local is_equipped = inv_ext:equipped_selection() == index
+	
+	Hooks:Call("HEVHUD_Crosshair_Listener",{
+		source = "weapon",
+		slot = index,
+		is_equipped = is_equipped,
+		magazine_current=magazine_current,
+		magazine_max=magazine_max,
+		reserves_current=reserves_current,
+		reserves_max=reserves_max
+	})
+	
 	if weapon_unit then
 		local weap_base = weapon_unit:base()
+		self:CheckUnderbarrelAmmo(weap_base) -- update underbarrel ammo info
 		local underbarrel = weap_base:gadget_overrides_weapon_functions()
 		if underbarrel then
-			self:CheckUnderbarrelAmmo(weap_base)
-			--magazine_max,magazine_current,reserves_current,reserves_max = weap_base:ammo_info()
 			-- specifically use the individual getters; ammo_info() will return the underbarrel ammo data
+			-- (so, get the base weapon ammo here)
 			magazine_max,magazine_current,reserves_current,reserves_max = weap_base:get_ammo_max_per_clip(),weap_base:get_ammo_remaining_in_clip(),weap_base:get_ammo_total(),weap_base:get_ammo_max()
-		elseif inv_ext:equipped_selection() ~= index then
+		elseif not is_equipped then
 			return
 		else
 			self:CheckWeaponFiremode(weap_base)
@@ -393,16 +417,6 @@ function HEVHUD:SetAmmoAmount(index,magazine_max,magazine_current,reserves_curre
 			end
 		end
 	end
-	
-	Hooks:Call("HEVHUD_Crosshair_Listener",{
-		source = "weapon",
-		slot = index,
-		is_equipped = true,
-		magazine_current=magazine_current,
-		magazine_max=magazine_max,
-		reserves_current=reserves_current,
-		reserves_max=reserves_max
-	})
 	
 	self._hud_weapons:set_main_ammo(magazine_max,magazine_current,reserves_current,reserves_max)
 	--[[

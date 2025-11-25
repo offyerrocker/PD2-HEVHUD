@@ -13,6 +13,7 @@ TODO:
 		Neater firemode readout
 		Weapon icons?
 		Melee
+		possible issue: bgbox flashing may interfere with equip/unequip alpha anim?
 	Teammates
 		- colors need to be tweaked; white should probably be normal, instead of orange, otherwise it blends too much
 	Equipment
@@ -23,16 +24,7 @@ TODO:
 			Primary/secondary
 		Cable Ties
 	Special crosshair (customizable target)
-		1: health
-		2: armor
-		3: magazine (current)
-		4: magazine (primary)
-		5: magazine (secondary)
-		6: reserve (current)
-		7: reserve (primary)
-		8: reserve (secondary)
-		9: perk-deck-specific (stored health, absorption, etc)
-		10: detection
+		needs menu options
 	HL2 style loadout
 	Ammo Pickup in HUD
 	Hints/Popups
