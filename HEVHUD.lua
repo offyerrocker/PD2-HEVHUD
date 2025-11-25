@@ -124,6 +124,8 @@ HEVHUD.HEVHUD_ICONS = {
 	EMPTY16 = {96,96,32,32}
 }
 
+
+
 function HEVHUD:GetIconData(icon_id)
 	local rect = self.HEVHUD_ICONS[icon_id]
 	if rect then
@@ -223,6 +225,7 @@ function HEVHUD:CreateHUD(parent_hud)
 	self._hud_weapons = HEVHUDCore:require("classes/HEVHUDWeapons"):new(hl2,settings,config)
 	self._hud_carry = HEVHUDCore:require("classes/HEVHUDCarry"):new(hl2,settings,config)
 	self._hud_followers = HEVHUDCore:require("classes/HEVHUDFollowers"):new(hl2,settings,config)
+	self._hud_crosshair = HEVHUDCore:require("classes/HEVHUDCrosshair"):new(hl2,settings,config)
 	self._teammate_panels = {}
 	
 	self:CreateTeammatesPanel(hl2) -- create separate panel to hold each individual teammate panel
@@ -237,8 +240,6 @@ function HEVHUD:CreateHUD(parent_hud)
 		teammate._panel:set_y(i * 90)
 	end
 end
-
-
 
 function HEVHUD:CreateTeammatesPanel(parent)
 	if alive(self._teammates_panel) then
@@ -393,6 +394,16 @@ function HEVHUD:SetAmmoAmount(index,magazine_max,magazine_current,reserves_curre
 		end
 	end
 	
+	Hooks:Call("HEVHUD_Crosshair_Listener",{
+		source = "weapon",
+		slot = index,
+		is_equipped = true,
+		magazine_current=magazine_current,
+		magazine_max=magazine_max,
+		reserves_current=reserves_current,
+		reserves_max=reserves_max
+	})
+	
 	self._hud_weapons:set_main_ammo(magazine_max,magazine_current,reserves_current,reserves_max)
 	--[[
 	local player = managers.player:local_player()
@@ -476,5 +487,93 @@ function HEVHUD:UpdatePaused(t,dt)
 end
 Hooks:Add("GameSetupUpdate","hevhud_updatepaused",callback(HEVHUD,HEVHUD,"UpdatePaused"))
 --]]
+
+function HEVHUD.check_crosshair_listener(setting,params)
+--[[
+	crosshair indicator trackers:
+	1: health
+	2: armor
+	3: magazine (current)
+	4: magazine (primary)
+	5: magazine (secondary)
+	6: reserve (current)
+	7: reserve (primary)
+	8: reserve (secondary)
+	9: perk-deck-specific (stored health, absorption, etc)
+	10: detection
+--]]
+	local source_types = {
+		[1] = "health",
+		[2] = "armor",
+		[3] = "weapon",
+		[4] = "weapon",
+		[5] = "weapon",
+		[6] = "weapon",
+		[7] = "weapon",
+		[8] = "weapon",
+		[9] = "perk"
+	}
+	local source = params.source
+	if source_types[setting] == source then 
+		if setting == 1 then
+			return params.current/params.total
+		elseif setting == 2 then
+			return params.current/params.total
+		elseif source == "weapon" then 
+			if setting == 3 then 
+				if params.is_equipped then 
+					return params.magazine_current/params.magazine_max
+				end
+			elseif setting == 4 then 
+				if params.slot == 2 then 
+					return params.magazine_current/params.magazine_max
+				end
+			elseif setting == 5 then 
+				if params.slot == 1 then 
+					return params.magazine_current/params.magazine_max
+				end
+			elseif setting == 6 then 
+				if params.is_equipped then 
+					return params.reserves_current/params.reserves_max
+				end
+			elseif setting == 7 then 
+				if params.slot == 2 then 
+					return params.reserves_current/params.reserves_max
+				end
+			elseif setting == 8 then 
+				if params.slot == 1 then 
+					return params.reserves_current/params.reserves_max
+				end
+			end
+		elseif setting == 9 then
+			local equipped_perk_deck --blackmarket equipped specialization blah blah blah
+			--these need to be done on a case-by-case basis 
+		end
+	end
+	return nil
+end
+
+function HEVHUD:GetRangedColor(n)
+	if n < 0.33 then
+		return self.colordecimal_to_color(HEVHUDCore.settings.color_hl2_red)
+	elseif n < 0.66 then
+		return self.colordecimal_to_color(HEVHUDCore.settings.color_hl2_orange)
+	else
+		return self.colordecimal_to_color(HEVHUDCore.settings.color_hl2_yellow)
+	end
+end
+
+Hooks:Register("HEVHUD_Crosshair_Listener")
+Hooks:Add("HEVHUD_Crosshair_Listener","HEVHUD_OnCrosshairListenerEvent",function(params)
+	local value = HEVHUD.check_crosshair_listener(HEVHUDCore.settings.crosshair_indicator_left_tracker,params)
+	if value then
+		HEVHUD._hud_crosshair:set_left_crosshair(value)
+	end
+	
+	value = HEVHUD.check_crosshair_listener(HEVHUDCore.settings.crosshair_indicator_right_tracker,params)
+	if value then
+		HEVHUD._hud_crosshair:set_right_crosshair(value)
+	end
+end)
 
 return HEVHUD

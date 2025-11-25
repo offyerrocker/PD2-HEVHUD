@@ -27,10 +27,24 @@ end)
 
 Hooks:PostHook(HUDManager,"set_player_health","hevhud_hudmanager_set_player_health",function(self,data)
 	HEVHUD._hud_vitals:set_health(data.current,data.total,data.revives)
+	
+	Hooks:Call("HEVHUD_Crosshair_Listener",{
+		source = "health",
+		current = data.current,
+		total = data.total,
+		revives = data.revives
+	})
+	
 end)
 
 Hooks:PostHook(HUDManager,"set_player_armor","hevhud_hudmanager_set_player_armor",function(self,data)
 	HEVHUD._hud_vitals:set_armor(data.current,data.total)
+	
+	Hooks:Call("HEVHUD_Crosshair_Listener",{
+		source = "armor",
+		current = data.current,
+		total = data.total
+	})
 end)
 
 Hooks:PostHook(HUDManager,"set_stamina_value","hevhud_hudmanager_set_stamina_current",function(self,value)

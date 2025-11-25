@@ -1,5 +1,12 @@
 local AnimateLibrary = {}
 
+function AnimateLibrary.animate_wait(o,duration,cb,...)
+	wait(duration or 0)
+	if cb then
+		o:animate(cb,...)
+	end
+end
+
 function AnimateLibrary.animate_color_lerp(o,cb,duration,from_color,to_color)
 	duration = duration or 1
 	

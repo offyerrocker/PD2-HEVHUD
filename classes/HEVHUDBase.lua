@@ -1,4 +1,5 @@
 local HEVHUDBase = blt_class() -- base class for HEVHUD HUD classes
+local AnimateLibrary = HEVHUDCore:require("classes/AnimateLibrary")
 
 function HEVHUDBase:init(parent,settings,config)
 	self._parent = parent
@@ -205,5 +206,11 @@ function HEVHUDBase.CreateBGBox(parent,w,h,panel_config,child_config)
 	return panel
 end
 
+
+function HEVHUDBase.animate_inactive_fadeout(o,anim_timeout_duration,anim_alpha_duration,alpha_min,alpha_max)
+	o:set_alpha(alpha_max)
+	o:stop()
+	return o:animate(AnimateLibrary.animate_wait,anim_timeout_duration,AnimateLibrary.animate_alpha_lerp,nil,anim_alpha_duration,nil,alpha_min)
+end
 
 return HEVHUDBase

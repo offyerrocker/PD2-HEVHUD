@@ -9,19 +9,24 @@
 		<texture path="fonts/trebuchet" />
 		<font path="fonts/tahoma_bold" load="true" unload="false" />
 		<texture path="fonts/tahoma_bold" />
--->
-		<texture path="textures/hl2_crosshair_empty_left" />
-		<texture path="textures/hl2_crosshair_empty_right" />
-		<texture path="textures/hl2_crosshair_fill_left" />
-		<texture path="textures/hl2_crosshair_fill_right" />
-		<texture path="textures/hl2_crosshair_angled_left" />
-		<texture path="textures/hl2_crosshair_angled_right" />
+		<texture path="guis/textures/hl2_crosshair_angled_left" />
+		<texture path="guis/textures/hl2_crosshair_angled_right" />
 		<texture path="textures/hevhud_firemode_1" />
 		<texture path="textures/hevhud_firemode_2" />
 		<texture path="textures/hevhud_firemode_3" />
+-->
+
+<!--
+	hl2 prefix denotes assets from half-life 2
+	hevhud prefix denotes original assets
+-->
+		<texture path="guis/textures/hl2_crosshair_empty_left" />
+		<texture path="guis/textures/hl2_crosshair_empty_right" />
+		<texture path="guis/textures/hl2_crosshair_fill_left" />
+		<texture path="guis/textures/hl2_crosshair_fill_right" />
+		<texture path="guis/textures/hl2_crosshair_fivedot" />
 		
 		<texture path="guis/textures/hevhud_icons" />
-		
 		<texture path="guis/textures/hevhud_bgbox_atlas" />
 		
 	</AddFiles>
