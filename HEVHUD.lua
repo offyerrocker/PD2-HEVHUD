@@ -417,6 +417,10 @@ function HEVHUD:HideCarry(...)
 	self._hud_carry:hide_carry_bag(...)
 end
 
+function HEVHUD:SetTeammateName(id,name)
+	self._teammate_panels[id]:set_name(name)
+end
+
 function HEVHUD:SetTeammateCondition(id,icon_id,text)
 	self._teammate_panels[id]:set_condition(icon_id,text)
 end

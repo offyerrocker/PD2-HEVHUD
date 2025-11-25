@@ -24,6 +24,7 @@ function HEVHUDTeammate:setup()
 	self._ai = nil
 	self._ammo_state_primary = false
 	self._ammo_state_secondary = false
+	self._status_panel_state = false	
 	
 	-- vars for layout
 	local vars = self._config.Teammate
@@ -55,21 +56,12 @@ function HEVHUDTeammate:setup()
 	self._ANIM_MISSION_EQ_HIGHLIGHT_DURATION = vars.ANIM_MISSION_EQ_HIGHLIGHT_DURATION
 	self._ANIM_SORT_MISSION_EQ_ICON_DURATION = vars.ANIM_SORT_MISSION_EQ_ICON_DURATION
 	
+	self._ANIM_STATUS_PANEL_FADE_DURATION = vars.ANIM_STATUS_PANEL_FADE_DURATION
+	
 	self._MISSION_EQ_X = vars.MISSION_EQ_X
 	self._ANIM_CARRY_START_DURATION = vars.ANIM_CARRY_FADEIN_DURATION
 	self._CARRY_RIGHT = vars.CARRY_ICON_W
 	self._CARRY_W = vars.CARRY_ICON_W
-	
-	--[[
-	
-	
-	self._TEAMMATE_VITALS_HEALTH_LOW_THRESHOLD = vars.TEAMMATE_VITALS_HEALTH_LOW_THRESHOLD
-	self._TEAMMATE_VITALS_HEALTH_EMPTY_THRESHOLD = vars.TEAMMATE_VITALS_HEALTH_EMPTY_THRESHOLD
-	self._TEAMMATE_VITALS_REVIVES_LOW_THRESHOLD = vars.TEAMMATE_VITALS_REVIVES_LOW_THRESHOLD
-	self._TEAMMATE_VITALS_REVIVES_EMPTY_THRESHOLD = vars.TEAMMATE_VITALS_REVIVES_EMPTY_THRESHOLD
-	self._TEAMMATE_MISSION_EQ_LABEL_FONT_SIZE = vars. TEAMMATE_MISSION_EQ_LABEL_FONT_SIZE
-	self._TEAMMATE_MISSION_EQ_LABEL_FONT_NAME = vars.TEAMMATE_MISSION_EQ_LABEL_FONT_NAME
-	--]]
 	
 	-- shows custody/downed/tasered/low ammo
 	local status = panel:panel({
@@ -78,6 +70,7 @@ function HEVHUDTeammate:setup()
 		h = vars.STATUS_ICON_H,
 		x = vars.STATUS_ICON_X,
 		y = vars.STATUS_ICON_Y,
+		visible = false,
 		layer = 3
 	})
 	local state_icon_texture,state_icon_rect = HEVHUD:GetIconData("triangle_line")
@@ -87,9 +80,9 @@ function HEVHUDTeammate:setup()
 		texture_rect = state_icon_rect,
 		w = status:w(),
 		h = status:h(),
-		halign = "grow",
+		halign = "left",
 		valign = "grow",
-		visible = false,
+		visible = true,
 		layer = 3
 	})
 	self._status_panel = status
@@ -130,12 +123,39 @@ function HEVHUDTeammate:setup()
 	})
 	self._ammo_panel = ammo
 	
-	local vitals = panel:panel({
+	local nameplate = panel:panel({
+		name = "nameplate",
+		x = vars.STATUS_ICON_X, -- vars.NAMEPLATE_X, -- starting position is left
+		y = vars.NAMEPLATE_Y,
+		w = vars.NAMEPLATE_W,
+		h = vars.NAMEPLATE_H,
+		valign = "grow",
+		halign = "grow",
+		layer = 2
+	})
+	self._nameplate = nameplate
+	
+	nameplate:text({
+		name = "name",
+		text = "WWWWWWWWWWWWQWWW",
+		font = vars.NAME_LABEL_FONT_NAME,
+		font_size = vars.NAME_LABEL_FONT_SIZE,
+		x = vars.NAME_LABEL_X,
+		y = vars.NAME_LABEL_Y,
+		valign = "grow",
+		halign = "grow",
+		color = self._TEXT_COLOR_FULL,
+		layer = 3
+	})
+	
+	local vitals = nameplate:panel({
 		name = "vitals",
 		w = vars.VITALS_ICON_W,
 		h = vars.VITALS_ICON_H,
 		x = vars.VITALS_ICON_X,
 		y = vars.VITALS_ICON_Y,
+		valign = "grow",
+		halign = "grow",
 		layer = 3
 	})
 	self._vitals = vitals
@@ -162,19 +182,6 @@ function HEVHUDTeammate:setup()
 		color = self._TEXT_COLOR_FULL,
 		valign = "grow",
 		halign = "grow",
-		layer = 3
-	})
-	
-	self._nameplate = panel:text({
-		name = "name",
-		text = "WWWWWWWWWWWWQWWW",
-		font = vars.NAMEPLATE_FONT_NAME,
-		font_size = vars.NAMEPLATE_FONT_SIZE,
-		x = vars.NAMEPLATE_X,
-		y = vars.NAMEPLATE_Y,
-		valign = "grow",
-		halign = "grow",
-		color = self._TEXT_COLOR_FULL,
 		layer = 3
 	})
 	
@@ -472,7 +479,7 @@ function HEVHUDTeammate:set_deployable_second_amount(data) -- secondary amount o
 end
 
 function HEVHUDTeammate:set_name(name)
-	self._panel:child("name"):set_text(name)
+	self._nameplate:child("name"):set_text(name)
 end
 
 function HEVHUDTeammate:show()
@@ -489,9 +496,11 @@ function HEVHUDTeammate:set_health(data)
 	local vitals_icon_fill = self._vitals:child("vitals_icon_fill")
 	
 	-- todo option for smooth lerp color
-	if ratio <= self._TEAMMATE_VITALS_HEALTH_EMPTY_THRESHOLD then
+	if ratio <= 0 then
+		vitals_icon_fill:set_color(Color.black)
+	elseif ratio <= self._VITALS_THRESHOLD_HEALTH_CRITICAL then
 		vitals_icon_fill:set_color(self._TEXT_COLOR_NONE)
-	elseif ratio <= self._TEAMMATE_VITALS_HEALTH_LOW_THRESHOLD then
+	elseif ratio <= self._VITALS_THRESHOLD_HEALTH_LOW then
 		vitals_icon_fill:set_color(self._TEXT_COLOR_HALF)
 	else
 		vitals_icon_fill:set_color(self._TEXT_COLOR_FULL)
@@ -512,11 +521,13 @@ function HEVHUDTeammate:set_armor(data)
 end
 
 function HEVHUDTeammate:_set_revives(revives)
-	local vitals_icon_line = self._panel:child("vitals_icon_line")
+	local vitals_icon_line = self._vitals:child("vitals_icon_line")
 	
-	if revives <= self._TEAMMATE_VITALS_REVIVES_EMPTY_THRESHOLD then
+	if revives <= 0 then
+		vitals_icon_line:set_color(Color.black)
+	elseif revives <= self._VITALS_THRESHOLD_REVIVES_CRITICAL then
 		vitals_icon_line:set_color(self._TEXT_COLOR_NONE)
-	elseif revives <= self._TEAMMATE_VITALS_REVIVES_LOW_THRESHOLD then
+	elseif revives <= self._VITALS_THRESHOLD_REVIVES_LOW then
 		vitals_icon_line:set_color(self._TEXT_COLOR_HALF)
 	else
 		vitals_icon_line:set_color(self._TEXT_COLOR_FULL)
@@ -560,12 +571,26 @@ function HEVHUDTeammate:stop_carry()
 end
 
 function HEVHUDTeammate:set_condition(icon_id,text)
+	--Print(icon_id,">",text,"<")
 	local status_icon = self._status_panel:child("status_icon")
 	if icon_id == "mugshot_normal" then
-		status_icon:hide()
+		local ammo_visible = self._ammo_state_primary or self._ammo_state_secondary
 		
-		self._ammo_panel:set_visible(self._ammo_state_primary or self._ammo_state_secondary)
+		self._ammo_panel:set_visible(ammo_visible)
+		--status_icon:hide()
+		if self._status_panel_state and not ammo_visible then
+			-- shrink status panel, then hide
+			self._status_panel_state = false
+			self._status_panel:stop()
+			self._status_panel:animate(AnimateLibrary.animate_grow_w_left,function(o) o:hide() end,self._ANIM_STATUS_PANEL_FADE_DURATION,nil,1)
+		end
+		
+		self._nameplate:stop()
+		self._nameplate:animate(AnimateLibrary.animate_move_lerp,nil,self._ANIM_STATUS_PANEL_FADE_DURATION,self._config.Teammate.NAMEPLATE_X)
+		
 	else
+		-- show icon
+		
 		--HEVHUDCore:Print("condition icon",icon_id)
 		
 		local texture,rect
@@ -586,8 +611,20 @@ function HEVHUDTeammate:set_condition(icon_id,text)
 		--]]
 		
 		self._ammo_panel:hide()
+		
 		status_icon:set_image(texture,unpack(rect))
-		status_icon:show()
+		--status_icon:show()
+		
+		if not self._status_panel_state then
+			-- show and grow status panel
+			self._status_panel_state = true
+			self._status_panel:stop()
+			self._status_panel:show()
+			self._status_panel:animate(AnimateLibrary.animate_grow_w_left,nil,self._ANIM_STATUS_PANEL_FADE_DURATION,1,self._config.Teammate.STATUS_ICON_W)
+		end
+		
+		self._nameplate:stop()
+		self._nameplate:animate(AnimateLibrary.animate_move_lerp,nil,self._ANIM_STATUS_PANEL_FADE_DURATION,self._config.Teammate.STATUS_ICON_W)
 	end
 end
 

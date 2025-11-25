@@ -60,3 +60,7 @@ end)
 Hooks:PostHook(HUDManager,"set_teammate_ammo_amount","hevhud_hudmanager_set_teammate_ammo",function(self, id, selection_index, max_clip, current_clip, current_left, max)
 	HEVHUD:SetTeammateAmmo(id, selection_index, max_clip, current_clip, current_left, max)
 end)
+
+Hooks:PostHook(HUDManager,"set_teammate_name","hevhud_hudmanager_set_teammate_name",function(self,i,name)
+	HEVHUD:SetTeammateName(i,name)
+end)
