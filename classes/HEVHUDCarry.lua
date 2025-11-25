@@ -45,7 +45,8 @@ function HEVHUDCarry:setup()
 		h = vars.BAG_H,
 		valign = "grow",
 		halign = "grow",
-		alpha = 0
+--		alpha = self._BAG_ANIM_ALPHA_ENABLED and 0 or 1,
+		visible = false
 	})
 	self._bag = bag
 	
@@ -68,7 +69,7 @@ function HEVHUDCarry:setup()
 	
 	local bag_label = bag:text({
 		name = "bag_label",
-		text = "trauma",
+		text = "",
 		font = vars.BAG_LABEL_FONT_NAME,
 		font_size = vars.BAG_LABEL_FONT_SIZE,
 		x = vars.BAG_LABEL_HOR_OFFSET,
@@ -87,7 +88,7 @@ end
 
 function HEVHUDCarry:show_carry_bag(carry_id,value)
 	local carry_data = tweak_data.carry[carry_id]
-	local type_text = carry_data.name_id and managers.localization:text(carry_data.name_id)
+	local type_text = managers.localization:text(carry_data.name_id)
 	
 	local bag = self._bag
 	bag:stop()
@@ -118,7 +119,7 @@ function HEVHUDCarry:show_carry_bag(carry_id,value)
 		o:child("bag_label"):animate(AnimateLibrary.animate_text_gradual,nil,self._CARRY_TEXT_ANIM_DURATION,type_text)
 	end
 	bag:set_x(self._panel:w())
-	bag:animate(AnimateLibrary.animate_move_lerp,nil,self._CARRY_INTRO_ANIM_DURATION,self._panel:w() - bag:w()) -- appear from left
+	bag:animate(AnimateLibrary.animate_move_lerp,not self._BAG_ANIM_ALPHA_ENABLED and cb,self._CARRY_INTRO_ANIM_DURATION,self._panel:w() - bag:w()) -- appear from left
 	
 	if self._BAG_ANIM_ALPHA_ENABLED then
 		bag:animate(AnimateLibrary.animate_alpha_lerp,cb,self._CARRY_INTRO_ANIM_DURATION,nil,1)
@@ -140,7 +141,7 @@ function HEVHUDCarry:hide_carry_bag()
 	bag:animate(AnimateLibrary.animate_move_lerp,cb,self._CARRY_OUTRO_ANIM_DURATION,self._panel:w()) -- move right offscreen
 	
 	if self._BAG_ANIM_ALPHA_ENABLED then
-		bag:animate(AnimateLibrary.animate_alpha_lerp,cb,self._CARRY_OUTRO_ANIM_DURATION,nil,0)
+		bag:animate(AnimateLibrary.animate_alpha_lerp,nil,self._CARRY_OUTRO_ANIM_DURATION,nil,0)
 	end
 --	bag:animate(AnimateLibrary.animate_grow_w_right,cb,self._CARRY_OUTRO_ANIM_DURATION,nil,1)
 end
