@@ -391,10 +391,10 @@ function HEVHUD:SetAmmoAmount(index,magazine_max,magazine_current,reserves_curre
 		source = "weapon",
 		slot = index,
 		is_equipped = is_equipped,
-		magazine_current=magazine_current,
-		magazine_max=magazine_max,
-		reserves_current=reserves_current,
-		reserves_max=reserves_max
+		magazine_current = magazine_current,
+		magazine_max = magazine_max,
+		reserves_current = reserves_current,
+		reserves_max = reserves_max
 	})
 	
 	if weapon_unit then
@@ -404,6 +404,7 @@ function HEVHUD:SetAmmoAmount(index,magazine_max,magazine_current,reserves_curre
 		if underbarrel then
 			-- specifically use the individual getters; ammo_info() will return the underbarrel ammo data
 			-- (so, get the base weapon ammo here)
+			
 			magazine_max,magazine_current,reserves_current,reserves_max = weap_base:get_ammo_max_per_clip(),weap_base:get_ammo_remaining_in_clip(),weap_base:get_ammo_total(),weap_base:get_ammo_max()
 		elseif not is_equipped then
 			return
@@ -419,19 +420,6 @@ function HEVHUD:SetAmmoAmount(index,magazine_max,magazine_current,reserves_curre
 	end
 	
 	self._hud_weapons:set_main_ammo(magazine_max,magazine_current,reserves_current,reserves_max)
-	--[[
-	local player = managers.player:local_player()
-	if alive(player) then
-		local mov_ext = player:movement()
-		local state_name = mov_ext:current_state_name()
-		if state_name == "player_turret" then
-			--local state = mov_ext:current_state()
-		else
-			
-		end
-	end
-	--]]
-	--local equipped_weapon = 
 end
 
 function HEVHUD:ShowCarry(carry_id,value,...)
