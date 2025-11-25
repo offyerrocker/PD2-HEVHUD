@@ -37,8 +37,6 @@ TODO:
 	Ammo Pickup in HUD
 	Hints/Popups
 		ez
-	Jokers
-		??
 	Objectives
 		???
 	Assault Banner
