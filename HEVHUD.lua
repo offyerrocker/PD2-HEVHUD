@@ -427,10 +427,20 @@ function HEVHUD:AddMinion(ukey,unit)
 			dmg_ext:add_listener(
 				"hevhud_on_minion_damaged",
 				{
-					"dmg_rcv"
+					-- kinda guessing that all of these damage types will be appropriately called tbh
+					"bullet",
+					"melee",
+					"poison",
+					"fire",
+					"explosion",
+					"mission",
+					"graze",
+					"simple",
+					"dmg_rcv",
+					"hurt"
 				},
 				function(hit_unit,dmg_info)
-					self._hud_followers:set_follower_hp(ukey,hit_unit:health_ratio())
+					self._hud_followers:set_follower_hp(ukey,hit_unit:character_damage():health_ratio())
 				end
 			)
 		end
@@ -438,7 +448,7 @@ function HEVHUD:AddMinion(ukey,unit)
 end
 	
 function HEVHUD:RemoveMinion(ukey)
-	self._hud_followers:remove_follower(ukey)
+	self._hud_followers:remove_follower(ukey,nil,nil)
 end
 
 --[[

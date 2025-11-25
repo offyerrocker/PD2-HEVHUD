@@ -13,6 +13,8 @@ function HEVHUDFollowers:init(panel,settings,config,...)
 		alpha = 0
 	})
 	self:setup()
+	
+	self._follower_anim_threads = {}
 end
 
 function HEVHUDFollowers:setup()
@@ -37,6 +39,9 @@ function HEVHUDFollowers:setup()
 	
 	self._ANIM_SORT_FOLLOWERS_DURATION = vars.ANIM_SORT_FOLLOWERS_DURATION
 	self._ANIM_FADE_FOLLOWERS_DURATION = vars.ANIM_FADE_FOLLOWERS_DURATION
+	self._ANIM_FOLLOWER_REMOVE_FADECOLOR_DURATION = vars.ANIM_FOLLOWER_REMOVE_FADECOLOR_DURATION
+	self._ANIM_FOLLOWER_REMOVE_FADEALPHA_DURATION = vars.ANIM_FOLLOWER_REMOVE_FADEALPHA_DURATION
+	
 	
 	self._ICON_W = vars.ICON_W
 	self._ICON_TEXT_HOR_OFFSET = vars.ICON_TEXT_HOR_OFFSET
@@ -72,7 +77,6 @@ end
 function HEVHUDFollowers:add_follower(ukey,skip_sort)
 	local vars = self._config.Followers
 	
-	-- todo add listener
 	ukey = tostring(ukey)
 	if alive(self._followers:child(ukey)) then
 		return
@@ -87,6 +91,7 @@ function HEVHUDFollowers:add_follower(ukey,skip_sort)
 		valign = "grow",
 		halign = "right",
 		layer = 1,
+		alpha = 0,
 		visible = nil
 	})
 	
@@ -104,8 +109,16 @@ function HEVHUDFollowers:add_follower(ukey,skip_sort)
 		color = self._TEXT_COLOR_FULL,
 		layer = 2
 	})
+	
+	local instant = self._panel:alpha() <= 0.001
+	if instant then
+		follower:set_alpha(1)
+	else
+		follower:animate(AnimateLibrary.animate_alpha_lerp,nil,self._ANIM_SORT_FOLLOWERS_DURATION,nil,1)
+	end
+	
 	if not skip_sort then
-		self:sort_followers(self._panel:alpha() <= 0.001)
+		self:sort_followers(true)
 	end
 end
 
@@ -113,7 +126,7 @@ function HEVHUDFollowers:set_follower_hp(ukey,hp_ratio)
 	ukey = tostring(ukey)
 	local follower = self._followers:child(ukey)
 	if alive(follower) then
-		local col1 = self._TEXT_COLOR_NONE
+		local col1 = self._TEXT_COLOR_HALF
 		local col2 = self._TEXT_COLOR_FULL
 		local dcol = col2 - col1
 		local color = col1 + dcol * hp_ratio
@@ -121,17 +134,40 @@ function HEVHUDFollowers:set_follower_hp(ukey,hp_ratio)
 	end
 end
 
-function HEVHUDFollowers:remove_follower(ukey,skip_sort)
-	-- todo remove listener
+function HEVHUDFollowers:remove_follower(ukey,skip_sort,instant)
 	ukey = tostring(ukey)
 	local follower = self._followers:child(ukey)
 	if alive(follower) then
-		self._followers:remove(follower)
+		if instant then
+			self._followers:remove(follower)
+			if not skip_sort then
+				self:sort_followers(true)
+			end
+		else
+			local cb_remove_follower = function(o)
+				self._followers:remove(o)
+				if not skip_sort then
+					self:sort_followers()
+				end
+			end
+			
+			-- animate fadeout
+			follower:animate(
+				AnimateLibrary.animate_alpha_lerp,
+				cb_remove_follower, 
+				self._ANIM_FOLLOWER_REMOVE_FADEALPHA_DURATION,
+				nil,
+				0
+			)
+			
+			-- animate color fade
+			local icon_text = follower:child("icon_text")
+			icon_text:set_blend_mode("add")
+			icon_text:animate(AnimateLibrary.animate_color_lerp,nil,self._ANIM_FOLLOWER_REMOVE_FADECOLOR_DURATION,nil,self._TEXT_COLOR_NONE)
+		end
 	end
 	
-	if not skip_sort then
-		self:sort_followers()
-	end
+	self._follower_anim_threads[ukey] = nil
 end
 
 function HEVHUDFollowers:sort_followers(instant)
@@ -139,12 +175,15 @@ function HEVHUDFollowers:sort_followers(instant)
 	local has_any = false
 	for i,child in ipairs(self._followers:children()) do 
 		has_any = true
+		local name = child:name()
+		if self._follower_anim_threads[name] then
+			child:stop(self._follower_anim_threads[name])
+		end
 		
-		child:stop()
 		if instant then
 			child:set_x(x)
 		else
-			child:animate(AnimateLibrary.animate_move_lerp,nil,self._ANIM_SORT_FOLLOWERS_DURATION,x)
+			self._follower_anim_threads[name] = child:animate(AnimateLibrary.animate_move_lerp,nil,self._ANIM_SORT_FOLLOWERS_DURATION,x)
 		end
 		x = x + self._ICON_W + self._ICON_TEXT_HOR_OFFSET
 	end
@@ -155,6 +194,7 @@ function HEVHUDFollowers:sort_followers(instant)
 		local cb = function()
 			self._anim_thread_panel_alpha = nil
 		end
+		
 		if self._anim_thread_panel_alpha then
 			self._panel:stop(self._anim_thread_panel_alpha)
 			self._anim_thread_panel_alpha = nil
