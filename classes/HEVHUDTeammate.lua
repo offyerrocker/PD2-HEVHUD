@@ -83,7 +83,7 @@ function HEVHUDTeammate:setup()
 		h = status:h(),
 		halign = "left",
 		valign = "grow",
-		visible = true,
+		visible = false,
 		layer = 3
 	})
 	self._status_panel = status
