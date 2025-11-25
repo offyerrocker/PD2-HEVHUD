@@ -52,3 +52,11 @@ end)
 Hooks:OverrideFunction(HUDManager,"temp_hide_carry_bag",function(self)
 	HEVHUD:HideCarry()
 end)
+
+Hooks:PostHook(HUDManager,"set_teammate_condition","hevhud_hudmanager_set_teammate_condition",function(self,i,icon_data,text)
+	HEVHUD:SetTeammateCondition(i,icon_data,text)
+end)
+
+Hooks:PostHook(HUDManager,"set_teammate_ammo_amount","hevhud_hudmanager_set_teammate_ammo",function(self, id, selection_index, max_clip, current_clip, current_left, max)
+	HEVHUD:SetTeammateAmmo(id, selection_index, max_clip, current_clip, current_left, max)
+end)

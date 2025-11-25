@@ -417,6 +417,13 @@ function HEVHUD:HideCarry(...)
 	self._hud_carry:hide_carry_bag(...)
 end
 
+function HEVHUD:SetTeammateCondition(id,icon_id,text)
+	self._teammate_panels[id]:set_condition(icon_id,text)
+end
+
+function HEVHUD:SetTeammateAmmo(id, selection_index, max_clip, current_clip, current_left, max)
+	self._teammate_panels[id]:set_ammo(selection_index, max_clip, current_clip, current_left, max)
+end
 
 function HEVHUD:AddMinion(ukey,unit)
 	self._hud_followers:add_follower(ukey)

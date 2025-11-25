@@ -22,6 +22,8 @@ function HEVHUDTeammate:setup()
 	-- game values
 	self._peer_id = nil
 	self._ai = nil
+	self._ammo_state_primary = false
+	self._ammo_state_secondary = false
 	
 	-- vars for layout
 	local vars = self._config.Teammate
@@ -39,11 +41,7 @@ function HEVHUDTeammate:setup()
 	self._VITALS_THRESHOLD_REVIVES_CRITICAL = 	vars.VITALS_THRESHOLD_REVIVES_CRITICAL
 	self._VITALS_THRESHOLD_REVIVES_LOW = 		vars.VITALS_THRESHOLD_REVIVES_LOW
 	
-	
-	
-	
-	
-	
+	self._AMMO_LOW_THRESHOLD = vars.AMMO_LOW_THRESHOLD
 	
 	self._MISSION_EQ_ICON_W = vars.MISSION_EQ_ICON_W
 	self._MISSION_EQ_ICON_H = vars.MISSION_EQ_ICON_H
@@ -94,6 +92,7 @@ function HEVHUDTeammate:setup()
 		visible = false,
 		layer = 3
 	})
+	self._status_panel = status
 	
 	local ammo = status:panel({
 		name = "ammo",
@@ -101,7 +100,8 @@ function HEVHUDTeammate:setup()
 		h = status:h(),
 		halign = "grow",
 		valign = "grow",
-		layer = 3
+		layer = 3,
+		visible = false
 	})
 	local ammo_icon_texture,ammo_icon_rect = HEVHUD:GetIconData("teammate_ammo")
 	ammo:bitmap({
@@ -128,6 +128,7 @@ function HEVHUDTeammate:setup()
 		blend_mode = "add",
 		layer = 2
 	})
+	self._ammo_panel = ammo
 	
 	local vitals = panel:panel({
 		name = "vitals",
@@ -522,6 +523,14 @@ function HEVHUDTeammate:_set_revives(revives)
 	end
 end
 
+function HEVHUDTeammate:set_ammo(selection_index, max_clip, current_clip, current_left, max)
+	if selection_index == 2 then
+		self._ammo_state_primary = current_left / max > self._AMMO_LOW_THRESHOLD
+	else
+		self._ammo_state_secondary = current_left / max > self._AMMO_LOW_THRESHOLD
+	end
+end
+
 function HEVHUDTeammate:set_ai(state)
 	self._ai = state
 	
@@ -550,6 +559,37 @@ function HEVHUDTeammate:stop_carry()
 
 end
 
+function HEVHUDTeammate:set_condition(icon_id,text)
+	local status_icon = self._status_panel:child("status_icon")
+	if icon_id == "mugshot_normal" then
+		status_icon:hide()
+		
+		self._ammo_panel:set_visible(self._ammo_state_primary or self._ammo_state_secondary)
+	else
+		--HEVHUDCore:Print("condition icon",icon_id)
+		
+		local texture,rect
+		texture,rect = HEVHUD:GetIconData(icon_id)
+		if not texture then
+			texture,rect = tweak_data.hud_icons:get_icon_data(icon_id)
+		end
+		
+		--[[
+	mugshot_health_background 
+	mugshot_health_armor
+	mugshot_health_health 
+	mugshot_talk 
+	mugshot_in_custody 
+	mugshot_downed
+	mugshot_cuffed
+	mugshot_electrified
+		--]]
+		
+		self._ammo_panel:hide()
+		status_icon:set_image(texture,unpack(rect))
+		status_icon:show()
+	end
+end
 
 function HEVHUDTeammate:set_peer_id(peer_id)
 	self._peer_id = peer_id
@@ -559,13 +599,6 @@ end
 function HEVHUDTeammate:set_peer_color(color)
 	if color then
 		self._nameplate:set_color(color)
-	end
-end
-
-function HEVHUDTeammate:set_status(status)
-	local texture,rect
-	if status == "custody" then
-		-- 
 	end
 end
 
