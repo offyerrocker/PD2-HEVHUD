@@ -96,7 +96,7 @@ function HEVHUDCore:Print(...)
 end
 
 function HEVHUDCore:LoadConfig(path)
-	if file.FileExists(path) then
+	if path and file.FileExists(path) then
 		local LIP = self:require("classes/LIP")
 		local config = LIP.load(path)
 		if config then
@@ -114,6 +114,7 @@ function HEVHUDCore:LoadConfig(path)
 		end
 	else
 		self:Log("No config file",path)
+		return
 	end
 	Hooks:Call("hevhud_on_settings_changed",self.config)
 end
