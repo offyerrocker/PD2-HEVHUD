@@ -2,7 +2,10 @@
 TODO:
 	Assets
 		Find a font that works for teammate names (support wide variety of characters)
-	
+		Find a font that works for small readouts eg. teammate ammo counters/equipment counter- something bold, prob.
+		Better zipties icon
+		
+		
 	General
 		OnSettings/Config Changed hooks
 	Vitals
@@ -15,6 +18,10 @@ TODO:
 		Melee
 		possible issue: bgbox flashing may interfere with equip/unequip alpha anim?
 	Teammates
+		- interaction
+		- deployable
+		- throwable; cooldown?
+		- bag (needs resizing)
 		- colors need to be tweaked; white should probably be normal, instead of orange, otherwise it blends too much
 	Equipment
 		?????????
