@@ -24,7 +24,7 @@ function HEVHUDTeammate:setup()
 	self._ai = nil
 	self._ammo_state_primary = false
 	self._ammo_state_secondary = false
-	self._status_panel_state = false	
+	self._status_panel_state = false
 	
 	-- vars for layout
 	local vars = self._config.Teammate
@@ -185,14 +185,23 @@ function HEVHUDTeammate:setup()
 		layer = 3
 	})
 	
+	-- deployable, zipties, grenades
+	local loadout = panel:panel({
+		name = "loadout",
+		x = vars.LOADOUT_X,
+		y = vars.LOADOUT_Y,
+		w = panel:w() - vars.LOADOUT_X,
+		h = panel:h() - vars.LOADOUT_Y,
+		layer = 1
+	})
+	
 	local deployable_texture,deployable_rect = tweak_data.hud_icons:get_icon_data("equipment_ammo_bag")
-	local deployable = panel:panel({
+	local deployable = loadout:panel({
 		name = "deployable",
 		w = vars.DEPLOYABLE_ICON_W,
 		h = vars.DEPLOYABLE_ICON_H,
 		x = vars.DEPLOYABLE_ICON_X,
 		y = vars.DEPLOYABLE_ICON_Y,
-		visible = nil,
 		layer = 3
 	})
 	deployable:bitmap({
@@ -231,7 +240,7 @@ function HEVHUDTeammate:setup()
 	self._deployable = deployable
 	
 	local grenades_icon_texture,grenades_icon_rect = tweak_data.hud_icons:get_icon_data("frag_grenade")
-	local grenades = panel:panel({
+	local grenades = loadout:panel({
 		name = "grenades",
 		x = vars.GRENADES_ICON_X,
 		y = vars.GRENADES_ICON_Y,
@@ -267,7 +276,7 @@ function HEVHUDTeammate:setup()
 	self._grenades = grenades
 	
 	local zipties_icon_texture,zipties_icon_rect = tweak_data.hud_icons:get_icon_data("equipment_cable_ties")
-	local zipties = panel:panel({
+	local zipties = loadout:panel({
 		name = "zipties",
 		x = vars.ZIPTIES_ICON_X,
 		y = vars.ZIPTIES_ICON_Y,
@@ -276,6 +285,7 @@ function HEVHUDTeammate:setup()
 		color = self._TEXT_COLOR_FULL,
 		valign = "grow",
 		halign = "grow",
+		alpha = vars.ZIPTIES_EMPTY_ALPHA,
 		layer = 2
 	})
 	zipties:bitmap({
@@ -295,7 +305,7 @@ function HEVHUDTeammate:setup()
 		y = vars.ZIPTIES_LABEL_Y,
 		font = vars.ZIPTIES_LABEL_FONT_NAME,
 		font_size = vars.ZIPTIES_LABEL_FONT_SIZE,
-		text = "20",
+		text = "",
 		align = vars.ZIPTIES_LABEL_ALIGN,
 		vertical = vars.ZIPTIES_LABEL_VERTICAL,
 		layer = 3
@@ -467,6 +477,24 @@ function HEVHUDTeammate:sort_special_equipment(instant)
 		end
 		x = x + self._MISSION_EQ_ICON_W + self._MISSION_EQ_ICON_HOR_MARGIN
 	end
+end
+
+
+function HEVHUDTeammate:set_zipties_data(data)
+	local texture,rect = tweak_data.hud_icons:get_icon_data(data.icon)
+	self._zipties:child("icon"):set_image(texture,unpack(rect))
+	self:set_zipties_amount(data.amount)
+end
+
+function HEVHUDTeammate:set_zipties_amount(amount)
+	if amount < 0 then
+		self._zipties:set_alpha(self._config.Teammate.ZIPTIES_EMPTY_ALPHA)
+		self._zipties:child("amount"):set_text("")
+	else
+		self._zipties:set_alpha(1)
+		self._zipties:child("amount"):set_text(string.format("%i",amount))
+	end
+	
 end
 
 function HEVHUDTeammate:set_deployable(data)

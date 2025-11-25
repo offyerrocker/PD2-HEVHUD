@@ -429,6 +429,14 @@ function HEVHUD:SetTeammateAmmo(id, selection_index, max_clip, current_clip, cur
 	self._teammate_panels[id]:set_ammo(selection_index, max_clip, current_clip, current_left, max)
 end
 
+function HEVHUD:SetTeammateCabletiesData(id,data)
+	self._teammate_panels[id]:set_zipties_data(data)
+end
+
+function HEVHUD:SetTeammateCabletiesAmount(id,amount)
+	self._teammate_panels[id]:set_zipties_amount(amount)
+end
+
 function HEVHUD:AddMinion(ukey,unit)
 	self._hud_followers:add_follower(ukey)
 	if alive(unit) then
