@@ -424,7 +424,7 @@ function HEVHUD:AddMinion(ukey,unit)
 		-- add damage listeners
 		local dmg_ext = unit:character_damage()
 		if dmg_ext then
-			dmg:add_listener(
+			dmg_ext:add_listener(
 				"hevhud_on_minion_damaged",
 				{
 					"dmg_rcv"
