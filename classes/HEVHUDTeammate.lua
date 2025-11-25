@@ -632,11 +632,13 @@ function HEVHUDTeammate:set_condition(icon_id,text)
 	--Print(icon_id,">",text,"<")
 	local status_icon = self._status_panel:child("status_icon")
 	if icon_id == "mugshot_normal" then
+		status_icon:hide()
 		if self._condition_state then
 			self._condition_state = false
 			self:chk_condition_panel()
 		end
 	else
+		status_icon:show()
 		if not self._condition_state then
 			self._condition_state = true
 			self:chk_condition_panel()
