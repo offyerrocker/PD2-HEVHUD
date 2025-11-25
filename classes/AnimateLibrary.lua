@@ -154,6 +154,9 @@ function AnimateLibrary.animate_text_gradual(o,cb,duration,text)
 		t = t + coroutine.yield()
 	end
 	o:set_text(text)
+	if cb then
+		cb(o)
+	end
 end
 
 return AnimateLibrary
