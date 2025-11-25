@@ -55,6 +55,7 @@ function HEVHUDTeammate:setup()
 	self._MISSION_EQ_LABEL_FONT_SIZE = vars.MISSION_EQ_LABEL_FONT_SIZE
 	
 	self._ANIM_MISSION_EQ_HIGHLIGHT_DURATION = vars.ANIM_MISSION_EQ_HIGHLIGHT_DURATION
+	self._ANIM_SORT_MISSION_EQ_ICON_DURATION = vars.ANIM_SORT_MISSION_EQ_ICON_DURATION
 	
 	self._MISSION_EQ_X = vars.MISSION_EQ_X
 	self._ANIM_CARRY_START_DURATION = vars.ANIM_CARRY_FADEIN_DURATION
@@ -68,7 +69,6 @@ function HEVHUDTeammate:setup()
 	self._TEAMMATE_VITALS_HEALTH_EMPTY_THRESHOLD = vars.TEAMMATE_VITALS_HEALTH_EMPTY_THRESHOLD
 	self._TEAMMATE_VITALS_REVIVES_LOW_THRESHOLD = vars.TEAMMATE_VITALS_REVIVES_LOW_THRESHOLD
 	self._TEAMMATE_VITALS_REVIVES_EMPTY_THRESHOLD = vars.TEAMMATE_VITALS_REVIVES_EMPTY_THRESHOLD
-	self._ANIM_SORT_MISSION_EQ_ICON_DURATION = vars.ANIM_SORT_MISSION_EQ_ICON_DURATION
 	self._TEAMMATE_MISSION_EQ_LABEL_FONT_SIZE = vars. TEAMMATE_MISSION_EQ_LABEL_FONT_SIZE
 	self._TEAMMATE_MISSION_EQ_LABEL_FONT_NAME = vars.TEAMMATE_MISSION_EQ_LABEL_FONT_NAME
 	--]]
@@ -177,23 +177,25 @@ function HEVHUDTeammate:setup()
 		layer = 3
 	})
 	
+	local deployable_texture,deployable_rect = tweak_data.hud_icons:get_icon_data("equipment_ammo_bag")
 	local deployable = panel:panel({
 		name = "deployable",
 		w = vars.DEPLOYABLE_ICON_W,
 		h = vars.DEPLOYABLE_ICON_H,
 		x = vars.DEPLOYABLE_ICON_X,
 		y = vars.DEPLOYABLE_ICON_Y,
+		visible = nil,
 		layer = 3
 	})
 	deployable:bitmap({
 		name = "icon",
 		w = deployable:w(),
-		w = deployable:h(),
-		texture = nil, -- set later
-		texture_rect = nil,
+		h = deployable:h(),
+		texture = deployable_texture, -- set later
+		texture_rect = deployable_rect,
+		color = self._TEXT_COLOR_FULL,
 		valign = "grow",
 		halign = "grow",
-		visible = false,
 		layer = 2
 	})
 	deployable:text({
@@ -252,6 +254,7 @@ function HEVHUDTeammate:setup()
 		text = "14",
 		align = vars.GRENADES_LABEL_ALIGN,
 		vertical = vars.GRENADES_LABEL_VERTICAL,
+		layer = 3
 	})
 	self._grenades = grenades
 	
@@ -287,6 +290,7 @@ function HEVHUDTeammate:setup()
 		text = "20",
 		align = vars.ZIPTIES_LABEL_ALIGN,
 		vertical = vars.ZIPTIES_LABEL_VERTICAL,
+		layer = 3
 	})
 	self._zipties = zipties
 	
@@ -340,11 +344,13 @@ function HEVHUDTeammate:setup()
 		color = self._TEXT_COLOR_FULL,
 		layer = 2
 	})
+	--[[
 	mission_equipment_bar:rect({
 		name = "debug",
 		color = Color.red,
 		alpha = 0.1
 	})
+	--]]
 	self._mission_equipment = mission_equipment_bar
 	
 	
@@ -363,8 +369,10 @@ function HEVHUDTeammate:setup()
 		
 		for i=1,8,1 do 
 			local id = table.remove(keys,math.random(1,#keys))
-			local amount = math.random(1,20)
-			self:add_special_equipment(id,amount,true)
+			if tweak_data.equipments[id] and tweak_data.equipments[id].icon then
+				local amount = math.random(1,20)
+				self:add_special_equipment(id,amount,true)
+			end
 		end
 		
 		self:sort_special_equipment()
