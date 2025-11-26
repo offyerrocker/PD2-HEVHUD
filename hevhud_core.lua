@@ -154,6 +154,7 @@ function HEVHUDCore:CheckFontResourcesAdded(skip_load)
 	local fonts = {
 		hl2_icons = "fonts/halflife2", 
 		hl2_text = "fonts/trebuchet",
+		hl2_chat = "fonts/tahoma_24",
 		hl2_vitals = "fonts/tahoma_bold"
 	}
 	
@@ -170,6 +171,14 @@ function HEVHUDCore:CheckFontResourcesAdded(skip_load)
 			end
 		end
 	end
+	
+	--[[
+	local merged_font_path = "fonts/font_tahoma_mf"
+	local merged_font_ids = Idstring("merged_font")
+	if not (DB:has(merged_font_ids, merged_font_path) or skip_load) then 
+		BLT.AssetManager:CreateEntry(Idstring(merged_font_path),merged_font_ids,self.ASSETS_PATH .. merged_font_path .. ".merged_font")
+	end
+	--]]
 end
 
 --Loads assets into memory so that they can be used in-game
@@ -193,6 +202,7 @@ function HEVHUDCore:CheckFontResourcesReady(skip_load,done_loading_cb)
 	local fonts = {
 		hl2_icons = "fonts/halflife2", 
 		hl2_text = "fonts/trebuchet",
+		hl2_chat = "fonts/tahoma_24",
 		hl2_vitals = "fonts/tahoma_bold"
 	}
 	
@@ -214,6 +224,16 @@ function HEVHUDCore:CheckFontResourcesReady(skip_load,done_loading_cb)
 			self:Log("Font asset " .. font_id .. " at path " .. font_path .. " is ready.")
 		end
 	end
+	
+	--[[ 
+	--seems merged_fonts can't be loaded this way
+	local mf_path_ids = Idstring("fonts/font_tahoma_mf")
+	local merged_font_ids = Idstring("merged_font")
+	if not (skip_load or managers.dyn_resource:is_resource_ready(merged_font_ids,mf_path_ids,dyn_pkg)) then 
+		managers.dyn_resource:load(merged_font_ids, mf_path_ids, dyn_pkg, done_loading_cb)
+	end
+	--]]
+	
 	return font_resources_ready
 end
 
