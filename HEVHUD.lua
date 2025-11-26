@@ -450,6 +450,16 @@ function HEVHUD:SetTeammateCabletiesAmount(id,amount)
 	self._teammate_panels[id]:set_zipties_amount(amount)
 end
 
+function HEVHUD:SetTeammateGrenadeData(id,data)
+	self._teammate_panels[id]:set_grenades_data(data)
+end
+function HEVHUD:SetTeammateGrenadeAmount(id,data)
+	self._teammate_panels[id]:set_grenades_amount(data)
+end
+function HEVHUD:SetTeammateGrenadeCooldown(id,data)
+	self._teammate_panels[id]:set_grenades_cooldown(data)
+end
+
 function HEVHUD:AddMinion(ukey,unit)
 	self._hud_followers:add_follower(ukey)
 	if alive(unit) then

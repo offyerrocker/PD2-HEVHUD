@@ -269,7 +269,7 @@ function HEVHUDTeammate:setup()
 		y = vars.GRENADES_LABEL_Y,
 		font = vars.GRENADES_LABEL_FONT_NAME,
 		font_size = vars.GRENADES_LABEL_FONT_SIZE,
-		text = "14",
+		text = "",
 		align = vars.GRENADES_LABEL_ALIGN,
 		vertical = vars.GRENADES_LABEL_VERTICAL,
 		layer = 3
@@ -480,6 +480,22 @@ function HEVHUDTeammate:sort_special_equipment(instant)
 	end
 end
 
+function HEVHUDTeammate:set_grenades_data(data)
+	local texture,rect = tweak_data.hud_icons:get_icon_data(data.icon,{0,0,32,32})
+	self._grenades:child("icon"):set_image(texture,unpack(rect))
+	self:set_grenades_amount(data)
+end
+
+function HEVHUDTeammate:set_grenades_amount(data)
+	self._grenades:child("amount"):set_text(string.format("%i",data.amount))
+end
+
+function HEVHUDTeammate:set_grenades_cooldown(data)
+	
+end
+
+function HEVHUDTeammate:set_ability_icon(data) -- should be funneled into status
+end
 
 function HEVHUDTeammate:set_zipties_data(data)
 	local texture,rect = tweak_data.hud_icons:get_icon_data(data.icon)

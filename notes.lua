@@ -1,5 +1,6 @@
 --[[
 TODO:
+	
 	Assets
 		Find a font that works for teammate names (support wide variety of characters)
 		Find a font that works for small readouts eg. teammate ammo counters/equipment counter- something bold, prob.
@@ -48,6 +49,15 @@ TODO:
 	
 
 
+	
+	looks like i have to (re)invent a lot of language for HEVHUD,
+	because hl2 is a much more mechanically simple game than pd2 (not lesser, but having less complexity),
+	and doesn't have equivalents for the type of information in pd2's hud
+	(progress bars, status/modals and state transitions);
+	furthermore, pd2 just has a lot *more* information than hl2
+	
+	
+	
 
 
 [X][v]NAMEHERE
