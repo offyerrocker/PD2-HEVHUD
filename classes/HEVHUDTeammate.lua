@@ -16,6 +16,27 @@ function HEVHUDTeammate:init(panel,settings,config,i,...)
 	self._id = i
 	
 	self:setup()
+	
+	
+	do -- test eq
+		local keys = {}
+		for k,v in pairs(tweak_data.equipments) do 
+			table.insert(keys,k)
+		end
+		
+		for i=1,8,1 do 
+			local id = table.remove(keys,math.random(1,#keys))
+			if tweak_data.equipments[id] and tweak_data.equipments[id].icon then
+				local amount = tostring(math.random(1,20))
+				self:_add_special_equipment(id,amount,nil,true)
+			end
+		end
+		
+		self:sort_special_equipment()
+		
+	end
+	
+	
 end
 
 function HEVHUDTeammate:setup()
@@ -323,6 +344,7 @@ function HEVHUDTeammate:setup()
 		color = self._TEXT_COLOR_FULL,
 		valign = "grow",
 		halign = "grow",
+		alpha = 0,
 		layer = 2
 	})
 	carry:bitmap({
@@ -379,30 +401,18 @@ function HEVHUDTeammate:setup()
 	-- deployables
 	-- mission equipment
 	
-	
-	do -- test eq
-		local keys = {}
-		for k,v in pairs(tweak_data.equipments) do 
-			table.insert(keys,k)
-		end
-		
-		for i=1,8,1 do 
-			local id = table.remove(keys,math.random(1,#keys))
-			if tweak_data.equipments[id] and tweak_data.equipments[id].icon then
-				local amount = tostring(math.random(1,20))
-				self:add_special_equipment(id,amount,true)
-			end
-		end
-		
-		self:sort_special_equipment()
-		
-	end
-	
 end
 
-function HEVHUDTeammate:add_special_equipment(id,amount,skip_sort)	
+function HEVHUDTeammate:add_special_equipment(data)
+	self:_add_special_equipment(data.id,data.amount,data.icon)
+end
+
+function HEVHUDTeammate:_add_special_equipment(id,amount,icon_id,skip_sort)	
+	if not alive(self._mission_equipment) then
+		error("Panel not alive!")
+	end
 	if not id then return end
-	
+	id = tostring(id)
 	local equipment = self._mission_equipment:child(id)
 	if not amount or tostring(amount) == "1" then
 		amount = ""
@@ -421,8 +431,12 @@ function HEVHUDTeammate:add_special_equipment(id,amount,skip_sort)
 			layer = 2
 		})
 		
-		local eq_td = tweak_data.equipments[id]
-		local texture,rect = tweak_data.hud_icons:get_icon_data(eq_td.icon)
+		if not icon_id then
+			local eq_td = tweak_data.equipments[id]
+			icon_id = eq_td.icon
+		end
+		
+		local texture,rect = tweak_data.hud_icons:get_icon_data(icon_id)
 		local icon = equipment:bitmap({
 			name = "icon",
 			texture = texture,
@@ -600,12 +614,12 @@ function HEVHUDTeammate:set_ai(state)
 	-- carry can stay
 end
 
-function HEVHUDTeammate:set_carry(data)
+function HEVHUDTeammate:set_carry(data,value)
 	self._mission_equipment:stop()
 	self._mission_equipment:animate(AnimateLibrary.animate_move_lerp,nil,self._ANIM_CARRY_START_DURATION,self._CARRY_RIGHT+self._MISSION_EQ_X)
 	self._carry:stop()
 	self._carry:set_alpha(1)
-	self._carry:animate(AnimateLibrary.animate_grow_w_left,nil,self._ANIM_CARRY_START_DURATION,nil,self._CARRY_W)
+	self._carry:animate(AnimateLibrary.animate_grow_w_left,nil,self._ANIM_CARRY_START_DURATION,1,self._CARRY_W)
 end
 
 function HEVHUDTeammate:stop_carry()

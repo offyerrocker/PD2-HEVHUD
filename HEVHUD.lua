@@ -460,6 +460,22 @@ function HEVHUD:SetTeammateGrenadeCooldown(id,data)
 	self._teammate_panels[id]:set_grenades_cooldown(data)
 end
 
+function HEVHUD:AddTeammateSpecialEquipment(id,data)
+	self._teammate_panels[id]:add_special_equipment(data)
+end
+function HEVHUD:RemoveTeammateSpecialEquipment(id,equipment_id)
+	self._teammate_panels[id]:remove_special_equipment(equipment_id)
+end
+function HEVHUD:SetTeammateSpecialEquipmentAmount(id,equipment_id,amount)
+	self._teammate_panels[id]:_add_special_equipment(equipment_id,amount)
+end
+function HEVHUD:SetTeammateCarry(id,carry_id,value)
+	self._teammate_panels[id]:set_carry(carry_id,value)
+end
+function HEVHUD:RemoveTeammateCarry(id)
+	self._teammate_panels[id]:stop_carry()
+end
+
 function HEVHUD:AddMinion(ukey,unit)
 	self._hud_followers:add_follower(ukey)
 	if alive(unit) then
