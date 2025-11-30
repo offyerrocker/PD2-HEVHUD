@@ -86,15 +86,25 @@ Hooks:PostHook(HUDManager,"set_cable_ties_amount","hevhud_hudmanager_set_teammat
 	HEVHUD:SetTeammateCabletiesAmount(i,amount)
 end)
 
+Hooks:PostHook(HUDManager,"set_player_grenade_cooldown","hevhud_hudmanager_set_grenade_cooldown",function(self,data)
+	HEVHUD._hud_weapons:set_grenades_cooldown(data)
+end)
+
 Hooks:PostHook(HUDManager,"set_teammate_grenade_cooldown","hevhud_hudmanager_teammate_set_grenade_cooldown",function(self,i,data)
 	HEVHUD:SetTeammateGrenadeCooldown(i,data)
 end)
 Hooks:PostHook(HUDManager,"set_teammate_grenades","hevhud_hudmanager_teammate_set_grenades_data",function(self,i,data)
 	-- set ability icon
 	HEVHUD:SetTeammateGrenadeData(i,data)
+	if i == HUDManager.PLAYER_PANEL then
+		HEVHUD._hud_weapons:set_grenades_data(data)
+	end
 end)
 Hooks:PostHook(HUDManager,"set_teammate_grenades_amount","hevhud_hudmanager_teammate_set_grenades_amount",function(self,i,data)
 	HEVHUD:SetTeammateGrenadeAmount(i,data)
+	if i == HUDManager.PLAYER_PANEL then
+		HEVHUD._hud_weapons:set_grenades_amount(data)
+	end
 end)
 
 

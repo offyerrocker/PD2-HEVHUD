@@ -22,7 +22,7 @@ function HEVHUDWeapons:init(panel,settings,config,...)
 	
 	self._underbarrel_visible = nil
 	self._underbarrel_on = nil
-	self._anim_main_ammo_swap_thread = nil -- plays when switching between two weapons that do and don't have an underbarrel
+	self._anim_main_weapon_swap_thread = nil -- plays when switching between two weapons that do and don't have an underbarrel
 	self._anim_underbarrel_ammo_swap_thread = nil
 	
 	self._anim_main_ammo_equip_thread = nil -- plays when equipping/unequipping the underbarrel on your current weapon
@@ -58,16 +58,70 @@ function HEVHUDWeapons:setup()
 	local bgbox_panel_config = {alpha=BG_BOX_ALPHA,valign="grow",halign="grow"}
 	local bgbox_item_config = {color=self._BG_BOX_COLOR}
 	
-	local main_ammo = self._panel:panel({
+	local main_weapon = self._panel:panel({
+		name = "main_weapon",
+		w = vars.MAIN_WEAPON_W,
+		h = vars.MAIN_WEAPON_H,
+		x = self._panel:w() - vars.MAIN_WEAPON_W,
+		y = self._panel:h() - vars.MAIN_WEAPON_H,
+		layer = 1
+	})
+	self._main_weapon = main_weapon
+	
+	local grenades = main_weapon:panel({
+		name = "grenades",
+		w = vars.GRENADES_W,
+		h = vars.GRENADES_H,
+--		x = main_weapon:w() - vars.GRENADES_W,
+		y = main_weapon:h() - vars.GRENADES_H,
+		valign = "bottom",
+		halign = "left",
+		layer = 2
+	})
+	self._grenades = grenades
+	
+	self._grenades_ammo_bgbox = self.CreateBGBox(grenades,nil,nil,bgbox_panel_config,bgbox_item_config)
+	
+	grenades:bitmap({
+		name = "icon",
+		w = vars.GRENADES_ICON_W,
+		h = vars.GRENADES_ICON_H,
+		x = vars.GRENADES_ICON_X,
+		y = vars.GRENADES_ICON_Y,
+		valign = "grow",
+		halign = "grow",
+		texture = "fonts/halflife2", 
+		texture_rect = {133,155,30,18},
+		color = self._TEXT_COLOR_FULL,
+		layer = 2
+	})
+	grenades:text({
+		name = "amount",
+		text = "99",
+		align = vars.GRENADES_LABEL_ALIGN,
+		vertical = vars.GRENADES_LABEL_VERTICAL,
+		x = vars.GRENADES_LABEL_HOR_OFFSET,
+		y = vars.GRENADES_LABEL_VER_OFFSET,
+		valign = "grow",
+		halign = "grow",
+		font = vars.GRENADES_LABEL_FONT_NAME,
+		font_size = vars.GRENADES_LABEL_FONT_SIZE,
+		color = self._TEXT_COLOR_FULL,
+		layer = 2
+	})
+		
+	local main_ammo = main_weapon:panel({
 		name = "main_ammo",
 		w = vars.MAIN_AMMO_W,
 		h = vars.MAIN_AMMO_H,
-		x = self._panel:w() - vars.MAIN_AMMO_W,
-		y = self._panel:h() - vars.MAIN_AMMO_H,
+		x = main_weapon:w() - vars.MAIN_AMMO_W,
+		y = main_weapon:h() - vars.MAIN_AMMO_H,
+		valign = "bottom",
+		halign = "right",
 		layer = 1
 	})
-	
 	self._main_ammo = main_ammo
+	
 	-- deal with placement later
 	self._main_ammo_bgbox = self.CreateBGBox(main_ammo,nil,nil,bgbox_panel_config,bgbox_item_config)
 	local ammo_name = main_ammo:text({
@@ -207,19 +261,19 @@ end
 
 function HEVHUDWeapons:set_underbarrel_visible(state)
 	if self._underbarrel_visible ~= state then
-		if self._anim_main_ammo_swap_thread then
-			self._main_ammo:stop(self._anim_main_ammo_swap_thread)
-			self._anim_main_ammo_swap_thread = nil
+		if self._anim_main_weapon_swap_thread then
+			self._main_weapon:stop(self._anim_main_weapon_swap_thread)
+			self._anim_main_weapon_swap_thread = nil
 		end
 		if self._anim_underbarrel_ammo_swap_thread then
 			self._underbarrel_ammo:stop(self._anim_underbarrel_ammo_swap_thread)
 			self._anim_underbarrel_ammo_swap_thread = nil
 		end
 		if not state then
-			self._anim_main_ammo_swap_thread = self._main_ammo:animate(AnimateLibrary.animate_move_lerp,nil,self._AMMO_SWAP_ANIM_DURATION,self._underbarrel_ammo:right()-self._main_ammo:w())
+			self._anim_main_weapon_swap_thread = self._main_weapon:animate(AnimateLibrary.animate_move_lerp,nil,self._AMMO_SWAP_ANIM_DURATION,self._underbarrel_ammo:right()-self._main_weapon:w())
 			self._anim_underbarrel_ammo_swap_thread = self._underbarrel_ammo:animate(AnimateLibrary.animate_alpha_lerp,nil,self._AMMO_SWAP_ANIM_DURATION,self._underbarrel_ammo:alpha(),0)
 		else
-			self._anim_main_ammo_swap_thread = self._main_ammo:animate(AnimateLibrary.animate_move_lerp,nil,self._AMMO_SWAP_ANIM_DURATION,self._underbarrel_ammo:left()-(self._main_ammo:w() + self._MAIN_AMMO_HOR_OFFSET))
+			self._anim_main_weapon_swap_thread = self._main_weapon:animate(AnimateLibrary.animate_move_lerp,nil,self._AMMO_SWAP_ANIM_DURATION,self._underbarrel_ammo:left()-(self._main_weapon:w() + self._MAIN_AMMO_HOR_OFFSET))
 			self._anim_underbarrel_ammo_swap_thread = self._underbarrel_ammo:animate(AnimateLibrary.animate_alpha_lerp,nil,self._AMMO_SWAP_ANIM_DURATION,self._underbarrel_ammo:alpha(),self._underbarrel_on and self._AMMO_PANEL_ACTIVE_ALPHA or self._AMMO_PANEL_INACTIVE_ALPHA)
 		end
 		self._underbarrel_visible = state
@@ -262,6 +316,22 @@ function HEVHUDWeapons:set_main_weapon_firemode(firemode,can_toggle)
 	if texture then
 		self._main_ammo:child("firemode_icon"):set_image(texture,unpack(texture_rect))
 	end
+end
+
+function HEVHUDWeapons:set_grenades_data(data)
+	if data.icon then
+		local texture,rect = tweak_data.hud_icons:get_icon_data(data.icon,{0,0,32,32})
+		self._grenades:child("icon"):set_image(texture,unpack(rect))
+	end
+	self:set_grenades_amount(data)
+end
+
+function HEVHUDWeapons:set_grenades_amount(data)
+	self._grenades:child("amount"):set_text(string.format("%i",data.amount))
+end
+
+function HEVHUDWeapons:set_grenades_cooldown(data)
+	
 end
 
 -- can_toggle is not used
