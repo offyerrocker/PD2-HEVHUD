@@ -51,6 +51,8 @@ function HEVHUDWeapons:setup()
 	self._ANIM_BGBOX_FLASH_DURATION = vars.ANIM_BGBOX_FLASH_DURATION
 	self._ANIM_BGBOX_ALPHA = vars.ANIM_BGBOX_ALPHA
 	
+	self._ANIM_GRENADE_CHARGE_USE_FILL_UPWARD = vars.ANIM_GRENADE_CHARGE_USE_FILL_UPWARD
+	
 	self._BG_BOX_COLOR = HEVHUD.colordecimal_to_color(self._config.General.BG_BOX_COLOR)
 	local BG_BOX_ALPHA = self._config.General.BG_BOX_ALPHA
 	self._BG_BOX_ALPHA = BG_BOX_ALPHA
@@ -108,6 +110,37 @@ function HEVHUDWeapons:setup()
 		font_size = vars.GRENADES_LABEL_FONT_SIZE,
 		color = self._TEXT_COLOR_FULL,
 		layer = 2
+	})
+	local grenades_charge = grenades:panel({
+		name = "grenades_charge",
+		w = vars.GRENADES_CHARGE_W,
+		h = vars.GRENADES_CHARGE_H,
+		x = vars.GRENADES_CHARGE_X,
+		y = (grenades:h() - vars.GRENADES_CHARGE_H) + vars.GRENADES_CHARGE_Y,
+		valign = "bottom",
+		halign = "grow",
+		alpha = 0,
+		layer = 3
+	})
+	self._grenades_charge = grenades_charge
+	grenades_charge:rect({
+		name = "charge_bar",
+		w = grenades_charge:w(),
+		h = grenades_charge:h(),
+		valign = "grow",
+		halign = "scale",
+		color = Color.white,
+		layer = 2
+	})
+	grenades_charge:rect({
+		name = "charge_bg",
+		w = grenades_charge:w(),
+		h = grenades_charge:h(),
+		valign = "grow",
+		halign = "scale",
+		color = Color.black,
+		alpha = vars.GRENADES_CHARGE_BG_ALPHA,
+		layer = 1
 	})
 		
 	local main_ammo = main_weapon:panel({
@@ -328,10 +361,38 @@ end
 
 function HEVHUDWeapons:set_grenades_amount(data)
 	self._grenades:child("amount"):set_text(string.format("%i",data.amount))
+	self:animate_flash_bgbox_grenades()
 end
 
 function HEVHUDWeapons:set_grenades_cooldown(data)
-	
+	self._grenades_charge:set_alpha(1)
+	local charge_bar = self._grenades_charge:child("charge_bar")
+	charge_bar:stop()
+	charge_bar:animate(function(o,cb,duration,end_t,from_w,to_w,upward_fill) -- modification of AnimateLibrary.animate_grow_w_left, but adapted to specifically use the same timer used for grenade cooldowns
+		local left = o:left()
+		from_w = from_w or o:w()
+		local dw = to_w - from_w
+		local t = -math.huge
+		local bezier_points 
+		if upward_fill then
+			bezier_points = {1,1,0,0}
+		else
+			bezier_points = {0,0,1,1}
+		end
+		--Print("duration",duration,"end_t",end_t)
+		while t < end_t do 
+			t = managers.game_play_central:get_heist_timer() -- alt. different timers Application:time() or TimerManager:game():time()
+			o:set_w(from_w + dw * math.bezier(bezier_points,(end_t - t)/duration))
+			o:set_left(right)
+			coroutine.yield()
+		end
+		o:set_w(to_w)
+		o:set_left(left)
+		if cb then 
+			cb(o)
+		end
+		--Print("end t",TimerManager:game():time(),"projcted",end_t)
+	end,function(o) o:parent():set_alpha(0) end,data.duration,data.end_time,1,self._grenades_charge:w(),self._ANIM_GRENADE_CHARGE_USE_FILL_UPWARD)
 end
 
 -- can_toggle is not used
@@ -396,12 +457,13 @@ function HEVHUDWeapons:animate_flash_bgbox_underbarrel()
 	self._underbarrel_ammo_bgbox:animate(AnimateLibrary.animate_alpha_lerp,nil,self._ANIM_BGBOX_FLASH_DURATION,self._ANIM_BGBOX_ALPHA,self._BG_BOX_ALPHA)
 end
 
--- todo
 function HEVHUDWeapons:animate_flash_bgbox_grenades()
---	for _,child in pairs(self._underbarrel_ammo_bgbox:children()) do 
---		child:stop()
---	end
---	self._underbarrel_ammo_bgbox:animate(AnimateLibrary.animate_color_lerp,nil,self._ANIM_BGBOX_FLASH_DURATION,self._TEXT_COLOR_FULL,self._BG_BOX_COLOR)
+	for _,child in pairs(self._grenades_ammo_bgbox:children()) do 
+		child:stop()
+		child:animate(AnimateLibrary.animate_color_lerp,nil,self._ANIM_BGBOX_FLASH_DURATION,self._TEXT_COLOR_FULL,self._BG_BOX_COLOR)
+	end
+	self._grenades_ammo_bgbox:stop()
+	self._grenades_ammo_bgbox:animate(AnimateLibrary.animate_alpha_lerp,nil,self._ANIM_BGBOX_FLASH_DURATION,self._ANIM_BGBOX_ALPHA,self._BG_BOX_ALPHA)
 end
 
 
