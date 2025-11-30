@@ -6,13 +6,22 @@ TODO:
 		Find a font that works for small readouts eg. teammate ammo counters/equipment counter- something bold, prob.
 		Better zipties icon
 		
-		
+	Mission text
+		ASSIGNMENT TERMINATED SUBJECT FREEMAN etc etc
+	scanline effect
+		either generic blob oval, or special special font (not recommended- prone to clipping)
+	HUDHitDamage
+		(or whatever it's called)
+		* simple left/right offscreen hit indicator
+			* option to stack repeated hits
+		* simple radial red line to show hit direction
+	Ammo Pickup in HUD
+		also show health 'pickups' on right side
+		heck, show special equipment pickups too
 	General
 		OnSettings/Config Changed hooks
 	Vitals
 		Neater revives counter (needs design too)
-		Workaround for no mul on bitmap	(check alpha channel in asset?)
-			- Yep it's the alpha channel, that has to be explicit
 	Weapons
 		Neater firemode readout
 		Weapon icons?
@@ -27,14 +36,13 @@ TODO:
 	Equipment
 		?????????
 		Special equipment
-		Throwable
+		Active Ability timer
 		Deployables
 			Primary/secondary
 		Cable Ties
 	Special crosshair (customizable target)
 		needs menu options
 	HL2 style loadout
-	Ammo Pickup in HUD
 	Hints/Popups
 		ez
 	Objectives
@@ -43,6 +51,7 @@ TODO:
 		????
 	Hostages
 		????
+		maybe in the Jokers panel? also show the following civ in "SQUAD FOLLOWING" hud 
 	Lootscreen
 		???
 	Custom drag+drop?

@@ -52,6 +52,7 @@ function HEVHUDWeapons:setup()
 	self._ANIM_BGBOX_ALPHA = vars.ANIM_BGBOX_ALPHA
 	
 	self._ANIM_GRENADE_CHARGE_USE_FILL_UPWARD = vars.ANIM_GRENADE_CHARGE_USE_FILL_UPWARD
+	self._ANIM_GRENADE_EMPTY_DURATION = vars.ANIM_GRENADE_EMPTY_DURATION
 	
 	self._BG_BOX_COLOR = HEVHUD.colordecimal_to_color(self._config.General.BG_BOX_COLOR)
 	local BG_BOX_ALPHA = self._config.General.BG_BOX_ALPHA
@@ -78,6 +79,7 @@ function HEVHUDWeapons:setup()
 		y = main_weapon:h() - vars.GRENADES_H,
 		valign = "bottom",
 		halign = "left",
+		alpha = 0, -- start hidden, show if the player has any grenades ever
 		layer = 2
 	})
 	self._grenades = grenades
@@ -361,7 +363,15 @@ end
 
 function HEVHUDWeapons:set_grenades_amount(data)
 	self._grenades:child("amount"):set_text(string.format("%i",data.amount))
-	self:animate_flash_bgbox_grenades()
+	local ANIM_GRENADE_EMPTY_DURATION = self._ANIM_GRENADE_EMPTY_DURATION
+	if data.amount <= 0 then
+		self._grenades:stop()
+		self._grenades:animate(AnimateLibrary.animate_alpha_lerp,nil,ANIM_GRENADE_EMPTY_DURATION,nil,0.5)
+	else
+		self._grenades:stop()
+		self._grenades:animate(AnimateLibrary.animate_alpha_lerp,nil,ANIM_GRENADE_EMPTY_DURATION,nil,1)
+		self:animate_flash_bgbox_grenades()
+	end
 end
 
 function HEVHUDWeapons:set_grenades_cooldown(data)
