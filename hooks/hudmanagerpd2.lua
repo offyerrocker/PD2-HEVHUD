@@ -8,6 +8,10 @@ Hooks:PostHook(HUDManager,"_setup_player_info_hud_pd2","hevhud_hudmanager_create
 end)
 
 
+Hooks:PostHook(HUDManager,"recreate_weapon_firemode","hevhud_hudmanager_recreatefiremode",function(self,i)
+	self._teammate_panels[i]._panel:hide()
+end)
+
 --[[
 Hooks:PostHook(HUDManager,"add_teammate_panel","hevhud_hudmanager_addteammate",function(self, character_name, player_name, ai, peer_id)
 	HEVHUD:AddTeammatePanel(character_name,player_name,ai,peer_id)
