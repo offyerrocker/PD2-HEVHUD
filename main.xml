@@ -26,6 +26,7 @@
 		<texture path="guis/textures/hl2_crosshair_fill_right" />
 		<texture path="guis/textures/hl2_crosshair_fivedot" />
 		
+		<texture path="guis/textures/hevhud_hitdirection" />
 		<texture path="guis/textures/hevhud_icons" />
 		<texture path="guis/textures/hevhud_bgbox_atlas" />
 		

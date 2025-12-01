@@ -226,6 +226,7 @@ function HEVHUD:CreateHUD(parent_hud)
 	self._hud_carry = HEVHUDCore:require("classes/HEVHUDCarry"):new(hl2,settings,config)
 	self._hud_followers = HEVHUDCore:require("classes/HEVHUDFollowers"):new(hl2,settings,config)
 	self._hud_crosshair = HEVHUDCore:require("classes/HEVHUDCrosshair"):new(hl2,settings,config)
+	self._hud_hitdirection = HEVHUDCore:require("classes/HEVHUDHitDirection"):new(hl2,settings,config)
 	self._teammate_panels = {}
 	
 	self:CreateTeammatesPanel(hl2) -- create separate panel to hold each individual teammate panel

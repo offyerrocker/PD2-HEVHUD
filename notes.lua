@@ -10,11 +10,6 @@ TODO:
 		ASSIGNMENT TERMINATED SUBJECT FREEMAN etc etc
 	scanline effect
 		either generic blob oval, or special special font (not recommended- prone to clipping)
-	HUDHitDamage
-		(or whatever it's called)
-		* simple left/right offscreen hit indicator
-			* option to stack repeated hits
-		* simple radial red line to show hit direction
 	Ammo Pickup in HUD
 		also show health 'pickups' on right side
 		heck, show special equipment pickups too
@@ -55,7 +50,10 @@ TODO:
 	Lootscreen
 		???
 	Custom drag+drop?
-	
+	HUDHitDamage
+		* simple radial red line to show hit direction?
+			tf2 style
+
 
 
 	

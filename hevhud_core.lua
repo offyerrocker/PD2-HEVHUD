@@ -18,6 +18,7 @@ HEVHUDCore.default_settings = {
 	_language_index = 1, 			-- Internally used to display the current language option; do not change
 	hud_teammate_enabled = true,
 	hud_crosshair_enabled = true,
+	hud_hitdirection_enabled = true,
 	crosshair_indicator_left_tracker = 1, -- health
 	crosshair_indicator_right_tracker = 3 -- mag
 }
@@ -35,7 +36,8 @@ HEVHUDCore.config = { -- Loaded from hevhud_vars.ini
 	Crosshair = {},
 	Chat = {},
 	Assault = {},
-	TabScreen = {}
+	TabScreen = {},
+	HitDirection = {}
 }
 HEVHUDCore._sort_config = { -- order to sort ini file during write
 	"General",
@@ -48,7 +50,8 @@ HEVHUDCore._sort_config = { -- order to sort ini file during write
 	"Crosshair",
 	"Chat",
 	"Assault",
-	"TabScreen"
+	"TabScreen",
+	"HitDirection"
 }
 
 HEVHUDCore.languages = {}
