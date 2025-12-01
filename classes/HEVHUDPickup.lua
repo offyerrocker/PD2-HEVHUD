@@ -168,7 +168,7 @@ function HEVHUDPickup:add_ammo_pickup(weapon_slot,amount,ammo_text,weapon_textur
 		font = vars.AMMO_AMOUNT_LABEL_FONT_NAME,
 		font_size = vars.AMMO_AMOUNT_LABEL_FONT_SIZE,
 		color = self._TEXT_COLOR_FULL,
-		blend_mode = "add",
+		blend_mode = vars.AMMO_AMOUNT_BLEND_MODE,
 		layer = 2
 	})
 	local tx,ty,tw,th = amount_label:text_rect()
@@ -182,7 +182,7 @@ function HEVHUDPickup:add_ammo_pickup(weapon_slot,amount,ammo_text,weapon_textur
 		w = vars.WEAPON_ICON_W,
 		h = vars.WEAPON_ICON_H,
 		color = self._TEXT_COLOR_FULL,
-		blend_mode = "add",
+		blend_mode = vars.WEAPON_ICON_BLEND_MODE,
 		layer = 3
 	})
 	--weapon_icon:set_right(tx + vars.WEAPON_ICON_X)
@@ -199,7 +199,7 @@ function HEVHUDPickup:add_ammo_pickup(weapon_slot,amount,ammo_text,weapon_textur
 		font = ICONS_FONT_NAME,
 		font_size = vars.AMMO_ICON_FONT_SIZE,
 		color = self._TEXT_COLOR_FULL,
-		blend_mode = "add",
+		blend_mode = vars.AMMO_ICON_BLEND_MODE,
 		layer = 2
 	})
 	--ammo_icon:set_x(weapon_icon:left() + 0)
