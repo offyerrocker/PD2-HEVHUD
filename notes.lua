@@ -1,6 +1,13 @@
 --[[
 TODO:
 	
+	BUGS
+		crosshair ammo counter is inaccurate with underbarrels
+			repro: 
+				1. toggle underbarrel on
+				2. fire round
+				3. toggle underbarrel off
+	
 	Assets
 		Find a font that works for teammate names (support wide variety of characters)
 		Find a font that works for small readouts eg. teammate ammo counters/equipment counter- something bold, prob.
@@ -11,8 +18,8 @@ TODO:
 	scanline effect
 		either generic blob oval, or special special font (not recommended- prone to clipping)
 	Ammo Pickup in HUD
-		also show health 'pickups' on right side
-		heck, show special equipment pickups too
+		show special equipment pickups too
+			- animate them going to their final position
 	General
 		OnSettings/Config Changed hooks
 	Vitals

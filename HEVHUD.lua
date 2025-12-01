@@ -124,7 +124,22 @@ HEVHUD.HEVHUD_ICONS = {
 	EMPTY16 = {96,96,32,32}
 }
 
-
+function HEVHUD.GetWeaponBlackmarketIcon(weapon_id)
+	local wtd = weapon_id and tweak_data.weapon[weapon_id]
+	if not wtd then
+		-- error
+		return
+	end
+	
+	local guis_catalog = "guis/"
+	local bundle_folder = wtd.texture_bundle_folder
+	if bundle_folder then
+		guis_catalog = guis_catalog .. "dlcs/" .. tostring(bundle_folder) .. "/"
+	end
+	guis_catalog = guis_catalog .. string.format("textures/pd2/blackmarket/icons/weapons/%s",weapon_id)
+	
+	return guis_catalog,nil
+end
 
 function HEVHUD:GetIconData(icon_id)
 	local rect = self.HEVHUD_ICONS[icon_id]
@@ -230,6 +245,7 @@ function HEVHUD:CreateHUD(parent_hud)
 	self._hud_followers = HEVHUDCore:require("classes/HEVHUDFollowers"):new(hl2,settings,config)
 	self._hud_crosshair = HEVHUDCore:require("classes/HEVHUDCrosshair"):new(hl2,settings,config)
 	self._hud_hitdirection = HEVHUDCore:require("classes/HEVHUDHitDirection"):new(hl2,settings,config)
+	self._hud_pickup = HEVHUDCore:require("classes/HEVHUDPickup"):new(hl2,settings,config) -- special equipment and ammo pickups
 	self._teammate_panels = {}
 	
 	self:CreateTeammatesPanel(hl2) -- create separate panel to hold each individual teammate panel
@@ -508,6 +524,20 @@ end
 	
 function HEVHUD:RemoveMinion(ukey)
 	self._hud_followers:remove_follower(ukey,nil,nil)
+end
+
+function HEVHUD:ShowAmmoPickup(slot,weapon_id,amount,override_ammo_char,override_weapon_icon,override_weapon_rect)
+
+	local ammo_text = override_ammo_char or HEVHUD._font_icons[self.GetHL2WeaponIcons(weapon_id) or ""]
+	
+	local weapon_texture,weapon_rect
+	if override_weapon_icon then
+		weapon_texture,weapon_rect = override_weapon_icon,override_weapon_rect
+	else
+		weapon_texture,weapon_rect = self.GetWeaponBlackmarketIcon(weapon_id)
+	end
+	
+	self._hud_pickup:add_ammo_pickup(slot,amount,ammo_text,weapon_texture,weapon_rect)
 end
 
 --[[

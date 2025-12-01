@@ -34,6 +34,10 @@
 			"script_path" : "hooks/newraycastweaponbase.lua"
 		},
 		{
+			"hook_id" : "lib/units/weapons/raycastweaponbase",
+			"script_path" : "hooks/raycastweaponbase.lua"
+		},
+		{
 			"hook_id" : "lib/managers/group_ai_states/groupaistatebase",
 			"script_path" : "hooks/groupaistatebase.lua"
 		}

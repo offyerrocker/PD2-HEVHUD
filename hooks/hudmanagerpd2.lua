@@ -116,6 +116,20 @@ Hooks:PostHook(HUDManager,"set_teammate_grenades_amount","hevhud_hudmanager_team
 end)
 
 
+
+Hooks:PostHook(HUDManager,"add_special_equipment","hevhud_hudmanager_set_special_equipment",function(self,data)
+	HEVHUD._hud_pickup:add_special_equipment(data)
+end)
+
+Hooks:PostHook(HUDManager,"set_special_equipment_amount","hevhud_hudmanager_set_special_equipment_amount",function(self,equipment_id,amount)
+	HEVHUD._hud_pickup:set_special_equipment_amount(equipment_id,amount)
+end)
+
+Hooks:PostHook(HUDManager,"remove_special_equipment","hevhud_hudmanager_remove_special_equipment",function(self,equipment_id)
+	HEVHUD._hud_pickup:remove_special_equipment(equipment_id)
+end)
+
+
 Hooks:PostHook(HUDManager,"add_teammate_special_equipment","hevhud_hudmanager_teammate_set_special_equipment",function(self,i,data)
 	HEVHUD:AddTeammateSpecialEquipment(i,data)
 end)
@@ -124,7 +138,7 @@ Hooks:PostHook(HUDManager,"remove_teammate_special_equipment","hevhud_hudmanager
 	HEVHUD:RemoveTeammateSpecialEquipment(i,equipment)
 end)
 
-Hooks:PostHook(HUDManager,"set_special_equipment_amount","hevhud_hudmanager_teammate_set_special_equipment_amount",function(self,i,equipment_id,amount)
+Hooks:PostHook(HUDManager,"set_teammate_special_equipment_amount","hevhud_hudmanager_teammate_set_special_equipment_amount",function(self,i,equipment_id,amount)
 	HEVHUD:SetTeammateSpecialEquipmentAmount(i,equipment_id,amount)
 end)
 
