@@ -124,7 +124,11 @@ function HEVHUDPickup:add_ammo_pickup(weapon_slot,amount,ammo_text,weapon_textur
 		if alive(pickup) then
 			for i,panel in pairs(self._anim_slots) do 
 				if panel == pickup then
-					pickup:child("amount_label"):set_text(tostring(amount))
+					local amount_label = pickup:child("amount_label")
+					amount_label:set_text(tostring(amount))
+					--local tx,ty,tw,th = amount_label:text_rect()
+					--pickup:child("weapon_icon"):set_right(tx + vars.WEAPON_ICON_X)
+					
 					self:animate_pickup(pickup,i,weapon_slot)
 					break
 				end
@@ -164,7 +168,7 @@ function HEVHUDPickup:add_ammo_pickup(weapon_slot,amount,ammo_text,weapon_textur
 		font = vars.AMMO_AMOUNT_LABEL_FONT_NAME,
 		font_size = vars.AMMO_AMOUNT_LABEL_FONT_SIZE,
 		color = self._TEXT_COLOR_FULL,
---		blend_mode = "add",
+		blend_mode = "add",
 		layer = 2
 	})
 	local tx,ty,tw,th = amount_label:text_rect()
@@ -173,15 +177,15 @@ function HEVHUDPickup:add_ammo_pickup(weapon_slot,amount,ammo_text,weapon_textur
 		name = "weapon_icon",
 		texture = weapon_texture,
 		rect = weapon_rect,
-		x = vars.WEAPON_ICON_X,
+		x = vars.WEAPON_ICON_X + pickup:w() - vars.WEAPON_ICON_W,
 		y = vars.WEAPON_ICON_Y,
 		w = vars.WEAPON_ICON_W,
 		h = vars.WEAPON_ICON_H,
 		color = self._TEXT_COLOR_FULL,
---		blend_mode = "add",
+		blend_mode = "add",
 		layer = 3
 	})
-	weapon_icon:set_right(tx + 0)
+	--weapon_icon:set_right(tx + vars.WEAPON_ICON_X)
 	
 	local ammo_icon = pickup:text({
 		name = "ammo_icon",
@@ -195,7 +199,7 @@ function HEVHUDPickup:add_ammo_pickup(weapon_slot,amount,ammo_text,weapon_textur
 		font = ICONS_FONT_NAME,
 		font_size = vars.AMMO_ICON_FONT_SIZE,
 		color = self._TEXT_COLOR_FULL,
---		blend_mode = "add",
+		blend_mode = "add",
 		layer = 2
 	})
 	--ammo_icon:set_x(weapon_icon:left() + 0)

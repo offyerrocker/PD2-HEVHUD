@@ -18,6 +18,7 @@ TODO:
 	scanline effect
 		either generic blob oval, or special special font (not recommended- prone to clipping)
 	Ammo Pickup in HUD
+		show ACTUAL amount added, rather than max added
 		show special equipment pickups too
 			- animate them going to their final position
 	General
