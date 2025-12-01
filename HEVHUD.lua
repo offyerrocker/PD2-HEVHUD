@@ -4,8 +4,8 @@ HEVHUD._font_icons = {
 	physgun_fill = "!",
 	pound = "#",
 	revolver_fill = "$",
-	pistol = "%",
-	smg = "&",
+	pistol_fill = "%",
+	smg_fill = "&",
 	supers2 = "'", --superscript 2 from half life 2 title
 	shotgun_fill = "(",
 	crossbow_fill = ")",
@@ -133,61 +133,64 @@ function HEVHUD:GetIconData(icon_id)
 	end
 end
 
-function HEVHUD:GetHLGunAmmoIcon(categories,weapon_id,fallback)
-	fallback = fallback or "pistol_ammo"
+--- returns string ammo_char,string empty_weapon_char,string full_weapon_char
+
+function HEVHUD.GetHL2WeaponIcons(weapon_id,categories)
 	local overrides = {
-		rpg7 = "rpg_ammo", --rocket launchers in pd2 don't have a separate category; they're all classed as grenade_launcher
-		ray = "rpg_ammo" --commando rocket launcher
+		rpg7 = {"rpg_ammo","rpg_full","rpg_empty"}, --rocket launchers in pd2 don't have a separate category; they're all classed as grenade_launcher
+		ray = {"rpg_ammo","rpg_full","rpg_empty"} --commando rocket launcher
 	}
-	if weapon_id and overrides[weapon_id] then 
-		return overrides[weapon_id]
+	if not weapon_id then
+		return
 	end
-	if type(categories) ~= "table" then 
-		return fallback
+	if overrides[weapon_id] then 
+		return unpack(overrides[weapon_id])
 	end
+	
+	if not categories then
+		categories = tweak_data.weapon[weapon_id] and tweak_data.weapon[weapon_id].categories or {}
+	end
+	
 	local is_revolver
 	local is_pistol 
-	for _,cat in pairs(categories) do 
+	for _,cat in pairs(categories) do
 		if cat == "revolver" then 
 			is_revolver = true
 		end
 		if cat == "crossbow" then 
-			return "crossbow_rebar"
+			return "crossbow_rebar","crossbow_fill","crossbow_empty"
 		elseif cat == "bow" then 
-			return "crossbow_bolt"
+			return "crossbow_bolt","crossbow_fill","crossbow_empty"
 		elseif cat == "grenade_launcher" then 
-			return "grenadelauncher_ammo"
+			return "grenadelauncher_ammo","grenade_fill","grenade_empty"
 		elseif cat == "shotgun" then 
-			return "shotgun_ammo"
+			return "shotgun_ammo","shotgun_fill","shotgun_empty"
 		elseif cat == "smg" then 
-			return "smg_ammo"
+			return "smg_ammo","smg_fill","smg_empty"
 		elseif cat == "lmg" then 
-			return "pulse_ammo"
+			return "pulse_ammo","pulse_fill","pulse_empty"
 		elseif cat == "minigun" then
-			return "pulse_ammo"
+			return "pulse_ammo","pulse_fill","pulse_empty"
 		elseif cat == "snp" then 
-			return "pulse_ammo"
+			return "pulse_ammo","pulse_fill","pulse_empty"
 		elseif cat == "assault_rifle" then 
-			return "smg_ammo"
+			return "smg_ammo","smg_fill","smg_empty"
 		elseif cat == "pistol" then 
 			is_pistol = true
 		elseif cat == "saw" then 
-			return "darkenergy_ammo"
+			return "darkenergy_ammo","pulse_fill","pulse_empty"
 		elseif cat == "flamethrower" then
-			return "darkenergy_ammo"
+			return "darkenergy_ammo","pulse_fill","pulse_empty"
 		end
 	end
 	if is_pistol then 
 		if is_revolver then 
-			return "revolver_ammo"
+			return "revolver_ammo","revolver_fill","revolver_empty"
 		else
-			return "pistol_ammo"
+			return "pistol_ammo","pistol_fill","pistol_empty"
 		end
 	end
-	return fallback
 end
-
-
 
 function HEVHUD.color_to_colorstring(color) -- from colorpicker; serialize a Color userdata as a hexadecimal string
 	return string.format("%02x%02x%02x", math.min(math.max(color.r * 255,0),0xff),math.min(math.max(color.g * 255,0),0xff),math.min(math.max(color.b * 255,0),0xff))
@@ -332,10 +335,7 @@ function HEVHUD:CheckUnderbarrelAmmo(weap_base)
 		
 		self._hud_weapons:set_underbarrel_ammo(magazine_max,magazine_current,reserves_current,reserves_max)
 		
-		local weapon_id = underbarrel_base.name_id
-		local wtd = weapon_id and tweak_data.weapon[weapon_id]
-		local categories = wtd and wtd.categories 
-		local underbarrel_icon = self:GetHLGunAmmoIcon(categories,weapon_id,nil)
+		local underbarrel_icon = self.GetHL2WeaponIcons(underbarrel_base.name_id)
 		if underbarrel_icon then
 			self._hud_weapons:set_underbarrel_ammo_icon(self._font_icons[underbarrel_icon])
 		end
@@ -413,7 +413,7 @@ function HEVHUD:SetAmmoAmount(index,magazine_max,magazine_current,reserves_curre
 			self:CheckWeaponFiremode(weap_base)
 			local categories = weap_base.categories and weap_base:categories()
 			local weapon_id = weap_base.get_name_id and weap_base:get_name_id()
-			local icon = self:GetHLGunAmmoIcon(categories,weapon_id,nil)
+			local icon = self.GetHL2WeaponIcons(weapon_id,categories,nil)
 			if icon then
 				self._hud_weapons:set_main_ammo_icon(self._font_icons[icon])
 			end
