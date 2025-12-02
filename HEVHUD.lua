@@ -511,6 +511,26 @@ function HEVHUD:RemoveTeammateCarry(id)
 	self._teammate_panels[id]:stop_carry()
 end
 
+function HEVHUD:CheckPlayerDeployables(equipment)
+	-- ignore data entirely basically;
+	-- because pd2 hud is set up to only show one deployable at a time regardless of how many you have (Jack of All Trades),
+	-- the hud "lies" and says that the equipped deployable is always slot 1.
+	-- so, i just use the function as an event that cues HEVHUD to check the deployables by itself.
+	
+	for slot,data in pairs(managers.player._equipment.selections) do 
+		self._hud_weapons:set_equipment(slot,data)
+	end
+	self._hud_weapons:set_selected_equipment_slot(managers.player._equipment.selected_index)
+	
+end
+
+function HEVHUD:SetTeammateDeployableData(id,data)
+	self._teammate_panels[id]:add_special_equipment(data)
+end
+
+function HEVHUD:SetTeammateDeployableFromString(id,data)
+	self._teammate_panels[id]:add_special_equipment(data)
+end
 function HEVHUD:AddMinion(ukey,unit)
 	self._hud_followers:add_follower(ukey)
 	if alive(unit) then

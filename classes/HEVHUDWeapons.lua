@@ -71,80 +71,6 @@ function HEVHUDWeapons:setup()
 	})
 	self._main_weapon = main_weapon
 	
-	local grenades = main_weapon:panel({
-		name = "grenades",
-		w = vars.GRENADES_W,
-		h = vars.GRENADES_H,
---		x = main_weapon:w() - vars.GRENADES_W,
-		y = main_weapon:h() - vars.GRENADES_H,
-		valign = "bottom",
-		halign = "left",
-		alpha = 0, -- start hidden, show if the player has any grenades ever
-		layer = 2
-	})
-	self._grenades = grenades
-	
-	self._grenades_ammo_bgbox = self.CreateBGBox(grenades,nil,nil,bgbox_panel_config,bgbox_item_config)
-	
-	grenades:bitmap({
-		name = "icon",
-		w = vars.GRENADES_ICON_W,
-		h = vars.GRENADES_ICON_H,
-		x = vars.GRENADES_ICON_X,
-		y = vars.GRENADES_ICON_Y,
-		valign = "grow",
-		halign = "grow",
-		texture = "fonts/halflife2", 
-		texture_rect = {133,155,30,18},
-		color = self._TEXT_COLOR_FULL,
-		layer = 2
-	})
-	grenades:text({
-		name = "amount",
-		text = "99",
-		align = vars.GRENADES_LABEL_ALIGN,
-		vertical = vars.GRENADES_LABEL_VERTICAL,
-		x = vars.GRENADES_LABEL_HOR_OFFSET,
-		y = vars.GRENADES_LABEL_VER_OFFSET,
-		valign = "grow",
-		halign = "grow",
-		font = vars.GRENADES_LABEL_FONT_NAME,
-		font_size = vars.GRENADES_LABEL_FONT_SIZE,
-		color = self._TEXT_COLOR_FULL,
-		layer = 2
-	})
-	local grenades_charge = grenades:panel({
-		name = "grenades_charge",
-		w = vars.GRENADES_CHARGE_W,
-		h = vars.GRENADES_CHARGE_H,
-		x = vars.GRENADES_CHARGE_X,
-		y = (grenades:h() - vars.GRENADES_CHARGE_H) + vars.GRENADES_CHARGE_Y,
-		valign = "bottom",
-		halign = "grow",
-		alpha = 0,
-		layer = 3
-	})
-	self._grenades_charge = grenades_charge
-	grenades_charge:rect({
-		name = "charge_bar",
-		w = grenades_charge:w(),
-		h = grenades_charge:h(),
-		valign = "grow",
-		halign = "scale",
-		color = Color.white,
-		layer = 2
-	})
-	grenades_charge:rect({
-		name = "charge_bg",
-		w = grenades_charge:w(),
-		h = grenades_charge:h(),
-		valign = "grow",
-		halign = "scale",
-		color = Color.black,
-		alpha = vars.GRENADES_CHARGE_BG_ALPHA,
-		layer = 1
-	})
-		
 	local main_ammo = main_weapon:panel({
 		name = "main_ammo",
 		w = vars.MAIN_AMMO_W,
@@ -267,6 +193,183 @@ function HEVHUDWeapons:setup()
 		color = self._TEXT_COLOR_FULL,
 		layer = 2
 	})
+	
+	
+	local grenades = main_weapon:panel({
+		name = "grenades",
+		w = vars.GRENADES_W,
+		h = vars.GRENADES_H,
+--		x = main_weapon:left() - (vars.MAIN_AMMO_W + vars.GRENADES_W + vars.GRENADES_HOR_MARGIN),
+		y = main_weapon:h() - vars.GRENADES_H,
+		valign = "bottom",
+		halign = "left",
+		alpha = 0, -- start hidden, show if the player has any grenades ever
+		layer = 2
+	})
+	grenades:set_right(main_ammo:left() + vars.GRENADES_HOR_MARGIN)
+	
+	self._grenades = grenades
+	
+	self._grenades_ammo_bgbox = self.CreateBGBox(grenades,nil,nil,bgbox_panel_config,bgbox_item_config)
+	
+	grenades:bitmap({
+		name = "icon",
+		w = vars.GRENADES_ICON_W,
+		h = vars.GRENADES_ICON_H,
+		x = vars.GRENADES_ICON_X,
+		y = vars.GRENADES_ICON_Y,
+		valign = "grow",
+		halign = "grow",
+		texture = "fonts/halflife2", 
+		texture_rect = {133,155,30,18},
+		color = self._TEXT_COLOR_FULL,
+		layer = 2
+	})
+	grenades:text({
+		name = "amount",
+		text = "99",
+		align = vars.GRENADES_LABEL_ALIGN,
+		vertical = vars.GRENADES_LABEL_VERTICAL,
+		x = vars.GRENADES_LABEL_HOR_OFFSET,
+		y = vars.GRENADES_LABEL_VER_OFFSET,
+		valign = "grow",
+		halign = "grow",
+		font = vars.GRENADES_LABEL_FONT_NAME,
+		font_size = vars.GRENADES_LABEL_FONT_SIZE,
+		color = self._TEXT_COLOR_FULL,
+		layer = 2
+	})
+	local grenades_charge = grenades:panel({
+		name = "grenades_charge",
+		w = vars.GRENADES_CHARGE_W,
+		h = vars.GRENADES_CHARGE_H,
+		x = vars.GRENADES_CHARGE_X,
+		y = (grenades:h() - vars.GRENADES_CHARGE_H) + vars.GRENADES_CHARGE_Y,
+		valign = "bottom",
+		halign = "grow",
+		alpha = 0,
+		layer = 3
+	})
+	self._grenades_charge = grenades_charge
+	grenades_charge:rect({
+		name = "charge_bar",
+		w = grenades_charge:w(),
+		h = grenades_charge:h(),
+		valign = "grow",
+		halign = "scale",
+		color = Color.white,
+		layer = 2
+	})
+	grenades_charge:rect({
+		name = "charge_bg",
+		w = grenades_charge:w(),
+		h = grenades_charge:h(),
+		valign = "grow",
+		halign = "scale",
+		color = Color.black,
+		alpha = vars.GRENADES_CHARGE_BG_ALPHA,
+		layer = 1
+	})
+	
+	
+		
+	local deployables = main_weapon:panel({
+		name = "deployables",
+--		x = vars.DEPLOYABLES_X,
+		y = vars.DEPLOYABLES_Y,
+		w = vars.DEPLOYABLES_W,
+		h = vars.DEPLOYABLES_H,
+		valign = "bottom",
+		halign = "right",
+		alpha = 1,
+		layer = 2,
+		visible = true
+	})
+	deployables:set_right(grenades:left() + vars.DEPLOYABLES_X)
+	
+	self._deployables = deployables
+	
+	local deployable_1 = deployables:panel({
+		name = "1",
+		x = deployables:w() - vars.DEPLOYABLE_W,
+		y = nil,
+		w = vars.DEPLOYABLE_W,
+		h = vars.DEPLOYABLE_H,
+		valign = "bottom",
+		halign = "right",
+		alpha = 1,
+		layer = 1,
+		visible = false
+	})
+	self.CreateBGBox(deployable_1,nil,nil,bgbox_panel_config,bgbox_item_config)
+	
+	deployable_1:bitmap({
+		name = "icon",
+		texture = "guis/textures/hevhud_icons", -- placeholder image
+		texture_rect = {32,64,32,32},
+		x = vars.DEPLOYABLE_ICON_X,
+		y = vars.DEPLOYABLE_ICON_Y,
+		w = vars.DEPLOYABLE_ICON_W,
+		h = vars.DEPLOYABLE_ICON_H,
+		color = self._TEXT_COLOR_FULL,
+		layer = 2
+	})
+	
+	deployable_1:text({
+		name = "amount",
+		text = "99",
+		x = vars.DEPLOYABLE_LABEL_X,
+		y = vars.DEPLOYABLE_LABEL_Y,
+		align = "right",
+		vertical = "center",
+		font = vars.DEPLOYABLE_LABEL_FONT_NAME,
+		font_size = vars.DEPLOYABLE_LABEL_FONT_SIZE,
+		color = self._TEXT_COLOR_FULL,
+		alpha = 1,
+		layer = 3
+	})
+	
+	local deployable_2 = deployables:panel({
+		name = "2",
+	--	x = deployable_1:x() - (vars.DEPLOYABLE_W + vars.DEPLOYABLE_W + vars.DEPLOYABLE_HOR_MARGIN),
+		y = 0,
+		w = vars.DEPLOYABLE_W,
+		h = vars.DEPLOYABLE_H,
+		valign = "bottom",
+		halign = "right",
+		alpha = 0.5,
+		layer = 1,
+		visible = false
+	})
+	deployable_2:set_right(deployable_1:left() + vars.DEPLOYABLE_HOR_MARGIN)
+	self.CreateBGBox(deployable_2,nil,nil,bgbox_panel_config,bgbox_item_config)
+	deployable_2:bitmap({
+		name = "icon",
+		texture = "guis/textures/hevhud_icons", -- placeholder image
+		texture_rect = {32,64,32,32},
+		x = vars.DEPLOYABLE_ICON_X,
+		y = vars.DEPLOYABLE_ICON_Y,
+		w = vars.DEPLOYABLE_ICON_W,
+		h = vars.DEPLOYABLE_ICON_H,
+		color = self._TEXT_COLOR_FULL,
+		layer = 2
+	})
+	deployable_2:text({
+		name = "amount",
+		text = "77",
+		x = vars.DEPLOYABLE_LABEL_X,
+		y = vars.DEPLOYABLE_LABEL_Y,
+		align = "right",
+		vertical = "center",
+		font = vars.DEPLOYABLE_LABEL_FONT_NAME,
+		font_size = vars.DEPLOYABLE_LABEL_FONT_SIZE,
+		color = self._TEXT_COLOR_FULL,
+		alpha = 1,
+		layer = 3
+	})
+	
+	
+	
 end
 
 function HEVHUDWeapons:set_underbarrel_on(state)
@@ -447,6 +550,103 @@ end
 
 function HEVHUDWeapons:set_main_ammo_icon(icon_name)
 	self._main_ammo:child("ammo_icon"):set_text(icon_name)
+end
+
+function HEVHUDWeapons:set_equipment(slot,data)
+	if data.amount then
+		-- format string
+		local amount_string = ""
+		for i = 1, #data.amount do
+			local amount = tostring(Application:digest_value(data.amount[i], false))
+			if i == 1 then 
+				amount_string = amount
+			else
+				amount_string = amount_string .. " | " .. amount
+			end
+		end
+		self:_set_deployable_label(slot,amount_string)
+	end
+	
+	-- get icon
+	local equipment_id = data.equipment
+	if equipment_id then
+		local guis_catalog = "guis/"
+		local bundle_folder = tweak_data.blackmarket.deployables[equipment_id] and tweak_data.blackmarket.deployables[equipment_id].texture_bundle_folder
+
+		if bundle_folder then
+			guis_catalog = guis_catalog .. "dlcs/" .. tostring(bundle_folder) .. "/"
+		end
+
+		local texture_path = guis_catalog .. "textures/pd2/blackmarket/icons/deployables/" .. tostring(equipment_id)
+		local texture_rect = nil
+		self:_set_deployable_icon(slot,texture_path,texture_rect)
+		self:_show_deployable(slot)
+	end
+		
+	-- get name
+	-- local equipment_name = managers.localization:text(tweak_data.upgrades.definitions[equipment_id].name_id)
+end
+
+function HEVHUDWeapons:_set_deployable_label(slot,str)
+	local panel = self._deployables:child(tostring(slot))
+	if alive(panel) then
+		panel:child("amount"):set_text(str)
+	end
+end
+function HEVHUDWeapons:_set_deployable_icon(slot,texture,rect)
+	local panel = self._deployables:child(tostring(slot))
+	if alive(panel) then
+		if rect then
+			panel:child("icon"):set_image(texture,unpack(rect))
+		else
+			panel:child("icon"):set_image(texture)
+		end
+	end
+end
+
+function HEVHUDWeapons:_show_deployable(slot)
+	local panel = self._deployables:child(tostring(slot))
+	if alive(panel) then
+		panel:show()
+	end
+end
+
+function HEVHUDWeapons:set_selected_equipment_slot(slot)
+	local slot_name = tostring(slot)
+	for _,deployable_panel in pairs(self._deployables:children()) do 
+		if deployable_panel:name() == slot_name then
+			-- if equipped,
+			
+			-- flash bgbox
+			local bgbox = deployable_panel:child("bgbox")
+			for _,child in pairs(bgbox:children()) do 
+				child:stop()
+				child:animate(AnimateLibrary.animate_color_lerp,nil,self._ANIM_BGBOX_FLASH_DURATION,self._TEXT_COLOR_FULL,self._BG_BOX_COLOR)
+			end
+			bgbox:stop()
+			bgbox:animate(AnimateLibrary.animate_alpha_lerp,nil,self._ANIM_BGBOX_FLASH_DURATION,self._ANIM_BGBOX_ALPHA,self._BG_BOX_ALPHA)
+			
+			-- set full visibility
+			--deployable_panel:stop()
+			--deployable_panel:animate(AnimateLibrary.animate_alpha_lerp,nil,self._config.Weapons.ANIM_SWAP_DEPLOYABLE_DURATION,nil,self._config.General.LABEL_ALPHA_HIGH)
+			deployable_panel:set_alpha(self._config.General.LABEL_ALPHA_HIGH)
+		else
+			-- set half visibility
+			deployable_panel:set_alpha(self._config.General.LABEL_ALPHA_LOW)
+			--deployable_panel:stop()
+			--deployable_panel:animate(AnimateLibrary.animate_alpha_lerp,nil,self._config.Weapons.ANIM_SWAP_DEPLOYABLE_DURATION,nil,self._config.General.LABEL_ALPHA_LOW)
+			
+--			for _,child in pairs(deployable_panel:child("bgbox")) do 
+--				child:stop()
+--				child:set_color(Color.black) -- or whatever
+--				child:set_alpha(0.5) -- etc etc
+--			end
+		end
+	end
+end
+
+function HEVHUDWeapons:animate_flash_bgbox_deployable(slot)
+	
 end
 
 function HEVHUDWeapons:animate_flash_bgbox_main()
