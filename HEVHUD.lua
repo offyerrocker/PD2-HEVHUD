@@ -254,10 +254,12 @@ function HEVHUD:CreateHUD(parent_hud)
 	--self._hud_objectives = HEVHUDCore:require("classes/HEVHUDObjectives"):new(hl2,settings,config)
 	
 	local HEVHUDTeammate = HEVHUDCore:require("classes/HEVHUDTeammate")
+	local y = config.Teammate.TEAMMATE_Y
 	for i=1,4 do 
 		local teammate = HEVHUDTeammate:new(hl2,settings,config,i)
 		self._teammate_panels[i] = teammate 
-		teammate._panel:set_y(i * 90)
+		teammate._panel:set_y(y + config.Teammate.TEAMMATE_VER_MARGIN)
+		y = teammate._panel:bottom()
 	end
 end
 
