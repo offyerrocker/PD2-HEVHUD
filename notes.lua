@@ -2,11 +2,11 @@
 TODO:
 	
 	BUGS
-		crosshair ammo counter is inaccurate with underbarrels
-			repro: 
-				1. toggle underbarrel on
-				2. fire round
-				3. toggle underbarrel off
+		- none... yet
+	
+	
+	
+	
 	
 	Assets
 		Find a font that works for teammate names (support wide variety of characters)

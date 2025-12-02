@@ -404,16 +404,6 @@ function HEVHUD:SetAmmoAmount(index,magazine_max,magazine_current,reserves_curre
 	
 	local is_equipped = inv_ext:equipped_selection() == index
 	
-	Hooks:Call("HEVHUD_Crosshair_Listener",{
-		source = "weapon",
-		slot = index,
-		is_equipped = is_equipped,
-		magazine_current = magazine_current,
-		magazine_max = magazine_max,
-		reserves_current = reserves_current,
-		reserves_max = reserves_max
-	})
-	
 	if weapon_unit then
 		local weap_base = weapon_unit:base()
 		self:CheckUnderbarrelAmmo(weap_base) -- update underbarrel ammo info
@@ -421,6 +411,21 @@ function HEVHUD:SetAmmoAmount(index,magazine_max,magazine_current,reserves_curre
 		if underbarrel then
 			-- specifically use the individual getters; ammo_info() will return the underbarrel ammo data
 			-- (so, get the base weapon ammo here)
+			
+			-- can use the below for explicit underbarrel ammo if i decide not to trust the ammo info passed to this function
+--			local umagazine_max,umagazine_current,ureserves_current,ureserves_max = RaycastWeaponBase.ammo_info(underbarrel)
+			Hooks:Call("HEVHUD_Crosshair_Listener",{
+				source = "weapon",
+				slot = index + 2,
+				is_equipped = true,
+				magazine_current = magazine_current,
+				magazine_max = magazine_max,
+				reserves_current = reserves_current,
+				reserves_max = reserves_max
+			})
+			is_equipped = false -- don't tell the crosshair ammo that the base weapon is equipped if the underbarrel is active
+			
+			-- todo set crosshair ammo of non-equipped underbarrels?
 			
 			magazine_max,magazine_current,reserves_current,reserves_max = weap_base:get_ammo_max_per_clip(),weap_base:get_ammo_remaining_in_clip(),weap_base:get_ammo_total(),weap_base:get_ammo_max()
 		elseif not is_equipped then
@@ -435,6 +440,19 @@ function HEVHUD:SetAmmoAmount(index,magazine_max,magazine_current,reserves_curre
 			end
 		end
 	end
+	
+	-- update the base weapon ammo
+	Hooks:Call("HEVHUD_Crosshair_Listener",{
+		source = "weapon",
+		slot = index,
+		is_equipped = is_equipped,
+		magazine_current = magazine_current,
+		magazine_max = magazine_max,
+		reserves_current = reserves_current,
+		reserves_max = reserves_max
+	})
+	
+	
 	
 	self._hud_weapons:set_main_ammo(magazine_max,magazine_current,reserves_current,reserves_max)
 end
