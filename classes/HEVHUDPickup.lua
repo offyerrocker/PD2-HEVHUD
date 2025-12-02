@@ -46,6 +46,7 @@ function HEVHUDPickup:setup()
 		h = vars.MISSION_EQUIPMENT_H,
 		layer = 4
 	})
+--	mission_equipment:rect({color=Color.red,alpha=0.1})
 	
 	self._mission_equipment = mission_equipment
 	
@@ -135,15 +136,16 @@ function HEVHUDPickup:remove_special_equipment(equipment_id,skip_sort)
 end
 
 function HEVHUDPickup:sort_special_equipment(instant)
+	local vars = self._config.Pickup
 	local x = 0
 	for i,child in ipairs(self._mission_equipment:children()) do 
 		child:stop() -- todo stop only motion thread
 		if instant then
 			child:set_x(x)
 		else
-			child:animate(AnimateLibrary.animate_move_lerp,nil,self._ANIM_SORT_MISSION_EQ_ICON_DURATION,x)
+			child:animate(AnimateLibrary.animate_move_lerp,nil,vars.ANIM_SORT_MISSION_EQ_ICON_DURATION,x)
 		end
-		x = x + self._MISSION_EQ_ICON_W + self._MISSION_EQ_ICON_HOR_MARGIN
+		x = x + vars.MISSION_EQ_ICON_W + vars.MISSION_EQ_ICON_HOR_MARGIN
 	end
 end
 

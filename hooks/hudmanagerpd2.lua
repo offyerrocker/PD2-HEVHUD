@@ -151,14 +151,21 @@ Hooks:PostHook(HUDManager,"add_item_from_string","hevhud_hudmanager_player_from_
 	HEVHUD:CheckPlayerDeployables(data)
 end)
 
-Hooks:PostHook(HUDManager,"set_deployable_equipment","hevhud_hudmanager_teammate_set_deployable",function(self, i, data)
-	HEVHUD:SetTeammateDeployableData(i,data)
+Hooks:PostHook(HUDManager,"set_item_amount","hevhud_hudmanager_player_set_deployable_amount",function(self, index, amount)
+	HEVHUD:CheckPlayerDeployables(data)
+end)
+
+Hooks:PostHook(HUDManager,"set_item_amount_from_string","hevhud_hudmanager_player_from_string_set_deployable_amount",function(self, index, amount_str, amount)
+	HEVHUD:CheckPlayerDeployables(data)
 end)
 
 Hooks:PostHook(HUDManager,"set_deployable_equipment_from_string","hevhud_hudmanager_teammate_from_string_set_deployable",function(self, i, data)
 	HEVHUD:SetTeammateDeployableFromString(i,data)
 end)
 
+Hooks:PostHook(HUDManager,"set_deployable_equipment","hevhud_hudmanager_teammate_set_deployable",function(self, i, data)
+	HEVHUD:SetTeammateDeployableData(i,data)
+end)
 
 Hooks:PostHook(HUDManager,"set_teammate_carry_info","hevhud_hudmanager_teammate_set_carry",function(self,i,carry_id,value)
 	HEVHUD:SetTeammateCarry(i,carry_id,value)
