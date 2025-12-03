@@ -1,9 +1,6 @@
 local HEVHUDPickup = blt_class(HEVHUDCore:require("classes/HEVHUDBase"))
 local AnimateLibrary = HEVHUDCore:require("classes/AnimateLibrary")
 
--- todo aggregate ammo pickups to same weapon
--- 	this requires being able to check in cases where the same weapon id is in multiple slots (eg. Primary as Secondary/Secondary as Primary, secondary_saw, or a hypothetical very hacky underbarrel mod)
-
 function HEVHUDPickup:init(panel,settings,config,...)
 	HEVHUDPickup.super.init(self,panel,settings,config,...)
 	self._panel = panel:panel({

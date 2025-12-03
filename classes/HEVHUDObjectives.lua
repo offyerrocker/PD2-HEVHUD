@@ -137,7 +137,7 @@ function HEVHUDObjectives:_add_special_equipment(id,amount,icon_id,skip_sort)
 			name = id,
 			w = vars.MISSION_EQ_ICON_W,
 			h = vars.MISSION_EQ_ICON_H,
---			x = -vars.MISSION_EQ_ICON_W,
+			x = self._mission_equipment:w()+vars.MISSION_EQ_ICON_W,
 			y = 0,
 			valign = "grow",
 			halign = "grow",
@@ -249,17 +249,12 @@ function HEVHUDObjectives:_activate_objective(data)
 		self:update_amount_objective(data)
 	else
 		self._objective_panel:child("amount"):hide()
-		-- animate hide amount
 	end
 	self:check_resize_corner()
 end
 
 function HEVHUDObjectives:remind_objective(id)
 --	Print("remind",id)
-	
-	-- flash the objective bgbox twice
-	
---	self:check_resize_corner()
 	self:animate_flash_bgbox_corner()
 end
 
@@ -279,6 +274,7 @@ function HEVHUDObjectives:update_amount_objective(data)
 	local objective_amount = self._objective_panel:child("amount")
 	objective_amount:show()
 	objective_amount:stop()
+	
 	local amount_str = self.format_objective_amount(data)
 	objective_amount:set_text(amount_str)
 	objective_amount:clear_range_color(0,amount_str)
@@ -343,12 +339,6 @@ function HEVHUDObjectives:animate_flash_bgbox_corner()
 	end
 	self._corner_bgbox:stop()
 	self._corner_bgbox:animate(AnimateLibrary.animate_alpha_lerp,nil,self._ANIM_BGBOX_FLASH_DURATION,self._ANIM_BGBOX_ALPHA,self._BG_BOX_ALPHA)
-end
-
-
-
-function HEVHUDObjectives:flash_bgbox()
-	
 end
 
 return HEVHUDObjectives
