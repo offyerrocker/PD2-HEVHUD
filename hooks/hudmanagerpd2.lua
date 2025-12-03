@@ -118,15 +118,17 @@ end)
 
 
 Hooks:PostHook(HUDManager,"add_special_equipment","hevhud_hudmanager_set_special_equipment",function(self,data)
-	HEVHUD._hud_pickup:add_special_equipment(data)
+	HEVHUD._hud_objectives:add_special_equipment(data)
+--	HEVHUD._hud_pickup:add_special_equipment(data)
 end)
 
 Hooks:PostHook(HUDManager,"set_special_equipment_amount","hevhud_hudmanager_set_special_equipment_amount",function(self,equipment_id,amount)
-	HEVHUD._hud_pickup:set_special_equipment_amount(equipment_id,amount)
+	HEVHUD._hud_objectives:set_special_equipment_amount(equipment_id,amount)
+--	HEVHUD._hud_pickup:set_special_equipment_amount(equipment_id,amount)
 end)
 
 Hooks:PostHook(HUDManager,"remove_special_equipment","hevhud_hudmanager_remove_special_equipment",function(self,equipment_id)
-	HEVHUD._hud_pickup:remove_special_equipment(equipment_id)
+	HEVHUD._hud_objectives:remove_special_equipment(equipment_id)
 end)
 
 

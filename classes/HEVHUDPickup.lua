@@ -38,19 +38,6 @@ function HEVHUDPickup:setup()
 	self._TEXT_COLOR_HALF = HEVHUD.colordecimal_to_color(self._settings.color_hl2_orange)
 	self._TEXT_COLOR_NONE = HEVHUD.colordecimal_to_color(self._settings.color_hl2_red)
 	
-	local mission_equipment = self._panel:panel({
-		name = "mission_equipment",
-		x = vars.MISSION_EQUIPMENT_X,
-		y = vars.MISSION_EQUIPMENT_Y,
-		w = vars.MISSION_EQUIPMENT_W,
-		h = vars.MISSION_EQUIPMENT_H,
-		layer = 4
-	})
---	mission_equipment:rect({color=Color.red,alpha=0.1})
-	
-	self._mission_equipment = mission_equipment
-	
-	
 end
 
 
@@ -58,94 +45,117 @@ function HEVHUDPickup:add_special_equipment(data)
 	self:_add_special_equipment(data.id,data.amount,data.icon)
 end
 
-function HEVHUDPickup:_add_special_equipment(id,amount,icon_id,skip_sort)	
-	if not alive(self._mission_equipment) then
-		error("Panel not alive!")
-	end
+function HEVHUDPickup:set_special_equipment_amount(equipment_id,amount)
+	self:_add_special_equipment(equipment_id,amount,nil)
+end
+
+function HEVHUDPickup:_add_special_equipment(id,amount,icon_id)
 	if not id then return end
-	id = tostring(id)
-	local equipment = self._mission_equipment:child(id)
+	
+	local vars = self._config.Pickup
+	local panel_name = "pickup_equipment_" .. tostring(id)
+	
+	local pickup = self._panel:child(panel_name)
+	
+	if self._settings.hud_ammo_pickup_aggregate_ammopickups then
+		local t = TimerManager:main():time()
+		local aggregate_cache = self._pickup_aggregate_cache[id]
+		if aggregate_cache and aggregate_cache.t > t then -- if within refresh threshold
+			aggregate_cache.t = t + vars.AMMO_AGGREGATE_TIMER_THRESHOLD
+			local old_amount = aggregate_cache.amount 
+			amount = amount + old_amount
+			aggregate_cache.amount = amount
+		else
+			self._pickup_aggregate_cache[id] = {
+				t = t + vars.AMMO_AGGREGATE_TIMER_THRESHOLD,
+				amount = amount
+			}
+		end
+		
+		if alive(pickup) then
+			for i,panel in pairs(self._anim_slots) do 
+				if panel == pickup then
+					pickup:child("amount_label"):set_text(tostring(amount))
+					self:animate_pickup(pickup,i)
+					break
+				end
+			end
+			return
+		end
+	end
+	
+	
 	if not amount or tostring(amount) == "1" then
 		amount = ""
 	end
-	if alive(equipment) then 
-		equipment:child("label"):set_text(amount)
+	if alive(pickup) then 
+		pickup:child("label"):set_text(amount)
 	else
-	
-		local vars = self._config.Pickup
+		local eq_td = tweak_data.equipments.specials[id]
 		
-		equipment = self._mission_equipment:panel({
-			name = id,
-			w = vars.MISSION_EQ_ICON_W,
-			h = vars.MISSION_EQ_ICON_H,
---			x = -vars.MISSION_EQ_ICON_W,
+		pickup = self._panel:panel({
+			name = panel_name,
+			w = vars.PICKUP_W,
+			h = vars.PICKUP_H,
+			x = 0,
 			y = 0,
 			valign = "grow",
 			halign = "grow",
+			layer = 2,
+			visible = false
+		})
+		
+		local amount_label = pickup:text({
+			name = "amount_label",
+			text = tostring(amount),
+			align = vars.AMMO_AMOUNT_LABEL_ALIGN,
+			vertical = vars.AMMO_AMOUNT_LABEL_VERTICAL,
+			x = vars.AMMO_AMOUNT_LABEL_HOR_OFFSET,
+			y = vars.AMMO_AMOUNT_LABEL_VER_OFFSET,
+			valign = "grow",
+			halign = "grow",
+			font = vars.AMMO_AMOUNT_LABEL_FONT_NAME,
+			font_size = vars.AMMO_AMOUNT_LABEL_FONT_SIZE,
+			color = self._TEXT_COLOR_FULL,
+			blend_mode = vars.AMMO_AMOUNT_BLEND_MODE,
 			layer = 2
 		})
 		
-		if not icon_id then
-			local eq_td = tweak_data.equipments[id]
-			icon_id = eq_td.icon
-		end
+		local name_label = pickup:text({
+			name = "name_label",
+			text = managers.localization:text(eq_td.text_id),
+			align = "left",
+			vertical = vars.AMMO_AMOUNT_LABEL_VERTICAL,
+			x = vars.WEAPON_ICON_X + pickup:w() - vars.WEAPON_ICON_W,
+			y = vars.WEAPON_ICON_Y,
+			valign = "grow",
+			halign = "grow",
+			font = vars.MISSION_EQ_LABEL_FONT_NAME,
+			font_size = vars.AMMO_AMOUNT_LABEL_FONT_SIZE,
+			color = self._TEXT_COLOR_FULL,
+			blend_mode = vars.AMMO_AMOUNT_BLEND_MODE,
+			layer = 2
+		})
 		
-		local texture,rect = tweak_data.hud_icons:get_icon_data(icon_id)
-		local icon = equipment:bitmap({
+		local texture,rect = tweak_data.hud_icons:get_icon_data(icon_id or eq_td.icon)
+		local icon = pickup:bitmap({
 			name = "icon",
 			texture = texture,
 			texture_rect = rect,
+			x = vars.AMMO_ICON_X,
+			y = vars.AMMO_ICON_Y,
 			w = vars.MISSION_EQ_ICON_W,
 			h = vars.MISSION_EQ_ICON_H,
+			color = self._TEXT_COLOR_FULL,
 			valign = "grow",
 			halign = "grow",
 			layer = 3
 		})
 		
-		local label = equipment:text({
-			name = "label",
-			font = vars.MISSION_EQ_LABEL_FONT_NAME,
-			font_size = vars.MISSION_EQ_LABEL_FONT_SIZE,
-			text = amount,
-			align = vars.MISSION_EQ_LABEL_ALIGN,
-			vertical = vars.MISSION_EQ_LABEL_VERTICAL,
-			valign = "grow",
-			halign = "grow",
-			layer = 4
-		})
-		icon:animate(AnimateLibrary.animate_color_lerp,nil,vars.ANIM_MISSION_EQ_HIGHLIGHT_DURATION,self._TEXT_COLOR_HALF,self._TEXT_COLOR_FULL)
-		if not skip_sort then
-			self:sort_special_equipment()
-		end
-	end
-end
-
-
-function HEVHUDPickup:set_special_equipment_amount(equipment_id,amount)
-	self:_add_special_equipment(equipment_id,amount,nil)
-end
-
-function HEVHUDPickup:remove_special_equipment(equipment_id,skip_sort)
-	local equipment = self._mission_equipment:child(equipment_id)
-	if alive(equipment) then 
-		self._mission_equipment:remove(equipment)
-		if not skip_sort then
-			self:sort_special_equipment()
-		end
-	end
-end
-
-function HEVHUDPickup:sort_special_equipment(instant)
-	local vars = self._config.Pickup
-	local x = 0
-	for i,child in ipairs(self._mission_equipment:children()) do 
-		child:stop() -- todo stop only motion thread
-		if instant then
-			child:set_x(x)
-		else
-			child:animate(AnimateLibrary.animate_move_lerp,nil,vars.ANIM_SORT_MISSION_EQ_ICON_DURATION,x)
-		end
-		x = x + vars.MISSION_EQ_ICON_W + vars.MISSION_EQ_ICON_HOR_MARGIN
+		--icon:animate(AnimateLibrary.animate_color_lerp,nil,vars.ANIM_MISSION_EQ_HIGHLIGHT_DURATION,self._TEXT_COLOR_HALF,self._TEXT_COLOR_FULL)
+		
+		
+		self:register_popup(pickup)
 	end
 end
 
@@ -202,7 +212,7 @@ function HEVHUDPickup:add_ammo_pickup(weapon_slot,amount,ammo_text,weapon_textur
 	local ICONS_FONT_NAME = self._config.General.ICONS_FONT_NAME
 	
 	
-	local panel_name = "ammo_pickup_" .. tostring(weapon_slot)
+	local panel_name = "pickup_ammo_" .. tostring(weapon_slot)
 	local pickup = self._panel:child(panel_name)
 	if self._settings.hud_ammo_pickup_aggregate_ammopickups then
 		local t = TimerManager:main():time()
@@ -227,7 +237,7 @@ function HEVHUDPickup:add_ammo_pickup(weapon_slot,amount,ammo_text,weapon_textur
 					--local tx,ty,tw,th = amount_label:text_rect()
 					--pickup:child("weapon_icon"):set_right(tx + vars.WEAPON_ICON_X)
 					
-					self:animate_pickup(pickup,i,weapon_slot)
+					self:animate_pickup(pickup,i)
 					break
 				end
 			end
@@ -269,7 +279,6 @@ function HEVHUDPickup:add_ammo_pickup(weapon_slot,amount,ammo_text,weapon_textur
 		blend_mode = vars.AMMO_AMOUNT_BLEND_MODE,
 		layer = 2
 	})
-	local tx,ty,tw,th = amount_label:text_rect()
 	
 	local weapon_icon = pickup:bitmap({
 		name = "weapon_icon",
@@ -283,6 +292,7 @@ function HEVHUDPickup:add_ammo_pickup(weapon_slot,amount,ammo_text,weapon_textur
 		blend_mode = vars.WEAPON_ICON_BLEND_MODE,
 		layer = 3
 	})
+	--local tx,ty,tw,th = amount_label:text_rect()
 	--weapon_icon:set_right(tx + vars.WEAPON_ICON_X)
 	
 	local ammo_icon = pickup:text({

@@ -76,6 +76,113 @@ function HEVHUDObjectives:setup()
 		layer = 4
 	})
 	
+	
+	
+	local mission_equipment = self._panel:panel({
+		name = "mission_equipment",
+		x = vars.MISSION_EQUIPMENT_X,
+		y = vars.MISSION_EQUIPMENT_Y,
+		w = vars.MISSION_EQUIPMENT_W,
+		h = vars.MISSION_EQUIPMENT_H,
+		layer = 4
+	})
+--	mission_equipment:rect({color=Color.red,alpha=0.1})
+	
+	self._mission_equipment = mission_equipment
+end
+
+
+function HEVHUDObjectives:add_special_equipment(data)
+	self:_add_special_equipment(data.id,data.amount,data.icon)
+end
+
+function HEVHUDObjectives:_add_special_equipment(id,amount,icon_id,skip_sort)	
+	if not alive(self._mission_equipment) then
+		error("Panel not alive!")
+	end
+	if not id then return end
+	id = tostring(id)
+	local equipment = self._mission_equipment:child(id)
+	if not amount or tostring(amount) == "1" then
+		amount = ""
+	end
+	if alive(equipment) then 
+		equipment:child("label"):set_text(amount)
+	else
+		local vars = self._config.Objectives
+		equipment = self._mission_equipment:panel({
+			name = id,
+			w = vars.MISSION_EQ_ICON_W,
+			h = vars.MISSION_EQ_ICON_H,
+--			x = -vars.MISSION_EQ_ICON_W,
+			y = 0,
+			valign = "grow",
+			halign = "grow",
+			layer = 2
+		})
+		
+		if not icon_id then
+			local eq_td = tweak_data.equipments[id]
+			icon_id = eq_td.icon
+		end
+		
+		local texture,rect = tweak_data.hud_icons:get_icon_data(icon_id)
+		local icon = equipment:bitmap({
+			name = "icon",
+			texture = texture,
+			texture_rect = rect,
+			w = vars.MISSION_EQ_ICON_W,
+			h = vars.MISSION_EQ_ICON_H,
+			valign = "grow",
+			halign = "grow",
+			layer = 3
+		})
+		
+		local label = equipment:text({
+			name = "label",
+			font = vars.MISSION_EQ_LABEL_FONT_NAME,
+			font_size = vars.MISSION_EQ_LABEL_FONT_SIZE,
+			text = amount,
+			align = vars.MISSION_EQ_LABEL_ALIGN,
+			vertical = vars.MISSION_EQ_LABEL_VERTICAL,
+			valign = "grow",
+			halign = "grow",
+			layer = 4
+		})
+		icon:animate(AnimateLibrary.animate_color_lerp,nil,vars.ANIM_MISSION_EQ_HIGHLIGHT_DURATION,self._TEXT_COLOR_HALF,self._TEXT_COLOR_FULL)
+		if not skip_sort then
+			self:sort_special_equipment()
+		end
+	end
+end
+
+
+function HEVHUDObjectives:set_special_equipment_amount(equipment_id,amount)
+	self:_add_special_equipment(equipment_id,amount,nil)
+end
+
+function HEVHUDObjectives:remove_special_equipment(equipment_id,skip_sort)
+	local equipment = self._mission_equipment:child(equipment_id)
+	if alive(equipment) then 
+		self._mission_equipment:remove(equipment)
+		if not skip_sort then
+			self:sort_special_equipment()
+		end
+	end
+end
+
+function HEVHUDObjectives:sort_special_equipment(instant)
+	local vars = self._config.Objectives
+	local x = 0
+	for i,child in ipairs(self._mission_equipment:children()) do 
+		child:stop() -- todo stop only motion thread
+		if instant then
+			child:set_x(x)
+		else
+			child:animate(AnimateLibrary.animate_move_lerp,nil,vars.ANIM_SORT_MISSION_EQ_ICON_DURATION,x)
+		end
+		x = x + vars.MISSION_EQ_ICON_W + vars.MISSION_EQ_ICON_HOR_MARGIN
+	end
 end
 
 function HEVHUDObjectives:activate_objective(data)
