@@ -40,7 +40,7 @@ function HEVHUDObjectives:setup()
 		x = vars.OBJECTIVES_X,
 		y = vars.OBJECTIVES_Y,
 		w = vars.OBJECTIVES_W,
-		y = vars.MISSION_EQUIPMENT_H, --vars.OBJECTIVES_H,
+		h = vars.MISSION_EQUIPMENT_H, --vars.OBJECTIVES_H,
 		valign = "grow",
 		halign = "grow",
 		layer = 1
