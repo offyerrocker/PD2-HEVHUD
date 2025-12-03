@@ -42,7 +42,8 @@ HEVHUDCore.config = { -- Loaded from hevhud_vars.ini
 	TabScreen = {},
 	HitDirection = {},
 	Pickup = {},
-	Objectives = {}
+	Objectives = {},
+	Presenter = {}
 }
 HEVHUDCore._sort_config = { -- order to sort ini file during write
 	"General",
@@ -58,7 +59,8 @@ HEVHUDCore._sort_config = { -- order to sort ini file during write
 	"TabScreen",
 	"HitDirection",
 	"Pickup",
-	"Objectives"
+	"Objectives",
+	"Presenter"
 }
 
 HEVHUDCore.languages = {}
