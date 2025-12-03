@@ -142,7 +142,6 @@ Hooks:PostHook(HUDManager,"set_teammate_special_equipment_amount","hevhud_hudman
 	HEVHUD:SetTeammateSpecialEquipmentAmount(i,equipment_id,amount)
 end)
 
-
 Hooks:PostHook(HUDManager,"add_item","hevhud_hudmanager_player_set_deployable",function(self, data)
 	HEVHUD:CheckPlayerDeployables(data)
 end)
@@ -174,6 +173,21 @@ Hooks:PostHook(HUDManager,"remove_teammate_carry_info","hevhud_hudmanager_teamma
 	HEVHUD:RemoveTeammateCarry(i)
 end)
 
+Hooks:OverrideFunction(HUDManager,"activate_objective",function(self,data)
+	HEVHUD._hud_objectives:activate_objective(data)
+end)
+
+Hooks:OverrideFunction(HUDManager,"update_amount_objective",function(self,data)
+	HEVHUD._hud_objectives:update_amount_objective(data)
+end)
+Hooks:OverrideFunction(HUDManager,"remind_objective",function(self,id)
+	HEVHUD._hud_objectives:remind_objective(id)
+end)
+Hooks:OverrideFunction(HUDManager,"complete_objective",function(self,data)
+	HEVHUD._hud_objectives:complete_objective(data)
+end)
+
+--[[
 Hooks:PostHook(HUDManager,"activate_objective","hevhud_hudmanager_activate_objective",function(self,data)
 	HEVHUD._hud_objectives:activate_objective(data)
 end)
@@ -187,3 +201,4 @@ end)
 Hooks:PostHook(HUDManager,"complete_objective","hevhud_hudmanager_complete_objective",function(self,data)
 	HEVHUD._hud_objectives:complete_objective(data)
 end)
+--]]

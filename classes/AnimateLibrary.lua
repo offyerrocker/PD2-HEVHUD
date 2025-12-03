@@ -166,4 +166,69 @@ function AnimateLibrary.animate_text_gradual(o,cb,duration,text)
 	end
 end
 
+
+-- recreation of the gameover text in hl2 that appears when you reach a non-death gameover/fail condition- eg. "mission-critical personnel" npc like Barney dying
+-- similar to animate_text_gradual with a few key differences: 
+-- it colors the text via color ranges as the text appears,
+-- and the text is technically all placed at once, just invisible and gradually revealed-
+-- this means that the individual characters won't move as the animation progress like they would with animate_text_gradual.
+
+-- total_duration is the total length of the animation,
+-- col_1 is the primary color,
+-- col_2 is the "fresh ink" color, which text is initially colored as it appears
+-- trail_len is the number of characters
+function AnimateLibrary.animate_text_mission(o,cb,text,total_duration,col_1,col_2,trail_len)
+	o:set_text(text)
+	local num_chars = string.len(text) -- use utf8?
+	if num_chars == 0 then
+		return
+	end
+	
+	total_duration = total_duration or (num_chars / 35) -- if none given, assume a rate based on number of chars- 35 char/sec
+	trail_len = trail_len or 15
+	
+	local invis_color = col_1:with_alpha(0)
+	o:set_range_color(0,num_chars+1,invis_color)
+	
+	local duration = total_duration / (1 + (trail_len/num_chars))
+	local hold_duration = total_duration - duration
+--	local total_duration = duration + (duration * trail_len / num_chars) -- formula for getting subdurations from total duration
+
+	local trail_colors = {}
+	local d_col = col_1 - col_2
+	for i=1,trail_len,1 do 
+		trail_colors[i] = col_2 + (d_col * i/trail_len)
+	end
+	local t = 0
+	while t < total_duration do 
+		local current_num_chars = math.round(num_chars * t/duration)
+		-- animate color trail
+		if current_num_chars > 0 then
+			
+			for i=trail_len,1,-1 do 
+				local trail_upper = current_num_chars - i
+				if trail_upper <= current_num_chars then
+					if trail_colors[i] then
+						o:set_range_color(trail_upper,trail_upper+1,trail_colors[i])
+					end
+				end
+			end
+			
+			-- clear the character just behind the trail
+			local behind_trail = -1 + current_num_chars - trail_len
+			if behind_trail > 0 then
+				o:clear_range_color(behind_trail-1,behind_trail)
+			end
+		end
+		t = t + coroutine.yield()
+	end
+	
+	o:clear_range_color(0,num_chars+1)
+	o:set_text(text)
+	if cb then
+		cb(o)
+	end
+end
+
+
 return AnimateLibrary
