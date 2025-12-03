@@ -183,19 +183,19 @@ function HEVHUD.GetHL2WeaponIcons(weapon_id,categories)
 		elseif cat == "smg" then 
 			return "smg_ammo","smg_fill","smg_empty"
 		elseif cat == "lmg" then 
-			return "pulse_ammo","pulse_fill","pulse_empty"
+			return "smg_ammo","smg_fill","smg_empty"
 		elseif cat == "minigun" then
-			return "pulse_ammo","pulse_fill","pulse_empty"
+			return "smg_ammo","smg_fill","smg_empty"
 		elseif cat == "snp" then 
-			return "pulse_ammo","pulse_fill","pulse_empty"
+			return "smg_ammo","smg_fill","smg_empty"
 		elseif cat == "assault_rifle" then 
 			return "smg_ammo","smg_fill","smg_empty"
 		elseif cat == "pistol" then 
 			is_pistol = true
 		elseif cat == "saw" then 
-			return "darkenergy_ammo","pulse_fill","pulse_empty"
+			return "darkenergy_ammo","physgun_fill","physgun_empty"
 		elseif cat == "flamethrower" then
-			return "darkenergy_ammo","pulse_fill","pulse_empty"
+			return "pulse_ammo","pulse_fill","pulse_empty"
 		end
 	end
 	if is_pistol then 
