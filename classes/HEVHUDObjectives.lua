@@ -14,6 +14,9 @@ function HEVHUDObjectives:init(panel,settings,config,...)
 		alpha = 1
 	})
 	self._active_objective_id = nil
+	self._anim_thread_grow_hor = nil
+	self._anim_thread_grow_ver = nil
+	
 	self:setup()
 end
 
@@ -47,8 +50,8 @@ function HEVHUDObjectives:setup()
 		text = "",
 		x = vars.OBJECTIVE_LABEL_X,
 		y = vars.OBJECTIVE_LABEL_Y,
---		w = self._objective:w(),
---		h = self._objective:h(),
+		w = vars.OBJECTIVES_W,
+		h = self._objective:h(),
 		font = vars.OBJECTIVE_LABEL_FONT_NAME,
 		font_size = vars.OBJECTIVE_LABEL_FONT_SIZE,
 		align = vars.OBJECTIVE_LABEL_ALIGN,
@@ -64,8 +67,8 @@ function HEVHUDObjectives:setup()
 		text = "",
 		x = vars.OBJECTIVE_AMOUNT_LABEL_X,
 		y = vars.OBJECTIVE_AMOUNT_LABEL_Y,
---		w = self._objective:w(),
---		h = self._objective:h(),
+		w = vars.OBJECTIVES_W,
+		h = self._objective:h(),
 		font = vars.OBJECTIVE_AMOUNT_LABEL_FONT_NAME,
 		font_size = vars.OBJECTIVE_AMOUNT_LABEL_FONT_SIZE,
 		align = vars.OBJECTIVE_AMOUNT_LABEL_ALIGN,
@@ -76,19 +79,20 @@ function HEVHUDObjectives:setup()
 		layer = 4
 	})
 	
-	
-	
-	local mission_equipment = self._panel:panel({
+	local mission_equipment = self._objective:panel({
 		name = "mission_equipment",
 		x = vars.MISSION_EQUIPMENT_X,
-		y = vars.MISSION_EQUIPMENT_Y,
+--		y = vars.MISSION_EQUIPMENT_Y,
 		w = vars.MISSION_EQUIPMENT_W,
 		h = vars.MISSION_EQUIPMENT_H,
+		valign = "bottom",
+		halign = "left",
 		layer = 4
 	})
---	mission_equipment:rect({color=Color.red,alpha=0.1})
-	
+	mission_equipment:set_bottom(self._objective:h() + vars.MISSION_EQUIPMENT_Y)
 	self._mission_equipment = mission_equipment
+	
+--	mission_equipment:rect({color=Color.red,alpha=0.1})
 end
 
 
@@ -154,6 +158,8 @@ function HEVHUDObjectives:_add_special_equipment(id,amount,icon_id,skip_sort)
 			self:sort_special_equipment()
 		end
 	end
+	
+	self:check_resize_objectives()
 end
 
 
@@ -192,30 +198,42 @@ function HEVHUDObjectives:activate_objective(data)
 	local cb_done
 	
 	if not self._objective:visible() then
-		cb_done = callback(self,self,"_activate_objective",data)
+		cb_done = function() self._anim_thread_grow_hor = nil; self:_activate_objective(data) end
 	end
 	
 	self._active_objective_id = data.id
 
 	local vars = self._config.Objectives
 	local objective_w = vars.OBJECTIVES_W
+	--[[
 	if data.text then
 		local objective_text = self._objective:child("text")
 		objective_text:set_text(data.text)
 		local tx,ty,tw,th = objective_text:text_rect()
 		objective_w = vars.OBJECTIVE_LABEL_X + tw + vars.OBJECTIVE_LABEL_HOR_MARGIN
 	end
+	--]]
+	
+	--[[
+	if #self._mission_equipment:children() > 0 then
+		Print("has eq")
+		objective_w = math.min(objective_w,self._mission_equipment:w())
+	end
+	--]]
+	
 	
 	self._objective:show()
-	self._objective:stop()
-	self._objective:animate(AnimateLibrary.animate_grow_w_left,cb_done,vars.ANIM_OBJECTIVE_PANEL_DURATION,nil,objective_w)
+	if self._anim_thread_grow_hor then
+		self._objective:stop(self._anim_thread_grow_hor)
+		self._anim_thread_grow_hor = nil
+	end
+	self._anim_thread_grow_hor = self._objective:animate(AnimateLibrary.animate_grow_w_left,cb_done,vars.ANIM_OBJECTIVE_PANEL_DURATION,nil,objective_w)
 	
 	if cb_done then
 		return
 	else
 		self:_activate_objective(data)
 	end
-	
 end
 
 function HEVHUDObjectives:_activate_objective(data)
@@ -229,6 +247,7 @@ function HEVHUDObjectives:_activate_objective(data)
 		self._objective:child("amount"):hide()
 		-- animate hide amount
 	end
+	self:check_resize_objectives()
 end
 
 function HEVHUDObjectives:remind_objective(id)
@@ -236,13 +255,16 @@ function HEVHUDObjectives:remind_objective(id)
 	
 	-- flash the objective bgbox twice
 	
+--	self:check_resize_objectives()
 end
 
 function HEVHUDObjectives:complete_objective(data)
 	if data.id == self._active_objective_id then
 --		Print("complete")
 --		logall(data)
+
 	end
+	self:check_resize_objectives()
 end
 
 function HEVHUDObjectives:update_amount_objective(data)
@@ -253,8 +275,51 @@ function HEVHUDObjectives:update_amount_objective(data)
 	objective_amount:show()
 	objective_amount:stop()
 	objective_amount:animate(AnimateLibrary.animate_wait,vars.ANIM_OBJECTIVE_AMOUNT_ACTIVATE_DELAY,AnimateLibrary.animate_text_mission,nil,string.format("%i/%i",data.current_amount or 0,data.amount),vars.ANIM_OBJECTIVE_AMOUNT_UPDATE_DURATION,self._objective_text_color,self._objective_flash_color,nil)
+	
+	self:check_resize_objectives()
 end
 
+
+function HEVHUDObjectives:check_resize_objectives()
+
+	local vars = self._config.Objectives
+	local h = 0
+	
+	if self._active_objective_id then
+		local amount_text = self._objective:child("amount")
+		Print("obj id",self._active_objective_id)
+		if amount_text:visible() then
+			Print("amount visible")
+			local tx,ty,tw,th = amount_text:text_rect()
+			--h = h + vars.OBJECTIVE_AMOUNT_LABEL_FONT_SIZE + vars.OBJECTIVE_AMOUNT_LABEL_VER_MARGIN
+			h = ty + th + vars.OBJECTIVE_AMOUNT_LABEL_VER_MARGIN
+		else
+			Print("amount not visible")
+			local tx,ty,tw,th = self._objective:child("text"):text_rect()
+			h = ty + th + vars.OBJECTIVE_AMOUNT_LABEL_VER_MARGIN
+		end
+	end
+	
+	if #self._mission_equipment:children() > 0 then
+		Print("has eq")
+		h = h + vars.MISSION_EQUIPMENT_H + vars.MISSION_EQUIPMENT_VER_MARGIN
+	end
+	
+	if self._anim_thread_grow_ver then
+		Print("stopping existing")
+		self._objective:stop(self._anim_thread_grow_ver)
+		self._anim_thread_grow_ver = nil
+	end
+	if h > 16 then
+		Print("> 16")
+		self._objective:show()
+		self._anim_thread_grow_ver = self._objective:animate(AnimateLibrary.animate_grow_h_top,function() self._anim_thread_grow_ver = nil end,vars.ANIM_OBJECTIVE_PANEL_DURATION,nil,h)
+	else
+		Print("<= 16")
+		self._objective:hide()
+--		self._objective:animate(AnimateLibrary.animate_alpha_lerp,nil,vars.ANIM_OBJECTIVE_PANEL_DURATION,nil,0)
+	end
+end
 
 
 return HEVHUDObjectives

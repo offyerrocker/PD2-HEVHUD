@@ -61,6 +61,7 @@ function AnimateLibrary.animate_grow_h_bottom(o,cb,duration,from_h,to_h)
 	local bottom = o:bottom()
 	from_h = from_h or o:h()
 	local dh = to_h - from_h
+	
 	local t,dt = 0,0
 	while t < duration do 
 		o:set_h(from_h + dh * math.bezier({0,0,1,1}, t/duration))
@@ -70,6 +71,25 @@ function AnimateLibrary.animate_grow_h_bottom(o,cb,duration,from_h,to_h)
 	end
 	o:set_h(to_h)
 	o:set_bottom(bottom)
+	if cb then 
+		cb(o)
+	end
+end
+
+-- grow height, align to top (should be the same as grow normal)
+function AnimateLibrary.animate_grow_h_top(o,cb,duration,from_h,to_h)
+	local top = o:top()
+	from_h = from_h or o:h()
+	local dh = to_h - from_h
+	local t,dt = 0,0
+	while t < duration do 
+		o:set_h(from_h + dh * math.bezier({0,0,1,1}, t/duration))
+		o:set_top(top)
+		dt = coroutine.yield()
+		t = t + dt
+	end
+	o:set_h(to_h)
+	o:set_top(top)
 	if cb then 
 		cb(o)
 	end
