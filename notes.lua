@@ -35,7 +35,7 @@ TODO:
 		- bag (needs resizing)
 		- colors need to be tweaked; white should probably be normal, instead of orange, otherwise it blends too much
 	Equipment
-		?????????
+		player deployable icon needs to be organized; icon and secondary amount are not centered
 		Active Ability timer
 		Cable Ties
 	Special crosshair (customizable target)
