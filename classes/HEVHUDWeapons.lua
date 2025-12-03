@@ -227,7 +227,7 @@ function HEVHUDWeapons:setup()
 	})
 	grenades:text({
 		name = "amount",
-		text = "99",
+		text = "",
 		align = vars.GRENADES_LABEL_ALIGN,
 		vertical = vars.GRENADES_LABEL_VERTICAL,
 		x = vars.GRENADES_LABEL_HOR_OFFSET,
@@ -317,11 +317,11 @@ function HEVHUDWeapons:setup()
 	
 	deployable_1:text({
 		name = "amount",
-		text = "99",
+		text = "",
 		x = vars.DEPLOYABLE_LABEL_X,
 		y = vars.DEPLOYABLE_LABEL_Y,
-		align = "right",
-		vertical = "center",
+		align = vars.DEPLOYABLE_LABEL_ALIGN,
+		vertical = vars.DEPLOYABLE_LABEL_VERTICAL,
 		font = vars.DEPLOYABLE_LABEL_FONT_NAME,
 		font_size = vars.DEPLOYABLE_LABEL_FONT_SIZE,
 		color = self._TEXT_COLOR_FULL,
@@ -356,11 +356,11 @@ function HEVHUDWeapons:setup()
 	})
 	deployable_2:text({
 		name = "amount",
-		text = "77",
+		text = "",
 		x = vars.DEPLOYABLE_LABEL_X,
 		y = vars.DEPLOYABLE_LABEL_Y,
-		align = "right",
-		vertical = "center",
+		align = vars.DEPLOYABLE_LABEL_ALIGN,
+		vertical = vars.DEPLOYABLE_LABEL_VERTICAL,
 		font = vars.DEPLOYABLE_LABEL_FONT_NAME,
 		font_size = vars.DEPLOYABLE_LABEL_FONT_SIZE,
 		color = self._TEXT_COLOR_FULL,

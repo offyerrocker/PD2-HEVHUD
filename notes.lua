@@ -27,8 +27,6 @@ TODO:
 		Neater revives counter (needs design too)
 	Weapons
 		Neater firemode readout
-		Weapon icons?
-		Melee
 		possible issue: bgbox flashing may interfere with equip/unequip alpha anim?
 	Teammates
 		- interaction
@@ -38,18 +36,13 @@ TODO:
 		- colors need to be tweaked; white should probably be normal, instead of orange, otherwise it blends too much
 	Equipment
 		?????????
-		Special equipment
 		Active Ability timer
-		Deployables
-			Primary/secondary
 		Cable Ties
 	Special crosshair (customizable target)
 		needs menu options
 	HL2 style loadout
 	Hints/Popups
 		ez
-	Objectives
-		???
 	Assault Banner
 		????
 	Hostages
