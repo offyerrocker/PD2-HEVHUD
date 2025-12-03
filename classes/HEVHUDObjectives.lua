@@ -72,7 +72,7 @@ function HEVHUDObjectives:setup()
 		font_size = vars.OBJECTIVE_LABEL_FONT_SIZE,
 		align = vars.OBJECTIVE_LABEL_ALIGN,
 		vertical = vars.OBJECTIVE_LABEL_VERTICAL,
-		color = self._objective_text_color,
+		color = self._TEXT_COLOR_FULL,
 		valign = "grow",
 		halign = "left",
 --		wrap = true, -- word wrap does not seem to work with custom fonts; it reports a negative line height, causing 
@@ -89,7 +89,7 @@ function HEVHUDObjectives:setup()
 		font_size = vars.OBJECTIVE_AMOUNT_LABEL_FONT_SIZE,
 		align = vars.OBJECTIVE_AMOUNT_LABEL_ALIGN,
 		vertical = vars.OBJECTIVE_AMOUNT_LABEL_VERTICAL,
-		color = self._objective_text_color,
+		color = self._TEXT_COLOR_FULL,
 		valign = "grow",
 		halign = "grow",
 		layer = 1
@@ -239,13 +239,10 @@ end
 
 function HEVHUDObjectives:_activate_objective(data)
 	local objective_text = self._objective_panel:child("text")
-	objective_text:stop()
-	objective_text:animate(AnimateLibrary.animate_text_mission,nil,data.text,nil,self._objective_text_color,self._objective_flash_color,nil)
+	
+	objective_text:set_text(data.text)
 	
 	if data.amount then
-		local vars = self._config.Objectives
-		self._objective_panel:child("amount"):animate(AnimateLibrary.animate_wait,vars.ANIM_OBJECTIVE_AMOUNT_ACTIVATE_DELAY,AnimateLibrary.animate_text_mission,nil,self.format_objective_amount(data),vars.ANIM_OBJECTIVE_AMOUNT_UPDATE_DURATION,self._objective_text_color,self._objective_flash_color,nil)
-		
 		self:update_amount_objective(data)
 	else
 		self._objective_panel:child("amount"):hide()
@@ -273,11 +270,8 @@ function HEVHUDObjectives:update_amount_objective(data)
 	local vars = self._config.Objectives
 	local objective_amount = self._objective_panel:child("amount")
 	objective_amount:show()
-	objective_amount:stop()
-	
 	local amount_str = self.format_objective_amount(data)
 	objective_amount:set_text(amount_str)
-	objective_amount:clear_range_color(0,amount_str)
 	
 	self:check_resize_corner()
 end
