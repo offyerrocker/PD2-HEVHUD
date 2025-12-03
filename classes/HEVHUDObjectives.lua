@@ -43,6 +43,7 @@ function HEVHUDObjectives:setup()
 		h = vars.MISSION_EQUIPMENT_H, --vars.OBJECTIVES_H,
 		valign = "grow",
 		halign = "grow",
+		visible = false,
 		layer = 1
 	})
 	self._corner_panel = corner_panel
@@ -316,11 +317,12 @@ function HEVHUDObjectives:check_resize_corner()
 	end
 	if h > 16 then
 --		Print(h,"> 16")
---		self._corner_panel:show()
+		self._corner_panel:show()
 		self._anim_thread_grow_ver = self._corner_panel:animate(AnimateLibrary.animate_grow_h_top,function() self._anim_thread_grow_ver = nil end,vars.ANIM_OBJECTIVE_PANEL_DURATION,nil,h)
 	else
+		
 --		Print(h,"<= 16")
---		self._corner_panel:hide()
+		self._corner_panel:hide()
 --		self._corner_panel:animate(AnimateLibrary.animate_alpha_lerp,nil,vars.ANIM_OBJECTIVE_PANEL_DURATION,nil,0)
 	end
 end

@@ -2,7 +2,7 @@
 TODO:
 	
 	BUGS
-		- none... yet
+		Ammo pickups for secondary weapon not showing up
 	
 	
 	
