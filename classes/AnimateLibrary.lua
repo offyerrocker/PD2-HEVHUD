@@ -198,6 +198,7 @@ end
 -- col_2 is the "fresh ink" color, which text is initially colored as it appears
 -- trail_len is the number of characters
 function AnimateLibrary.animate_text_mission(o,cb,text,total_duration,col_1,col_2,trail_len)
+	text = text or o:text()
 	o:set_text(text)
 	local num_chars = string.len(text) -- use utf8?
 	if num_chars == 0 then
