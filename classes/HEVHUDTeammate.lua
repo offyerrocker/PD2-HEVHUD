@@ -36,7 +36,13 @@ function HEVHUDTeammate:init(panel,settings,config,i,...)
 		
 	end
 	
-	
+	self._deployable_state = false
+	self._secondary_deployable_state = false
+	self._grenade_state = false
+	self._ability_state = false
+	self._zipties_state = false
+	self._equipment_state = false
+	self._bag_state = false
 end
 
 function HEVHUDTeammate:setup()
@@ -151,8 +157,8 @@ function HEVHUDTeammate:setup()
 		y = vars.NAMEPLATE_Y,
 		w = vars.NAMEPLATE_W,
 		h = vars.NAMEPLATE_H,
-		valign = "grow",
-		halign = "grow",
+		valign = "top",
+		halign = "left",
 		layer = 2
 	})
 	self._nameplate = nameplate
@@ -214,22 +220,25 @@ function HEVHUDTeammate:setup()
 		y = vars.LOADOUT_Y,
 		w = panel:w() - vars.LOADOUT_X,
 		h = panel:h() - vars.LOADOUT_Y,
+		valign = "top",
+		halign = "left",
 		layer = 1
 	})
 	
 	local deployable_texture,deployable_rect = tweak_data.hud_icons:get_icon_data("equipment_ammo_bag")
-	local deployable = loadout:panel({
-		name = "deployable",
+	local deployable_1 = loadout:panel({
+		name = "deployable_1",
 		w = vars.DEPLOYABLE_ICON_W,
 		h = vars.DEPLOYABLE_ICON_H,
 		x = vars.DEPLOYABLE_ICON_X,
 		y = vars.DEPLOYABLE_ICON_Y,
+		visible = false,
 		layer = 3
 	})
-	deployable:bitmap({
+	deployable_1:bitmap({
 		name = "icon",
-		w = deployable:w(),
-		h = deployable:h(),
+		w = deployable_1:w(),
+		h = deployable_1:h(),
 		texture = deployable_texture, -- set later
 		texture_rect = deployable_rect,
 		color = self._TEXT_COLOR_FULL,
@@ -237,29 +246,75 @@ function HEVHUDTeammate:setup()
 		halign = "grow",
 		layer = 2
 	})
-	deployable:text({
+	deployable_1:text({
 		name = "amount_1",
 		x = vars.DEPLOYABLE_LABEL_1_X,
 		y = vars.DEPLOYABLE_LABEL_1_Y,
 		font = vars.DEPLOYABLE_LABEL_FONT_NAME,
 		font_size = vars.DEPLOYABLE_LABEL_FONT_SIZE,
-		text = "14",
+		text = "",
 		align = vars.DEPLOYABLE_LABEL_1_ALIGN,
 		vertical = vars.DEPLOYABLE_LABEL_1_VERTICAL,
 		layer = 3
 	})
-	deployable:text({
+	deployable_1:text({
 		name = "amount_2",
 		x = vars.DEPLOYABLE_LABEL_2_X,
 		y = vars.DEPLOYABLE_LABEL_2_Y,
 		font = vars.DEPLOYABLE_LABEL_FONT_NAME,
 		font_size = vars.DEPLOYABLE_LABEL_FONT_SIZE,
-		text = "10",
+		text = "",
 		align = vars.DEPLOYABLE_LABEL_2_ALIGN,
 		vertical = vars.DEPLOYABLE_LABEL_2_VERTICAL,
 		layer = 3
 	})
-	self._deployable = deployable
+	self._deployable = deployable_1
+	self._loadout_x_1 = deployable_1:x()
+	self._loadout_y_1 = deployable_1:y()
+	
+	local deployable_2 = loadout:panel({
+		name = "deployable_2",
+		w = vars.DEPLOYABLE_ICON_W,
+		h = vars.DEPLOYABLE_ICON_H,
+		x = deployable_1:right(),
+		y = vars.DEPLOYABLE_ICON_Y,
+		visible = false,
+		layer = 3
+	})
+	deployable_2:bitmap({
+		name = "icon",
+		w = deployable_2:w(),
+		h = deployable_2:h(),
+		texture = deployable_texture, -- set later
+		texture_rect = deployable_rect,
+		color = self._TEXT_COLOR_FULL,
+		valign = "grow",
+		halign = "grow",
+		layer = 2
+	})
+	deployable_2:text({
+		name = "amount_1",
+		x = vars.DEPLOYABLE_LABEL_1_X,
+		y = vars.DEPLOYABLE_LABEL_1_Y,
+		font = vars.DEPLOYABLE_LABEL_FONT_NAME,
+		font_size = vars.DEPLOYABLE_LABEL_FONT_SIZE,
+		text = "",
+		align = vars.DEPLOYABLE_LABEL_1_ALIGN,
+		vertical = vars.DEPLOYABLE_LABEL_1_VERTICAL,
+		layer = 3
+	})
+	deployable_2:text({
+		name = "amount_2",
+		x = vars.DEPLOYABLE_LABEL_2_X,
+		y = vars.DEPLOYABLE_LABEL_2_Y,
+		font = vars.DEPLOYABLE_LABEL_FONT_NAME,
+		font_size = vars.DEPLOYABLE_LABEL_FONT_SIZE,
+		text = "",
+		align = vars.DEPLOYABLE_LABEL_2_ALIGN,
+		vertical = vars.DEPLOYABLE_LABEL_2_VERTICAL,
+		layer = 3
+	})
+	self._secondary_deployable = deployable_2
 	
 	local grenades_icon_texture,grenades_icon_rect = tweak_data.hud_icons:get_icon_data("frag_grenade")
 	local grenades = loadout:panel({
@@ -271,6 +326,7 @@ function HEVHUDTeammate:setup()
 		color = self._TEXT_COLOR_FULL,
 		valign = "grow",
 		halign = "grow",
+		visible = false,
 		layer = 2
 	})
 	grenades:bitmap({
@@ -305,9 +361,10 @@ function HEVHUDTeammate:setup()
 		w = vars.ZIPTIES_ICON_W,
 		h = vars.ZIPTIES_ICON_H,
 		color = self._TEXT_COLOR_FULL,
-		valign = "grow",
-		halign = "grow",
+		valign = nil,
+		halign = nil,
 		alpha = vars.ZIPTIES_EMPTY_ALPHA,
+		visible = false,
 		layer = 2
 	})
 	zipties:bitmap({
@@ -342,8 +399,9 @@ function HEVHUDTeammate:setup()
 		w = vars.CARRY_ICON_W,
 		h = vars.CARRY_ICON_H,
 		color = self._TEXT_COLOR_FULL,
-		valign = "grow",
-		halign = "grow",
+		valign = "top",
+		halign = "left",
+		visible = false,
 		alpha = 0,
 		layer = 2
 	})
@@ -359,22 +417,8 @@ function HEVHUDTeammate:setup()
 		layer = 2
 	})
 	self._carry = carry
-	
-	--[[
-	all vars standardized to eqbox
-
--- slight layering of equipment icons?
--- or scrolling bar?
-	
-	
-[X][v]NAMEHERE
-[1][G][Z]
-[B][M]
-	
-	
-	-- move carry to second row?
-	--]]
-	
+	self._loadout_x_2 = carry:x()
+	self._loadout_y_2 = carry:y()
 	
 	local mission_equipment_bar = panel:panel({
 		name = "mission_equipment_bar",
@@ -383,6 +427,8 @@ function HEVHUDTeammate:setup()
 		x = vars.MISSION_EQ_X,
 		y = vars.MISSION_EQ_Y,
 		color = self._TEXT_COLOR_FULL,
+		valign = "top",
+		halign = "left",
 		layer = 2
 	})
 	--[[
@@ -476,7 +522,6 @@ function HEVHUDTeammate:remove_special_equipment(id,skip_sort)
 	end
 end
 
---
 function HEVHUDTeammate:sort_special_equipment(instant)
 	-- todo sort options?
 	-- todo ensure reliable sort
@@ -492,23 +537,43 @@ function HEVHUDTeammate:sort_special_equipment(instant)
 		end
 		x = x + self._MISSION_EQ_ICON_W + self._MISSION_EQ_ICON_HOR_MARGIN
 	end
+	
+	self._equipment_state = #self._mission_equipment:children() > 0
+	self:check_panel_state()
 end
+
 
 function HEVHUDTeammate:set_grenades_data(data)
 	local texture,rect = tweak_data.hud_icons:get_icon_data(data.icon,{0,0,32,32})
 	self._grenades:child("icon"):set_image(texture,unpack(rect))
 	self:set_grenades_amount(data)
+	--self:check_panel_state()
 end
 
 function HEVHUDTeammate:set_grenades_amount(data)
 	self._grenades:child("amount"):set_text(string.format("%i",data.amount))
+	self._grenade_state = data.amount > 0
+	if self._grenade_state then
+		self._grenades:show()
+	end
+	self:check_panel_state()
 end
 
 function HEVHUDTeammate:set_grenades_cooldown(data)
-	
+	self._ability_state = true
+	if self._ability_state then
+		self._grenades:show()
+	end
+
+	self:check_panel_state()
 end
 
 function HEVHUDTeammate:set_ability_icon(data) -- should be funneled into status
+	self._ability_state = true
+	
+	if self._ability_state then
+		self._grenades:show()
+	end
 end
 
 function HEVHUDTeammate:set_zipties_data(data)
@@ -518,23 +583,111 @@ function HEVHUDTeammate:set_zipties_data(data)
 end
 
 function HEVHUDTeammate:set_zipties_amount(amount)
-	if amount < 0 then
+	if amount <= 0 then
 		self._zipties:set_alpha(self._config.Teammate.ZIPTIES_EMPTY_ALPHA)
 		self._zipties:child("amount"):set_text("")
+		self._zipties_state = false
+		self._zipties:hide()
 	else
 		self._zipties:set_alpha(1)
 		self._zipties:child("amount"):set_text(string.format("%i",amount))
+		self._zipties_state = true
+		self._zipties:show()
 	end
 	
+	self:check_panel_state()
 end
 
-function HEVHUDTeammate:set_deployable(data)
+function HEVHUDTeammate:set_deployable(data) -- only used for teammates
 	local texture,rect = tweak_data.hud_icons:get_icon_data(data.icon)
-	self._deployable:child("icon"):set_image(texture,unpack(rect))
-	self._deployable:child("amount_1"):set_text(string.format("%i",data.amount))
+	local deployable = self._deployable
+	
+	if data.icon then
+		deployable:child("icon"):set_image(texture,unpack(rect))
+		deployable:child("amount_1"):set_text(string.format("%i",data.amount))
+	end
+	
+	self._deployable_state = data.amount > 0
+	deployable:set_visible(self._deployable_state)
+	
+	self:check_panel_state()
 end
-function HEVHUDTeammate:set_deployable_second_amount(data) -- secondary amount of a deployable like tripmines/shaped charges; NOT jack of all trades
---	self._deployable:child("amount_2"):set_text(
+
+function HEVHUDTeammate:set_deployable_second_amount(data) -- only used for teammates
+	local deployable = self._deployable
+	
+	local has_any
+	if data.amount[1] then
+		has_any = has_any or (data.amount[1] > 0)
+		deployable:child("amount_1"):set_text(string.format("%i",data.amount[1]))
+	end
+	if data.amount[2] then
+		has_any = has_any or (data.amount[2] > 0)
+		deployable:child("amount_2"):set_text(string.format("%i",data.amount[2]))
+	end
+	if data.icon then
+		local texture,rect = tweak_data.hud_icons:get_icon_data(data.icon)
+		deployable:child("icon"):set_image(texture,unpack(rect))
+	end
+	
+	
+	self._deployable_state = has_any
+	deployable:set_visible(self._deployable_state)
+	self:check_panel_state()
+end
+
+function HEVHUDTeammate:set_deployable_by_index(index,data) -- only used for player
+	local deployable
+	if index == 2 then
+		deployable = self._secondary_deployable
+	else
+		deployable = self._deployable
+	end
+	if data.icon then
+		local texture,rect = tweak_data.hud_icons:get_icon_data(data.icon)
+		deployable:child("icon"):set_image(texture,unpack(rect))
+	end
+	deployable:child("amount_1"):set_text(string.format("%i",data.amount))
+	
+	if index == 2 then
+		self._secondary_deployable_state = data.amount > 0
+		deployable:set_visible(self._secondary_deployable_state)
+	else
+		self._deployable_state = data.amount > 0
+		deployable:set_visible(self._deployable_state)
+	end
+	self:check_panel_state()
+end
+function HEVHUDTeammate:set_deployable_second_amount_by_index(index,data) -- only used for player
+	local deployable
+	if index == 2 then
+		deployable = self._secondary_deployable
+	else
+		deployable = self._deployable
+	end
+	
+	local has_any
+	if data.amount[1] then
+		has_any = has_any or (data.amount[1] > 0)
+		deployable:child("amount_1"):set_text(string.format("%i",data.amount[1]))
+	end
+	if data.amount[2] then
+		has_any = has_any or (data.amount[2] > 0)
+		deployable:child("amount_2"):set_text(string.format("%i",data.amount[2]))
+	end
+	if data.icon then
+		local texture,rect = tweak_data.hud_icons:get_icon_data(data.icon)
+		deployable:child("icon"):set_image(texture,unpack(rect))
+	end
+	
+	if index == 2 then
+		self._secondary_deployable_state = has_any
+		deployable:set_visible(self._secondary_deployable_state)
+	else
+		self._deployable_state = has_any
+		deployable:set_visible(self._deployable_state)
+	end
+	self:check_panel_state()
 end
 
 function HEVHUDTeammate:set_name(name)
@@ -617,9 +770,13 @@ end
 function HEVHUDTeammate:set_carry(data,value)
 	self._mission_equipment:stop()
 	self._mission_equipment:animate(AnimateLibrary.animate_move_lerp,nil,self._ANIM_CARRY_START_DURATION,self._CARRY_RIGHT+self._MISSION_EQ_X)
+	self._carry:show()
 	self._carry:stop()
 	self._carry:set_alpha(1)
 	self._carry:animate(AnimateLibrary.animate_grow_w_left,nil,self._ANIM_CARRY_START_DURATION,1,self._CARRY_W)
+	
+	self._bag_state = true
+	self:check_panel_state()
 end
 
 function HEVHUDTeammate:stop_carry()
@@ -628,7 +785,9 @@ function HEVHUDTeammate:stop_carry()
 	self._carry:stop()
 	self._carry:animate(AnimateLibrary.animate_grow_w_left,nil,self._ANIM_CARRY_START_DURATION,nil,1)
 	self._carry:animate(AnimateLibrary.animate_alpha_lerp,nil,self._ANIM_CARRY_START_DURATION,nil,0)
-
+	
+	self._bag_state = false
+	self:check_panel_state()
 end
 
 function HEVHUDTeammate:chk_condition_panel()
@@ -705,6 +864,53 @@ function HEVHUDTeammate:set_peer_color(color)
 	if color then
 		self._nameplate:set_color(color)
 	end
+end
+
+function HEVHUDTeammate:check_panel_state()
+	local h = self._vitals:h() -- first row h
+	
+--	self._deployable:set_visible(self._deployable_state)
+--	self._grenades:set_visible(self._grenade_state or self._ability_state)
+--	self._zipties:set_visible(self._zipties_state)
+--	self._mission_equipment:set_visible(self._equipment_state)
+--	self._carry:set_visible(self._bag_state)
+	if self._deployable_state or self._secondary_deployable_state or self._grenade_state or self._ability_state or self._zipties_state then 
+		local x = self._loadout_x_1
+		if self._deployable_state then
+			self._deployable:set_x(x)
+			x = self._deployable:right()
+		end
+		if self._secondary_deployable_state then
+			self._secondary_deployable:set_x(x)
+			x = self._secondary_deployable:right()
+		end
+		
+		if self._grenade_state or self._ability_state then
+			self._grenades:set_x(x)
+			x = self._grenades:right()
+		end
+		if self._zipties_state then
+			self._zipties:set_x(x)
+			x = self._zipties:right()
+		end
+	else
+		h = self._loadout_y_1
+	end
+	if self._bag_state or self._equipment_state then
+		local x = self._loadout_x_2
+		if self._bag_state then
+			self._carry:set_x(x)
+			x = self._carry:right()
+		end
+		if self._equipment_state then
+			self._mission_equipment:set_x(x)
+			x = self._mission_equipment:right()
+		end
+	else
+		h = self._loadout_y_2
+	end
+	
+	self._panel:set_h(h)
 end
 
 return HEVHUDTeammate

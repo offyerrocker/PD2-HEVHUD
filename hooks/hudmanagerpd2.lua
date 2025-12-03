@@ -133,11 +133,30 @@ Hooks:PostHook(HUDManager,"set_item_amount_from_string","hevhud_hudmanager_playe
 	HEVHUD:CheckPlayerDeployables(data)
 end)
 
-Hooks:PostHook(HUDManager,"set_deployable_equipment_from_string","hevhud_hudmanager_teammate_from_string_set_deployable",function(self, i, data)
-	HEVHUD:SetTeammateDeployableFromString(i,data)
+Hooks:PostHook(HUDManager,"set_deployable_equipment_from_string","hevhud_hudmanager_player_from_string_set_deployable",function(self, i, data)
+	if i ~= HUDManager.PLAYER_PANEL then
+		HEVHUD:SetTeammateDeployableFromString(i,data)
+	end
 end)
 Hooks:PostHook(HUDManager,"set_deployable_equipment","hevhud_hudmanager_teammate_set_deployable",function(self, i, data)
-	HEVHUD:SetTeammateDeployableData(i,data)
+	if i ~= HUDManager.PLAYER_PANEL then
+		HEVHUD:SetTeammateDeployableData(i,data)
+	end
+end)
+
+Hooks:PostHook(HUDManager,"set_teammate_deployable_equipment_amount","hevhud_hudmanager_teammate_set_deployable_amount",function(self, i, index, data)
+	-- not used
+	if i == HUDManager.PLAYER_PANEL then
+--		HEVHUD:SetTeammateDeployableAmount(i,index,data)
+	end
+-- Table data = { amount = Int, index = Int }
+end)
+Hooks:PostHook(HUDManager,"set_teammate_deployable_equipment_amount_from_string","hevhud_hudmanager_teammate_from_string_set_deployable_amount",function(self, i, index, data)
+	-- not used
+	if i == HUDManager.PLAYER_PANEL then
+--		HEVHUD:SetTeammateDeployableAmountFromString(i,index,data)
+	end
+-- Table data = { amount_str = string, Table amount = { Int, Int }
 end)
 
 -- CARRY

@@ -522,19 +522,39 @@ function HEVHUD:CheckPlayerDeployables(equipment)
 	-- so, i just use the function as an event that cues HEVHUD to check the deployables by itself.
 	
 	for slot,data in pairs(managers.player._equipment.selections) do 
+	
+		-- this hud class is equipped to deal with hashed values in the data
 		self._hud_weapons:set_equipment(slot,data)
+
+		-- this one is not
+		local amount = {}
+		for i,v in pairs(data.amount) do
+			amount[i] = Application:digest_value(v,false)
+		end
+		self._teammate_panels[HUDManager.PLAYER_PANEL]:set_deployable_second_amount_by_index(slot,{
+			equipment = data.equipment,
+			icon = data.icon,
+			amount = amount
+		})
 	end
 	self._hud_weapons:set_selected_equipment_slot(managers.player._equipment.selected_index)
-	
 end
 
 function HEVHUD:SetTeammateDeployableData(id,data)
-	self._teammate_panels[id]:add_special_equipment(data)
+	self._teammate_panels[id]:set_deployable(data)
+end
+function HEVHUD:SetTeammateDeployableFromString(id,data)
+	self._teammate_panels[id]:set_deployable_second_amount(data)
 end
 
-function HEVHUD:SetTeammateDeployableFromString(id,data)
-	self._teammate_panels[id]:add_special_equipment(data)
+function HEVHUD:SetTeammateDeployableAmount(id,index,data)
+	self._teammate_panels[id]:set_deployable_by_index(index,data)
 end
+
+function HEVHUD:SetTeammateDeployableAmountFromString(id,index,data)
+	self._teammate_panels[id]:set_deployable_second_amount_by_index(index,data)
+end
+
 function HEVHUD:AddMinion(ukey,unit)
 	self._hud_followers:add_follower(ukey)
 	if alive(unit) then
