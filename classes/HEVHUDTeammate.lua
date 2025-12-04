@@ -17,7 +17,7 @@ function HEVHUDTeammate:init(panel,settings,config,i,...)
 	
 	self:setup()
 	
-	
+	--[[
 	do -- test eq
 		local keys = {}
 		for k,v in pairs(tweak_data.equipments) do 
@@ -35,6 +35,7 @@ function HEVHUDTeammate:init(panel,settings,config,i,...)
 		self:sort_special_equipment()
 		
 	end
+	--]]
 	
 	self._deployable_state = false
 	self._secondary_deployable_state = false
@@ -269,8 +270,6 @@ function HEVHUDTeammate:setup()
 		layer = 3
 	})
 	self._deployable = deployable_1
-	self._loadout_x_1 = deployable_1:x()
-	self._loadout_y_1 = deployable_1:y()
 	
 	local deployable_2 = loadout:panel({
 		name = "deployable_2",
@@ -412,13 +411,11 @@ function HEVHUDTeammate:setup()
 		w = carry:w(),
 		h = carry:h(),
 		color = self._TEXT_COLOR_FULL,
-		valign = "grow",
-		halign = "grow",
+		valign = "top",
+		halign = "left",
 		layer = 2
 	})
 	self._carry = carry
-	self._loadout_x_2 = carry:x()
-	self._loadout_y_2 = carry:y()
 	
 	local mission_equipment_bar = panel:panel({
 		name = "mission_equipment_bar",
@@ -867,7 +864,7 @@ function HEVHUDTeammate:set_peer_color(color)
 end
 
 function HEVHUDTeammate:check_panel_state()
-	local h = self._vitals:h() -- first row h
+	local h = self._nameplate:bottom() -- first row h
 	
 --	self._deployable:set_visible(self._deployable_state)
 --	self._grenades:set_visible(self._grenade_state or self._ability_state)
@@ -875,6 +872,8 @@ function HEVHUDTeammate:check_panel_state()
 --	self._mission_equipment:set_visible(self._equipment_state)
 --	self._carry:set_visible(self._bag_state)
 	if self._deployable_state or self._secondary_deployable_state or self._grenade_state or self._ability_state or self._zipties_state then 
+		h = self._deployable:bottom()
+		
 		local x = self._loadout_x_1
 		if self._deployable_state then
 			self._deployable:set_x(x)
@@ -893,10 +892,12 @@ function HEVHUDTeammate:check_panel_state()
 			self._zipties:set_x(x)
 			x = self._zipties:right()
 		end
-	else
-		h = self._loadout_y_1
 	end
+	-- todo this needs to adjust row 2 down if row 1 is nonexistent
+	
 	if self._bag_state or self._equipment_state then
+		h = self._carry:bottom()
+		
 		local x = self._loadout_x_2
 		if self._bag_state then
 			self._carry:set_x(x)
@@ -906,8 +907,6 @@ function HEVHUDTeammate:check_panel_state()
 			self._mission_equipment:set_x(x)
 			x = self._mission_equipment:right()
 		end
-	else
-		h = self._loadout_y_2
 	end
 	
 	self._panel:set_h(h)
