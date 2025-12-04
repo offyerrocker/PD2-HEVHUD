@@ -17,10 +17,10 @@ function HEVHUDHitDirection:init(panel,settings,config,...)
 	})
 	self._panel:set_center(panel:w()/2,panel:h()/2)
 	
-	self:setup()
+	self:recreate_hud()
 end
 
-function HEVHUDHitDirection:setup()
+function HEVHUDHitDirection:recreate_hud()
 	self:clear_hits()
 end
 

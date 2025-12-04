@@ -9,12 +9,29 @@ function HEVHUDBase:init(parent,settings,config)
 	local key = tostring(self)
 	Hooks:Add("hevhud_on_settings_changed","hevhud_on_settings_changed_" .. key,callback(self,self,"clbk_on_settings_changed"))
 	Hooks:Add("hevhud_on_config_changed","hevhud_on_config_changed_" .. key,callback(self,self,"clbk_on_config_changed"))
+	
+	--self._save_data = {} -- save any data passed to the hud, so that it can be remade if the user changes settings and triggers a hud refresh
+	self:setup(settings,config)
 end
 
--- setup should be called whenever settings or config are changed;
--- this should recreate the panel
-function HEVHUDBase:setup()
+-- should be overloaded by child classes
+function HEVHUDBase:recreate_hud()
 end
+
+-- setup should be called whenever settings or config are changed,
+-- or on first time setup (before panel creation).
+function HEVHUDBase:setup(settings,config)
+	self._COLOR_YELLOW = HEVHUD.colordecimal_to_color(settings.color_hl2_yellow)
+	self._COLOR_ORANGE = HEVHUD.colordecimal_to_color(settings.color_hl2_orange)
+	self._COLOR_RED = HEVHUD.colordecimal_to_color(settings.color_hl2_red)
+	
+	self._BG_BOX_ALPHA = config.General.BG_BOX_ALPHA
+	self._BG_BOX_COLOR = HEVHUD.colordecimal_to_color(config.General.BG_BOX_COLOR)
+	self._BGBOX_PANEL_CONFIG = {alpha=self._BG_BOX_ALPHA,valign="grow",halign="grow"}
+	self._BGBOX_TILE_CONFIG = {color=self._BG_BOX_COLOR}
+end
+
+
 
 function HEVHUDBase:pre_destroy()
 	if alive(self._panel) then
@@ -25,11 +42,13 @@ function HEVHUDBase:pre_destroy()
 end
 
 function HEVHUDBase:clbk_on_settings_changed(settings)
-
+	self._settings = settings
+	self:setup(settings,self._config)
 end
 
 function HEVHUDBase:clbk_on_config_changed(config)
-
+	self._config = config
+	self:setup(self._settings,config)
 end
 
 function HEVHUDBase.CreateBGBox(parent,w,h,panel_config,child_config)

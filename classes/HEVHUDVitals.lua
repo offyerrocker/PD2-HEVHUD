@@ -31,15 +31,15 @@ function HEVHUDVitals:init(panel,settings,config,...)
 	self._stamina_current = 50
 	self._stamina_max = 50
 	
-	-- set later in setup()
+	-- set later in recreate_hud()
 	self._NUM_POWER_TICKS = 10
 	self._num_power_ticks_current = self._NUM_POWER_TICKS
 	
-	self:setup()
+	self:recreate_hud()
 end
 
 
-function HEVHUDVitals:setup()
+function HEVHUDVitals:recreate_hud()
 	local vars = self._config.Vitals
 	self._LABEL_ALPHA_LOW = self._config.General.LABEL_ALPHA_LOW
 	self._LABEL_ALPHA_HIGH = self._config.General.LABEL_ALPHA_HIGH

@@ -15,7 +15,7 @@ function HEVHUDTeammate:init(panel,settings,config,i,...)
 --	self._panel:rect({color=Color.red,alpha=0.1,name="debug"})
 	self._id = i
 	
-	self:setup()
+	self:recreate_hud()
 	
 	--[[
 	do -- test eq
@@ -46,7 +46,7 @@ function HEVHUDTeammate:init(panel,settings,config,i,...)
 	self._bag_state = false
 end
 
-function HEVHUDTeammate:setup()
+function HEVHUDTeammate:recreate_hud()
 	-- game values
 	self._peer_id = nil
 	self._ai = nil

@@ -24,10 +24,10 @@ function HEVHUDPickup:init(panel,settings,config,...)
 	-- stores recent amounts by weapon slot, so that they can be combined
 	self._pickup_aggregate_cache = {}
 	
-	self:setup()
+	self:recreate_hud()
 end
 
-function HEVHUDPickup:setup()
+function HEVHUDPickup:recreate_hud()
 --	self._panel:clear()
 	local vars = self._config.Pickup
 	self._MAX_POPUP_SLOTS = vars.PICKUP_POPUP_SLOTS_MAX

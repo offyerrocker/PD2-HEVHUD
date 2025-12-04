@@ -17,12 +17,12 @@ function HEVHUDCrosshair:init(panel,settings,config,...)
 	})
 	self._panel:set_center(panel:w()/2,panel:h()/2)
 	
-	self:setup()
+	self:recreate_hud()
 	self:set_left_crosshair(1)
 	self:set_right_crosshair(1)
 end
 
-function HEVHUDCrosshair:setup()
+function HEVHUDCrosshair:recreate_hud()
 	local vars = self._config.Crosshair
 	
 	self._CROSSHAIR_INDICATOR_SIZE = vars.CROSSHAIR_INDICATOR_SIZE

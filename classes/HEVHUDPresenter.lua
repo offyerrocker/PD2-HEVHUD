@@ -16,10 +16,10 @@ function HEVHUDPresenter:init(panel,settings,config,...)
 	self._present_queue = {}
 	self._presenting = nil
 	
-	self:setup()
+	self:recreate_hud()
 end
 
-function HEVHUDPresenter:setup()
+function HEVHUDPresenter:recreate_hud()
 	local vars = self._config.Presenter
 	self._TEXT_COLOR_FULL = HEVHUD.colordecimal_to_color(self._settings.color_hl2_yellow)
 	self._TEXT_COLOR_HALF = HEVHUD.colordecimal_to_color(self._settings.color_hl2_orange)

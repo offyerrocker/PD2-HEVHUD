@@ -27,12 +27,12 @@ function HEVHUDWeapons:init(panel,settings,config,...)
 	
 	self._anim_main_ammo_equip_thread = nil -- plays when equipping/unequipping the underbarrel on your current weapon
 	self._anim_underbarrel_ammo_equip_thread = nil -- plays when equipping/unequipping the underbarrel on your current weapon
-	self:setup()
+	self:recreate_hud()
 	self:set_underbarrel_on(false)
 	self:set_underbarrel_visible(false)
 end
 
-function HEVHUDWeapons:setup()
+function HEVHUDWeapons:recreate_hud()
 	local vars = self._config.Weapons
 	self._panel:set_size(vars.WEAPONS_W,vars.WEAPONS_H)
 	self._panel:set_position(vars.WEAPONS_HOR_OFFSET + self._parent:w()-self._panel:w(),vars.WEAPONS_VER_OFFSET + self._parent:h() - self._panel:h())

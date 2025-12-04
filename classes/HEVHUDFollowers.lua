@@ -12,12 +12,12 @@ function HEVHUDFollowers:init(panel,settings,config,...)
 		layer = 1,
 		alpha = 0
 	})
-	self:setup()
-	
 	self._follower_anim_threads = {}
+
+	self:recreate_hud()
 end
 
-function HEVHUDFollowers:setup()
+function HEVHUDFollowers:recreate_hud()
 	local vars = self._config.Followers
 	
 	self._panel:clear()

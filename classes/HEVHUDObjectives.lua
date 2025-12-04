@@ -17,10 +17,10 @@ function HEVHUDObjectives:init(panel,settings,config,...)
 	self._anim_thread_grow_hor = nil
 	self._anim_thread_grow_ver = nil
 	
-	self:setup()
+	self:recreate_hud()
 end
 
-function HEVHUDObjectives:setup()
+function HEVHUDObjectives:recreate_hud()
 --	self._panel:clear()
 	local vars = self._config.Objectives
 	
