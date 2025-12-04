@@ -16,12 +16,10 @@ function HEVHUDPresenter:init(panel,settings,config,...)
 	self._present_queue = {}
 	self._presenting = nil
 	
-	
 	self:setup()
 end
 
 function HEVHUDPresenter:setup()
---	self._panel:clear()
 	local vars = self._config.Presenter
 	self._TEXT_COLOR_FULL = HEVHUD.colordecimal_to_color(self._settings.color_hl2_yellow)
 	self._TEXT_COLOR_HALF = HEVHUD.colordecimal_to_color(self._settings.color_hl2_orange)
@@ -75,8 +73,6 @@ function HEVHUDPresenter:setup()
 end
 
 function HEVHUDPresenter:present(params)
---	logall(params)
---	foo = params
 	if self._presenting then
 		table.insert(self._present_queue, params)
 
@@ -89,14 +85,7 @@ function HEVHUDPresenter:present(params)
 end
 
 function HEVHUDPresenter:_present_information(params)
---	self._present_box:stop()
---	local alpha_duration = 0.5
---	self._present_box:animate(AnimateLibrary.animate_alpha_lerp,callback(self,self,"animate_show_text",params),alpha_duration,nil,1)
 	self:animate_show_text(params)
-	
-	--present_panel:animate(callback(self, self, "_animate_present_information"), callback_params)
-
---	self._present_box:show()
 	self._presenting = true
 end
 
@@ -128,8 +117,8 @@ function HEVHUDPresenter:animate_show_text(params)
 	
 	local title = params.title
 	self._title:stop()
-	self._title:set_alpha(1)
 	self._title:set_text("")
+	self._title:set_alpha(1)
 	if title then 
 		self._title:clear_range_color(0,utf8.len(title))
 		-- show title -> show desc -> hold visible -> fadeout each -> queue next
@@ -189,14 +178,6 @@ function HEVHUDPresenter:_present_done()
 	if queued and queued.present_mid_text then
 		setup:add_end_frame_clbk(callback(self, self, "_do_it", queued))
 	end
-	--[[
-	if #self._present_queue > 0 then
-		local queued = table.remove(self._present_queue, 1)
-		self:_present_information(queued)
-		return
-	end
-	--]]
---	self._present_box:hide()
 end
 
 
