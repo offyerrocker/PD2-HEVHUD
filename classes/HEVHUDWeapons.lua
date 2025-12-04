@@ -561,7 +561,7 @@ function HEVHUDWeapons:set_equipment(slot,data)
 			if i == 1 then 
 				amount_string = amount
 			else
-				amount_string = amount_string .. " | " .. amount
+				amount_string = amount_string .. HEVHUD._font_icons.slash .. amount
 			end
 		end
 		self:_set_deployable_label(slot,amount_string)
