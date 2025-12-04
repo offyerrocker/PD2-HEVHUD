@@ -52,6 +52,12 @@ end)
 Hooks:PostHook(HUDManager,"set_teammate_condition","hevhud_hudmanager_set_teammate_condition",function(self,i,icon_data,text)
 	HEVHUD:SetTeammateCondition(i,icon_data,text)
 end)
+Hooks:PostHook(HUDManager,"set_teammate_health","hevhud_hudmanager_set_teammate_health",function(self,i,data)
+	HEVHUD:SetTeammateHealth(i,data)
+end)
+Hooks:PostHook(HUDManager,"set_teammate_armor","hevhud_hudmanager_set_teammate_armor",function(self,i,data)
+	HEVHUD:SetTeammateArmor(i,data)
+end)
 
 -- WEAPONS
 Hooks:PostHook(HUDManager,"set_ammo_amount","hevhud_hudmanager_set_ammo_amount",function(self, index, magazine_max, magazine_current, reserves_current, reserves_max)

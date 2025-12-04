@@ -481,6 +481,14 @@ function HEVHUD:SetTeammateAmmo(id, selection_index, max_clip, current_clip, cur
 	self._teammate_panels[id]:set_ammo(selection_index, max_clip, current_clip, current_left, max)
 end
 
+function HEVHUD:SetTeammateHealth(id,data)
+	self._teammate_panels[id]:set_health(data)
+end
+
+function HEVHUD:SetTeammateArmor(id,data)
+	self._teammate_panels[id]:set_armor(data)
+end
+
 function HEVHUD:SetTeammateCabletiesData(id,data)
 	self._teammate_panels[id]:set_zipties_data(data)
 end
