@@ -66,6 +66,8 @@ function HEVHUDObjectives:recreate_hud()
 		color = self._COLOR_YELLOW,
 		valign = "grow",
 		halign = "left",
+		rotation = 0.00001, -- this fixes an EXTREMELY annoying bug where the text is hidden for no reason until its position or text string are changed.
+		-- please, please tell me if you know anything about this issue.
 --		wrap = true, -- word wrap does not seem to work with custom fonts; it reports a negative line height, causing 
 		layer = 1
 	})
