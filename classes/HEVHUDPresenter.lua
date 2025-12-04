@@ -176,7 +176,7 @@ function HEVHUDPresenter:_present_done()
 	local queued = table.remove(self._present_queue, 1)
 
 	if queued and queued.present_mid_text then
-		setup:add_end_frame_clbk(callback(self, self, "_do_it", queued))
+		setup:add_end_frame_clbk(callback(self, self, "_present_information", queued))
 	end
 end
 
