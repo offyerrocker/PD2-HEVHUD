@@ -15,6 +15,7 @@ function HEVHUDTeammate:init(panel,settings,config,i,...)
 --	self._panel:rect({color=Color.red,alpha=0.1,name="debug"})
 	self._id = i
 	
+	self:setup(settings,config)
 	self:recreate_hud()
 	
 	--[[
@@ -63,9 +64,7 @@ function HEVHUDTeammate:recreate_hud()
 	self._TEXT_COLOR_NONE = HEVHUD.colordecimal_to_color(self._settings.color_hl2_red)
 	
 	local panel = self._panel
-	local BG_BOX_ALPHA = self._config.General.BG_BOX_ALPHA
-	self._BG_BOX_COLOR = HEVHUD.colordecimal_to_color(self._config.General.BG_BOX_COLOR)
-	self._bgbox = self.CreateBGBox(panel,nil,nil,{alpha=BG_BOX_ALPHA,valign="grow",halign="grow"},{color=self._BG_BOX_COLOR})
+	self._bgbox = self.CreateBGBox(panel,nil,nil,self._BGBOX_PANEL_CONFIG,self._BGBOX_TILE_CONFIG)
 	self._VITALS_THRESHOLD_HEALTH_CRITICAL = 	vars.VITALS_THRESHOLD_HEALTH_CRITICAL
 	self._VITALS_THRESHOLD_HEALTH_LOW = 		vars.VITALS_THRESHOLD_HEALTH_LOW
 	self._VITALS_THRESHOLD_REVIVES_CRITICAL = 	vars.VITALS_THRESHOLD_REVIVES_CRITICAL

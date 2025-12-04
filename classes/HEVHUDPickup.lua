@@ -24,6 +24,7 @@ function HEVHUDPickup:init(panel,settings,config,...)
 	-- stores recent amounts by weapon slot, so that they can be combined
 	self._pickup_aggregate_cache = {}
 	
+	self:setup(settings,config)
 	self:recreate_hud()
 end
 

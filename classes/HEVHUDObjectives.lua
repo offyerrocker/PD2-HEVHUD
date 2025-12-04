@@ -17,6 +17,7 @@ function HEVHUDObjectives:init(panel,settings,config,...)
 	self._anim_thread_grow_hor = nil
 	self._anim_thread_grow_ver = nil
 	
+	self:setup(settings,config)
 	self:recreate_hud()
 end
 
@@ -24,17 +25,6 @@ function HEVHUDObjectives:recreate_hud()
 --	self._panel:clear()
 	local vars = self._config.Objectives
 	
-	self._objective_text_color = Color("ababab")
-	self._objective_flash_color = Color("ffa000")
-	self._TEXT_COLOR_FULL = HEVHUD.colordecimal_to_color(self._settings.color_hl2_yellow)
-	self._TEXT_COLOR_HALF = HEVHUD.colordecimal_to_color(self._settings.color_hl2_orange)
-	self._TEXT_COLOR_NONE = HEVHUD.colordecimal_to_color(self._settings.color_hl2_red)
-	self._BG_BOX_COLOR = HEVHUD.colordecimal_to_color(self._config.General.BG_BOX_COLOR)
-	
-	self._ANIM_BGBOX_FLASH_DURATION = vars.ANIM_BGBOX_FLASH_DURATION
-	self._ANIM_BGBOX_ALPHA = vars.ANIM_BGBOX_ALPHA
-	self._BG_BOX_ALPHA = self._config.General.BG_BOX_ALPHA
-
 	local corner_panel = self._panel:panel({
 		name = "corner_panel",
 		x = vars.OBJECTIVES_X,
@@ -47,7 +37,7 @@ function HEVHUDObjectives:recreate_hud()
 		layer = 1
 	})
 	self._corner_panel = corner_panel
-	self._corner_bgbox = self.CreateBGBox(corner_panel,nil,nil,{alpha=self._config.General.BG_BOX_ALPHA,valign="grow",halign="grow",layer=1},{color=self._BG_BOX_COLOR})
+	self._corner_bgbox = self.CreateBGBox(corner_panel,nil,nil,self._BGBOX_PANEL_CONFIG,self._BGBOX_TILE_CONFIG)
 	
 	local objective_panel = corner_panel:panel({
 		name = "objective_panel",
@@ -73,12 +63,13 @@ function HEVHUDObjectives:recreate_hud()
 		font_size = vars.OBJECTIVE_LABEL_FONT_SIZE,
 		align = vars.OBJECTIVE_LABEL_ALIGN,
 		vertical = vars.OBJECTIVE_LABEL_VERTICAL,
-		color = self._TEXT_COLOR_FULL,
+		color = self._COLOR_YELLOW,
 		valign = "grow",
 		halign = "left",
 --		wrap = true, -- word wrap does not seem to work with custom fonts; it reports a negative line height, causing 
 		layer = 1
 	})
+	
 	objective_panel:text({
 		name = "amount",
 		text = "",
@@ -90,7 +81,7 @@ function HEVHUDObjectives:recreate_hud()
 		font_size = vars.OBJECTIVE_AMOUNT_LABEL_FONT_SIZE,
 		align = vars.OBJECTIVE_AMOUNT_LABEL_ALIGN,
 		vertical = vars.OBJECTIVE_AMOUNT_LABEL_VERTICAL,
-		color = self._TEXT_COLOR_FULL,
+		color = self._COLOR_YELLOW,
 		valign = "grow",
 		halign = "grow",
 		layer = 1
@@ -173,7 +164,7 @@ function HEVHUDObjectives:_add_special_equipment(id,amount,icon_id,skip_sort)
 			halign = "grow",
 			layer = 4
 		})
-		icon:animate(AnimateLibrary.animate_color_lerp,nil,vars.ANIM_MISSION_EQ_HIGHLIGHT_DURATION,self._TEXT_COLOR_HALF,self._TEXT_COLOR_FULL)
+		icon:animate(AnimateLibrary.animate_color_lerp,nil,vars.ANIM_MISSION_EQ_HIGHLIGHT_DURATION,self._COLOR_ORANGE,self._COLOR_YELLOW)
 		if not skip_sort then
 			self:sort_special_equipment()
 		end
@@ -329,12 +320,13 @@ end
 
 
 function HEVHUDObjectives:animate_flash_bgbox_corner()
+	local vars = self._config.Objectives
 	for _,child in pairs(self._corner_bgbox:children()) do 
 		child:stop()
-		child:animate(AnimateLibrary.animate_color_lerp,nil,self._ANIM_BGBOX_FLASH_DURATION,self._TEXT_COLOR_FULL,self._BG_BOX_COLOR)
+		child:animate(AnimateLibrary.animate_color_lerp,nil,vars.ANIM_BGBOX_FLASH_DURATION,self._COLOR_YELLOW,self._BG_BOX_COLOR)
 	end
 	self._corner_bgbox:stop()
-	self._corner_bgbox:animate(AnimateLibrary.animate_alpha_lerp,nil,self._ANIM_BGBOX_FLASH_DURATION,self._ANIM_BGBOX_ALPHA,self._BG_BOX_ALPHA)
+	self._corner_bgbox:animate(AnimateLibrary.animate_alpha_lerp,nil,vars.ANIM_BGBOX_FLASH_DURATION,vars.ANIM_BGBOX_ALPHA,self._BG_BOX_ALPHA)
 end
 
 return HEVHUDObjectives

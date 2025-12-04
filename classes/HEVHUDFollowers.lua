@@ -14,6 +14,7 @@ function HEVHUDFollowers:init(panel,settings,config,...)
 	})
 	self._follower_anim_threads = {}
 
+	self:setup(settings,config)
 	self:recreate_hud()
 end
 
@@ -28,14 +29,7 @@ function HEVHUDFollowers:recreate_hud()
 		h = vars.FOLLOWERS_H
 	})
 	
-	local BG_BOX_ALPHA = self._config.General.BG_BOX_ALPHA
-	self._BG_BOX_COLOR = HEVHUD.colordecimal_to_color(self._config.General.BG_BOX_COLOR)
-	
-	self._bgbox = self.CreateBGBox(self._panel,nil,nil,{alpha=BG_BOX_ALPHA,valign="grow",halign="grow",layer=1},{color=self._BG_BOX_COLOR})
-	
-	self._TEXT_COLOR_FULL = HEVHUD.colordecimal_to_color(self._settings.color_hl2_yellow)
-	self._TEXT_COLOR_HALF = HEVHUD.colordecimal_to_color(self._settings.color_hl2_orange)
-	self._TEXT_COLOR_NONE = HEVHUD.colordecimal_to_color(self._settings.color_hl2_red)
+	self._bgbox = self.CreateBGBox(self._panel,nil,nil,self._BGBOX_PANEL_CONFIG,self._BGBOX_TILE_CONFIG)
 	
 	self._ANIM_SORT_FOLLOWERS_DURATION = vars.ANIM_SORT_FOLLOWERS_DURATION
 	self._ANIM_FADE_FOLLOWERS_DURATION = vars.ANIM_FADE_FOLLOWERS_DURATION
@@ -58,7 +52,7 @@ function HEVHUDFollowers:recreate_hud()
 		y = vars.PANEL_NAME_Y,
 		font = vars.PANEL_FONT_NAME,
 		font_size = vars.PANEL_FONT_SIZE,
-		color = self._TEXT_COLOR_FULL,
+		color = self._COLOR_YELLOW,
 		layer = 3
 	})
 	
@@ -106,7 +100,7 @@ function HEVHUDFollowers:add_follower(ukey,skip_sort)
 		font_size = vars.ICONS_FONT_SIZE,
 		valign = "bottom",
 		halign = "grow",
-		color = self._TEXT_COLOR_FULL,
+		color = self._COLOR_YELLOW,
 		layer = 2
 	})
 	
@@ -126,8 +120,8 @@ function HEVHUDFollowers:set_follower_hp(ukey,hp_ratio)
 	ukey = tostring(ukey)
 	local follower = self._followers:child(ukey)
 	if alive(follower) then
-		local col1 = self._TEXT_COLOR_HALF
-		local col2 = self._TEXT_COLOR_FULL
+		local col1 = self._COLOR_ORANGE
+		local col2 = self._COLOR_YELLOW
 		local dcol = col2 - col1
 		local color = col1 + dcol * hp_ratio
 		follower:child("icon_text"):set_color(color)
@@ -163,7 +157,7 @@ function HEVHUDFollowers:remove_follower(ukey,skip_sort,instant)
 			-- animate color fade
 			local icon_text = follower:child("icon_text")
 			icon_text:set_blend_mode("add")
-			icon_text:animate(AnimateLibrary.animate_color_lerp,nil,self._ANIM_FOLLOWER_REMOVE_FADECOLOR_DURATION,nil,self._TEXT_COLOR_NONE)
+			icon_text:animate(AnimateLibrary.animate_color_lerp,nil,self._ANIM_FOLLOWER_REMOVE_FADECOLOR_DURATION,nil,self._COLOR_RED)
 		end
 	end
 	

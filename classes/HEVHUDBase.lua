@@ -24,6 +24,7 @@ function HEVHUDBase:setup(settings,config)
 	self._COLOR_YELLOW = HEVHUD.colordecimal_to_color(settings.color_hl2_yellow)
 	self._COLOR_ORANGE = HEVHUD.colordecimal_to_color(settings.color_hl2_orange)
 	self._COLOR_RED = HEVHUD.colordecimal_to_color(settings.color_hl2_red)
+	self._COLOR_GREY = HEVHUD.colordecimal_to_color(settings.color_hl2_grey)
 	
 	self._BG_BOX_ALPHA = config.General.BG_BOX_ALPHA
 	self._BG_BOX_COLOR = HEVHUD.colordecimal_to_color(config.General.BG_BOX_COLOR)

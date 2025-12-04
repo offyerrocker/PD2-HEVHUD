@@ -17,6 +17,7 @@ function HEVHUDCrosshair:init(panel,settings,config,...)
 	})
 	self._panel:set_center(panel:w()/2,panel:h()/2)
 	
+	self:setup(settings,config)
 	self:recreate_hud()
 	self:set_left_crosshair(1)
 	self:set_right_crosshair(1)

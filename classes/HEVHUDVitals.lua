@@ -35,6 +35,7 @@ function HEVHUDVitals:init(panel,settings,config,...)
 	self._NUM_POWER_TICKS = 10
 	self._num_power_ticks_current = self._NUM_POWER_TICKS
 	
+	self:setup(settings,config)
 	self:recreate_hud()
 end
 
@@ -92,7 +93,7 @@ function HEVHUDVitals:recreate_hud()
 		y = vars.HEALTH_VER_OFFSET + self._panel:h() - vars.HEALTH_H
 	})
 	self._health = health
-	self._health_bgbox = self.CreateBGBox(health,nil,nil,bgbox_panel_config,{color=self._BG_BOX_COLOR}) -- blend_mode mul would be best but it doesn't seem to want to work
+	self._health_bgbox = self.CreateBGBox(health,nil,nil,self._BGBOX_PANEL_CONFIG,self._BGBOX_TILE_CONFIG) -- blend_mode mul would be best but it doesn't seem to want to work
 	
 	local health_name = health:text({
 		name = "health_name",
@@ -132,7 +133,7 @@ function HEVHUDVitals:recreate_hud()
 		y = vars.SUIT_VER_OFFSET + self._panel:h() - vars.SUIT_H
 	})
 	self._suit = suit
-	self._suit_bgbox = self.CreateBGBox(suit,nil,nil,bgbox_panel_config,{color=self._BG_BOX_COLOR})
+	self._suit_bgbox = self.CreateBGBox(suit,nil,nil,self._BGBOX_PANEL_CONFIG,self._BGBOX_TILE_CONFIG)
 	
 	local suit_name = suit:text({
 		name = "suit_name",
@@ -174,7 +175,7 @@ function HEVHUDVitals:recreate_hud()
 		visible = vars.REVIVES_ENABLED
 	})
 	self._revives = revives
-	self._revives_bgbox = self.CreateBGBox(revives,nil,nil,bgbox_panel_config,{color=self._BG_BOX_COLOR})
+	self._revives_bgbox = self.CreateBGBox(revives,nil,nil,self._BGBOX_PANEL_CONFIG,self._BGBOX_TILE_CONFIG)
 	
 	local revives_icon_texture,revives_icon_texture_rect = HEVHUD:GetIconData("revives")
 	local revives_icon = revives:bitmap({
@@ -218,7 +219,7 @@ function HEVHUDVitals:recreate_hud()
 		y = health:y() - (vars.POWER_H + vars.POWER_VER_OFFSET)
 	})
 	self._power = power
-	self._power_bgbox = self.CreateBGBox(power,nil,nil,bgbox_panel_config,{color=self._BG_BOX_COLOR})
+	self._power_bgbox = self.CreateBGBox(power,nil,nil,self._BGBOX_PANEL_CONFIG,self._BGBOX_TILE_CONFIG)
 	
 	local power_frame = power:panel({
 		name = "power_frame",

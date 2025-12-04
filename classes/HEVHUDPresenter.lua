@@ -4,7 +4,7 @@ local AnimateLibrary = HEVHUDCore:require("classes/AnimateLibrary")
 function HEVHUDPresenter:init(panel,settings,config,...)
 	HEVHUDPresenter.super.init(self,panel,settings,config,...)
 	self._panel = panel:panel({
-		name = "pickup",
+		name = "presenter",
 		valign = "grow",
 		halign = "grow",
 		w = panel:w(),
@@ -21,13 +21,6 @@ end
 
 function HEVHUDPresenter:recreate_hud()
 	local vars = self._config.Presenter
-	self._TEXT_COLOR_FULL = HEVHUD.colordecimal_to_color(self._settings.color_hl2_yellow)
-	self._TEXT_COLOR_HALF = HEVHUD.colordecimal_to_color(self._settings.color_hl2_orange)
-	self._TEXT_COLOR_NONE = HEVHUD.colordecimal_to_color(self._settings.color_hl2_red)
-	
-	self._objective_text_color = Color("ababab")
-	self._objective_flash_color = Color("ffa000")
-	
 	
 	self._present_box = self._panel:panel({
 		name = "present_box",
@@ -49,7 +42,7 @@ function HEVHUDPresenter:recreate_hud()
 		halign = "grow",
 		font = vars.PRESENTER_TITLE_FONT_NAME,
 		font_size = vars.PRESENTER_TITLE_FONT_SIZE,
-		color = self._objective_text_color,
+		color = self._COLOR_GREY,
 		blend_mode = vars.PRESENTER_TITLE_BLEND_MODE,
 		layer = 2
 	})
@@ -65,7 +58,7 @@ function HEVHUDPresenter:recreate_hud()
 		halign = "grow",
 		font = vars.PRESENTER_DESC_FONT_NAME,
 		font_size = vars.PRESENTER_DESC_FONT_SIZE,
-		color = self._objective_text_color,
+		color = self._COLOR_GREY,
 		blend_mode = vars.PRESENTER_DESC_BLEND_MODE,
 		layer = 2
 	})
@@ -98,8 +91,8 @@ function HEVHUDPresenter:animate_show_text(params)
 	
 	local duration = params.time or 4
 	
-	local col_1 = self._objective_text_color
-	local col_2 = self._objective_flash_color
+	local col_1 = self._COLOR_GREY
+	local col_2 = self._COLOR_ORANGE
 	
 	
 	self._desc:stop()
@@ -108,10 +101,10 @@ function HEVHUDPresenter:animate_show_text(params)
 	self._desc:clear_range_color(0,utf8.len(params.text))
 	
 	
-	local vars = self._config.Objectives
+	local vars = self._config.Presenter
 	
 	local function cb_animate_fadeout(o,cb)
-		local alpha_duration = vars.ANIM_OBJECTIVE_FADEOUT_DURATION
+		local alpha_duration = vars.ANIM_PRESENTER_FADEOUT_DURATION
 		o:animate(AnimateLibrary.animate_alpha_lerp,cb,alpha_duration,nil,0)
 	end
 	
