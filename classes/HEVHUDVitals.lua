@@ -39,18 +39,17 @@ function HEVHUDVitals:init(panel,settings,config,...)
 	self:recreate_hud()
 end
 
-
-function HEVHUDVitals:recreate_hud()
-	local vars = self._config.Vitals
-	self._LABEL_ALPHA_LOW = self._config.General.LABEL_ALPHA_LOW
-	self._LABEL_ALPHA_HIGH = self._config.General.LABEL_ALPHA_HIGH
+function HEVHUDVitals:setup(settings,config,...)
+	HEVHUDVitals.super.setup(self,settings,config,...)
+	
+	local vars = config.Vitals
+	
+	self._LABEL_ALPHA_LOW = config.General.LABEL_ALPHA_LOW
+	self._LABEL_ALPHA_HIGH = config.General.LABEL_ALPHA_HIGH
 	self._POWER_TICK_ANIM_DURATION = vars.POWER_TICK_ANIM_DURATION
 	self._POWER_RATIO_LOW_THRESHOLD = vars.POWER_RATIO_LOW_THRESHOLD
 	self._POWER_FRAME_ANIM_DURATION = vars.POWER_FRAME_ANIM_DURATION
 	self._POWER_FADE_ANIM_DURATION = vars.POWER_FADE_ANIM_DURATION
-	self._TEXT_COLOR_FULL = HEVHUD.colordecimal_to_color(self._settings.color_hl2_yellow)
-	self._TEXT_COLOR_HALF = HEVHUD.colordecimal_to_color(self._settings.color_hl2_orange)
-	self._TEXT_COLOR_NONE = HEVHUD.colordecimal_to_color(self._settings.color_hl2_red)
 	self._HEALTH_RATIO_LOW_THRESHOLD = vars.HEALTH_RATIO_LOW_THRESHOLD
 	self._HEALTH_LOW_ANIM_SPEED = vars.HEALTH_LOW_ANIM_SPEED
 	self._TICK_EMPTY_ALPHA = vars.TICK_EMPTY_ALPHA
@@ -58,18 +57,17 @@ function HEVHUDVitals:recreate_hud()
 	
 	self._NUM_POWER_TICKS = vars.NUM_POWER_TICKS
 	self._num_power_ticks_current = self._NUM_POWER_TICKS
+end
 
-	local scale = 1
+function HEVHUDVitals:recreate_hud()
+	local vars = self._config.Vitals
 	
-	local BG_BOX_ALPHA = self._config.General.BG_BOX_ALPHA
-	local bgbox_panel_config = {alpha=BG_BOX_ALPHA,valign="grow",halign="grow"}
-	self._BG_BOX_COLOR = HEVHUD.colordecimal_to_color(self._config.General.BG_BOX_COLOR)
 	local ICONS_FONT_NAME = self._config.General.ICONS_FONT_NAME
 	local LABEL_ALPHA_LOW = self._LABEL_ALPHA_LOW
 	local LABEL_ALPHA_HIGH = self._LABEL_ALPHA_HIGH
 	
 	
-	local DEFAULT_COLOR = self._TEXT_COLOR_FULL
+	local DEFAULT_COLOR = self._COLOR_YELLOW
 	
 	local VITALS_FONT_NAME = vars.VITALS_FONT_NAME
 	
@@ -312,19 +310,19 @@ function HEVHUDVitals:set_low_health(state)
 		for _,child in pairs(self._health_bgbox:children()) do 
 			child:stop()
 			if state then
-				child:animate(AnimateLibrary.animate_color_oscillate,self._HEALTH_LOW_ANIM_SPEED,self._BG_BOX_COLOR,self._TEXT_COLOR_NONE)
+				child:animate(AnimateLibrary.animate_color_oscillate,self._HEALTH_LOW_ANIM_SPEED,self._BG_BOX_COLOR,self._COLOR_RED)
 			else
 				child:set_color(self._BG_BOX_COLOR)
 			end
 		end
 		
 		if state then
-			self._health:child("health_name"):set_color(self._TEXT_COLOR_NONE)
+			self._health:child("health_name"):set_color(self._COLOR_RED)
 			self._health:child("health_label"):set_color(Color.red)
 			self._health:child("health_label"):set_blend_mode("add")
 		else
-			self._health:child("health_name"):set_color(self._TEXT_COLOR_FULL)
-			self._health:child("health_label"):set_color(self._TEXT_COLOR_FULL)
+			self._health:child("health_name"):set_color(self._COLOR_YELLOW)
+			self._health:child("health_label"):set_color(self._COLOR_YELLOW)
 			self._health:child("health_label"):set_blend_mode("normal")
 		end
 		
@@ -367,8 +365,8 @@ function HEVHUDVitals:set_sprint_amount(current,total)
 		local low_stamina = ratio < POWER_RATIO_LOW_THRESHOLD
 		local TICK_EMPTY_ALPHA = self._TICK_EMPTY_ALPHA
 		local TICK_FULL_ALPHA = self._TICK_FULL_ALPHA
-		local TEXT_COLOR_NONE = self._TEXT_COLOR_NONE
-		local TEXT_COLOR_FULL = self._TEXT_COLOR_FULL
+		local TEXT_COLOR_NONE = self._COLOR_RED
+		local TEXT_COLOR_FULL = self._COLOR_YELLOW
 		
 		do -- set power name color
 			local anim_data = self._anim_power_tick_threads[0]

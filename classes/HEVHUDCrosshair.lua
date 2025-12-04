@@ -23,28 +23,30 @@ function HEVHUDCrosshair:init(panel,settings,config,...)
 	self:set_right_crosshair(1)
 end
 
-function HEVHUDCrosshair:recreate_hud()
-	local vars = self._config.Crosshair
-	
+function HEVHUDCrosshair:setup(settings,config,...)
+	HEVHUDCrosshair.super.setup(self,settings,config,...)
+	local vars = config.Crosshair
 	self._CROSSHAIR_INDICATOR_SIZE = vars.CROSSHAIR_INDICATOR_SIZE
-	local crosshair_size = self._CROSSHAIR_INDICATOR_SIZE
-	local crosshair_distance = 32
-	
-	local crosshairs = self._panel
 	
 	self._VALUE_THRESHOLD_LOW = vars.VALUE_THRESHOLD_LOW
 	self._VALUE_THRESHOLD_CRITICAL = vars.VALUE_THRESHOLD_CRITICAL
 	
-	self._ANIM_TIMEOUT_WAIT_DURATION = self._config.General.ANIM_TIMEOUT_WAIT_DURATION
-	self._ANIM_TIMEOUT_FADE_DURATION = self._config.General.ANIM_TIMEOUT_FADE_DURATION
+	self._ANIM_TIMEOUT_WAIT_DURATION = config.General.ANIM_TIMEOUT_WAIT_DURATION
+	self._ANIM_TIMEOUT_FADE_DURATION = config.General.ANIM_TIMEOUT_FADE_DURATION
+	
 	self._CROSSHAIR_ALPHA_MIN = vars.CROSSHAIR_ALPHA_MIN
 	self._CROSSHAIR_ALPHA_MAX = vars.CROSSHAIR_ALPHA_MAX
 	
 	self._CROSSHAIR_IMAGE_SIZE = vars.CROSSHAIR_IMAGE_SIZE
-	self._TEXT_COLOR_FULL = HEVHUD.colordecimal_to_color(self._settings.color_hl2_yellow)
-	self._TEXT_COLOR_HALF = HEVHUD.colordecimal_to_color(self._settings.color_hl2_orange)
-	self._TEXT_COLOR_NONE = HEVHUD.colordecimal_to_color(self._settings.color_hl2_red)
+end
+
+function HEVHUDCrosshair:recreate_hud()
+	local vars = self._config.Crosshair
 	
+	local crosshair_size = self._CROSSHAIR_INDICATOR_SIZE
+	local crosshair_distance = 32
+	
+	local crosshairs = self._panel
 	local crosshair_dots = crosshairs:bitmap({
 		name = "crosshair_dots",
 		w = crosshair_size,
@@ -64,7 +66,7 @@ function HEVHUDCrosshair:recreate_hud()
 		h = crosshair_size,
 		x = -crosshair_distance + (crosshairs:w() - crosshair_size) / 2,
 		y = (crosshairs:h() - crosshair_size) / 2,
-		color = self._TEXT_COLOR_FULL,
+		color = self._COLOR_YELLOW,
 		layer = 2
 	})
 	local crosshair_empty_right = crosshairs:bitmap({
@@ -76,7 +78,7 @@ function HEVHUDCrosshair:recreate_hud()
 		y = (crosshairs:h() - crosshair_size) / 2,
 		valign = "grow",
 		halign = "grow",
-		color = self._TEXT_COLOR_FULL,
+		color = self._COLOR_YELLOW,
 		layer = 2
 	})
 	local crosshair_fill_left = crosshairs:bitmap({
@@ -88,7 +90,7 @@ function HEVHUDCrosshair:recreate_hud()
 		y = (crosshairs:h() - crosshair_size) / 2,
 		valign = "grow",
 		halign = "grow",
-		color = self._TEXT_COLOR_FULL,
+		color = self._COLOR_YELLOW,
 		layer = 3
 	})
 	local crosshair_fill_right = crosshairs:bitmap({
@@ -100,7 +102,7 @@ function HEVHUDCrosshair:recreate_hud()
 		y = (crosshairs:h() - crosshair_size) / 2,
 		valign = "grow",
 		halign = "grow",
-		color = self._TEXT_COLOR_FULL,
+		color = self._COLOR_YELLOW,
 		layer = 3
 	})
 end

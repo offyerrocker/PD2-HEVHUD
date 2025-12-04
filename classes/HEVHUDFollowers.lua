@@ -18,6 +18,21 @@ function HEVHUDFollowers:init(panel,settings,config,...)
 	self:recreate_hud()
 end
 
+function HEVHUDFollowers:setup(settings,config,...)
+	HEVHUDFollowers.super.setup(self,settings,config,...)
+	local vars = config.Followers
+	
+	self._ANIM_SORT_FOLLOWERS_DURATION = vars.ANIM_SORT_FOLLOWERS_DURATION
+	self._ANIM_FADE_FOLLOWERS_DURATION = vars.ANIM_FADE_FOLLOWERS_DURATION
+	self._ANIM_FOLLOWER_REMOVE_FADECOLOR_DURATION = vars.ANIM_FOLLOWER_REMOVE_FADECOLOR_DURATION
+	self._ANIM_FOLLOWER_REMOVE_FADEALPHA_DURATION = vars.ANIM_FOLLOWER_REMOVE_FADEALPHA_DURATION
+	
+	self._ICON_W = vars.ICON_W
+	self._ICON_TEXT_HOR_OFFSET = vars.ICON_TEXT_HOR_OFFSET
+end
+
+	
+	
 function HEVHUDFollowers:recreate_hud()
 	local vars = self._config.Followers
 	
@@ -30,16 +45,6 @@ function HEVHUDFollowers:recreate_hud()
 	})
 	
 	self._bgbox = self.CreateBGBox(self._panel,nil,nil,self._BGBOX_PANEL_CONFIG,self._BGBOX_TILE_CONFIG)
-	
-	self._ANIM_SORT_FOLLOWERS_DURATION = vars.ANIM_SORT_FOLLOWERS_DURATION
-	self._ANIM_FADE_FOLLOWERS_DURATION = vars.ANIM_FADE_FOLLOWERS_DURATION
-	self._ANIM_FOLLOWER_REMOVE_FADECOLOR_DURATION = vars.ANIM_FOLLOWER_REMOVE_FADECOLOR_DURATION
-	self._ANIM_FOLLOWER_REMOVE_FADEALPHA_DURATION = vars.ANIM_FOLLOWER_REMOVE_FADEALPHA_DURATION
-	
-	
-	self._ICON_W = vars.ICON_W
-	self._ICON_TEXT_HOR_OFFSET = vars.ICON_TEXT_HOR_OFFSET
-	
 	
 	self._panel:text({
 		name = "name",

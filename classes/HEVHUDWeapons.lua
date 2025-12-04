@@ -35,6 +35,25 @@ function HEVHUDWeapons:init(panel,settings,config,...)
 	self:set_underbarrel_visible(false)
 end
 
+function HEVHUDWeapons:setup(settings,config,...)
+	HEVHUDWeapons.super.setup(self,settings,config,...)
+	
+	local vars = config.Weapons
+	
+	
+	self._AMMO_PANEL_INACTIVE_ALPHA = vars.AMMO_PANEL_INACTIVE_ALPHA
+	self._AMMO_PANEL_ACTIVE_ALPHA = vars.AMMO_PANEL_ACTIVE_ALPHA
+	self._AMMO_SWAP_ANIM_DURATION = vars.AMMO_SWAP_ANIM_DURATION
+	self._EQUIP_UNDERBARREL_ANIM_DURATION = vars.EQUIP_UNDERBARREL_ANIM_DURATION	
+	self._MAIN_AMMO_HOR_OFFSET = vars.MAIN_AMMO_HOR_OFFSET
+	
+	self._ANIM_BGBOX_FLASH_DURATION = vars.ANIM_BGBOX_FLASH_DURATION
+	self._ANIM_BGBOX_ALPHA = vars.ANIM_BGBOX_ALPHA
+	
+	self._ANIM_GRENADE_CHARGE_USE_FILL_UPWARD = vars.ANIM_GRENADE_CHARGE_USE_FILL_UPWARD
+	self._ANIM_GRENADE_EMPTY_DURATION = vars.ANIM_GRENADE_EMPTY_DURATION
+end
+
 function HEVHUDWeapons:recreate_hud()
 	local vars = self._config.Weapons
 	self._panel:set_size(vars.WEAPONS_W,vars.WEAPONS_H)
@@ -42,27 +61,7 @@ function HEVHUDWeapons:recreate_hud()
 	self._panel:set_valign(vars.WEAPONS_VALIGN)
 	self._panel:set_halign(vars.WEAPONS_HALIGN)
 	
-	self._AMMO_PANEL_INACTIVE_ALPHA = vars.AMMO_PANEL_INACTIVE_ALPHA
-	self._AMMO_PANEL_ACTIVE_ALPHA = vars.AMMO_PANEL_ACTIVE_ALPHA
-	self._AMMO_SWAP_ANIM_DURATION = vars.AMMO_SWAP_ANIM_DURATION
-	self._EQUIP_UNDERBARREL_ANIM_DURATION = vars.EQUIP_UNDERBARREL_ANIM_DURATION	
-	self._MAIN_AMMO_HOR_OFFSET = vars.MAIN_AMMO_HOR_OFFSET
-	self._TEXT_COLOR_FULL = HEVHUD.colordecimal_to_color(self._settings.color_hl2_yellow)
-	self._TEXT_COLOR_HALF = HEVHUD.colordecimal_to_color(self._settings.color_hl2_orange)
-	self._TEXT_COLOR_NONE = HEVHUD.colordecimal_to_color(self._settings.color_hl2_red)
-	
-	self._ANIM_BGBOX_FLASH_DURATION = vars.ANIM_BGBOX_FLASH_DURATION
-	self._ANIM_BGBOX_ALPHA = vars.ANIM_BGBOX_ALPHA
-	
-	self._ANIM_GRENADE_CHARGE_USE_FILL_UPWARD = vars.ANIM_GRENADE_CHARGE_USE_FILL_UPWARD
-	self._ANIM_GRENADE_EMPTY_DURATION = vars.ANIM_GRENADE_EMPTY_DURATION
-	
-	self._BG_BOX_COLOR = HEVHUD.colordecimal_to_color(self._config.General.BG_BOX_COLOR)
-	local BG_BOX_ALPHA = self._config.General.BG_BOX_ALPHA
-	self._BG_BOX_ALPHA = BG_BOX_ALPHA
 	local ICONS_FONT_NAME = self._config.General.ICONS_FONT_NAME
-	local bgbox_panel_config = {alpha=BG_BOX_ALPHA,valign="grow",halign="grow"}
-	local bgbox_item_config = {color=self._BG_BOX_COLOR}
 	
 	local main_weapon = self._panel:panel({
 		name = "main_weapon",
@@ -97,7 +96,7 @@ function HEVHUDWeapons:recreate_hud()
 		y = vars.WEAPONS_NAME_VER_OFFSET,
 		font = vars.AMMO_FONT_NAME,
 		font_size = vars.NAME_FONT_SIZE,
-		color = self._TEXT_COLOR_FULL,
+		color = self._COLOR_YELLOW,
 		layer = 2
 	})
 	local ammo_icon = main_ammo:text({
@@ -107,7 +106,7 @@ function HEVHUDWeapons:recreate_hud()
 		y = vars.ICON_VER_OFFSET,
 		font = ICONS_FONT_NAME,
 		font_size = vars.ICONS_FONT_SIZE,
-		color = self._TEXT_COLOR_FULL,
+		color = self._COLOR_YELLOW,
 		layer = 2
 	})
 	local magazine = main_ammo:text({
@@ -119,7 +118,7 @@ function HEVHUDWeapons:recreate_hud()
 		y = vars.MAGAZINE_VER_OFFSET, -- + main_ammo:h() - vars.MAGAZINE_FONT_SIZE,
 		font = ICONS_FONT_NAME,
 		font_size = vars.MAGAZINE_FONT_SIZE,
-		color = self._TEXT_COLOR_FULL,
+		color = self._COLOR_YELLOW,
 		layer = 2
 	})
 	
@@ -132,7 +131,7 @@ function HEVHUDWeapons:recreate_hud()
 		y = vars.RESERVE_VER_OFFSET, -- + main_ammo:h() - vars.RESERVE_FONT_SIZE,
 		font = ICONS_FONT_NAME,
 		font_size = vars.RESERVE_FONT_SIZE,
-		color = self._TEXT_COLOR_FULL,
+		color = self._COLOR_YELLOW,
 		layer = 2
 	})
 	
@@ -144,7 +143,7 @@ function HEVHUDWeapons:recreate_hud()
 		h = vars.FIREMODE_ICON_H,
 		x = vars.FIREMODE_ICON_HOR_OFFSET,
 		y = vars.FIREMODE_ICON_VER_OFFSET,
-		color = self._TEXT_COLOR_FULL,
+		color = self._COLOR_YELLOW,
 		valign = "bottom",
 		halign = "right",
 		visible = true,
@@ -170,7 +169,7 @@ function HEVHUDWeapons:recreate_hud()
 		y = vars.ICON_VER_OFFSET,
 		font = ICONS_FONT_NAME,
 		font_size = vars.ICONS_FONT_SIZE,
-		color = self._TEXT_COLOR_FULL,
+		color = self._COLOR_YELLOW,
 		layer = 2
 	})
 	local underbarrel_name = underbarrel_ammo:text({
@@ -182,7 +181,7 @@ function HEVHUDWeapons:recreate_hud()
 		y = vars.WEAPONS_NAME_VER_OFFSET,
 		font = vars.AMMO_FONT_NAME,
 		font_size = vars.NAME_FONT_SIZE,
-		color = self._TEXT_COLOR_FULL,
+		color = self._COLOR_YELLOW,
 		layer = 2
 	})
 	local underbarrel_label = underbarrel_ammo:text({
@@ -193,7 +192,7 @@ function HEVHUDWeapons:recreate_hud()
 		y = vars.UNDERBARREL_LABEL_VER_OFFSET + main_ammo:h() - vars.UNDERBARREL_LABEL_FONT_SIZE,
 		font = ICONS_FONT_NAME,
 		font_size = vars.UNDERBARREL_LABEL_FONT_SIZE,
-		color = self._TEXT_COLOR_FULL,
+		color = self._COLOR_YELLOW,
 		layer = 2
 	})
 	
@@ -225,7 +224,7 @@ function HEVHUDWeapons:recreate_hud()
 		halign = "grow",
 		texture = "fonts/halflife2", 
 		texture_rect = {133,155,30,18},
-		color = self._TEXT_COLOR_FULL,
+		color = self._COLOR_YELLOW,
 		layer = 2
 	})
 	grenades:text({
@@ -239,7 +238,7 @@ function HEVHUDWeapons:recreate_hud()
 		halign = "grow",
 		font = vars.GRENADES_LABEL_FONT_NAME,
 		font_size = vars.GRENADES_LABEL_FONT_SIZE,
-		color = self._TEXT_COLOR_FULL,
+		color = self._COLOR_YELLOW,
 		layer = 2
 	})
 	local grenades_charge = grenades:panel({
@@ -314,7 +313,7 @@ function HEVHUDWeapons:recreate_hud()
 		y = vars.DEPLOYABLE_ICON_Y,
 		w = vars.DEPLOYABLE_ICON_W,
 		h = vars.DEPLOYABLE_ICON_H,
-		color = self._TEXT_COLOR_FULL,
+		color = self._COLOR_YELLOW,
 		layer = 2
 	})
 	
@@ -327,7 +326,7 @@ function HEVHUDWeapons:recreate_hud()
 		vertical = vars.DEPLOYABLE_LABEL_VERTICAL,
 		font = vars.DEPLOYABLE_LABEL_FONT_NAME,
 		font_size = vars.DEPLOYABLE_LABEL_FONT_SIZE,
-		color = self._TEXT_COLOR_FULL,
+		color = self._COLOR_YELLOW,
 		alpha = 1,
 		layer = 3
 	})
@@ -354,7 +353,7 @@ function HEVHUDWeapons:recreate_hud()
 		y = vars.DEPLOYABLE_ICON_Y,
 		w = vars.DEPLOYABLE_ICON_W,
 		h = vars.DEPLOYABLE_ICON_H,
-		color = self._TEXT_COLOR_FULL,
+		color = self._COLOR_YELLOW,
 		layer = 2
 	})
 	deployable_2:text({
@@ -366,7 +365,7 @@ function HEVHUDWeapons:recreate_hud()
 		vertical = vars.DEPLOYABLE_LABEL_VERTICAL,
 		font = vars.DEPLOYABLE_LABEL_FONT_NAME,
 		font_size = vars.DEPLOYABLE_LABEL_FONT_SIZE,
-		color = self._TEXT_COLOR_FULL,
+		color = self._COLOR_YELLOW,
 		alpha = 1,
 		layer = 3
 	})
@@ -429,9 +428,9 @@ function HEVHUDWeapons:set_main_ammo(magazine_max,magazine_current,reserves_curr
 	
 	local color
 	if magazine_current == 0 then
-		color = self._TEXT_COLOR_NONE
+		color = self._COLOR_RED
 	else
-		color = self._TEXT_COLOR_FULL
+		color = self._COLOR_YELLOW
 	end
 	self._main_ammo:child("reserve"):set_color(color)
 	self._main_ammo:child("magazine"):set_color(color)
@@ -525,14 +524,14 @@ function HEVHUDWeapons:set_underbarrel_ammo(magazine_max,magazine_current,reserv
 	
 	local color
 	if magazine_current == 0 then
-		self._underbarrel_ammo:child("underbarrel_label"):set_color(self._TEXT_COLOR_NONE)
+		self._underbarrel_ammo:child("underbarrel_label"):set_color(self._COLOR_RED)
 		if reserves_current == 0 then
-			color = self._TEXT_COLOR_NONE
+			color = self._COLOR_RED
 		else
-			color = self._TEXT_COLOR_FULL
+			color = self._COLOR_YELLOW
 		end
 	else
-		color = self._TEXT_COLOR_FULL
+		color = self._COLOR_YELLOW
 		self._underbarrel_ammo:child("underbarrel_label"):set_color(color)
 	end
 	self._underbarrel_ammo:child("underbarrel_icon"):set_color(color)
@@ -624,7 +623,7 @@ function HEVHUDWeapons:set_selected_equipment_slot(slot)
 			local bgbox = deployable_panel:child("bgbox")
 			for _,child in pairs(bgbox:children()) do 
 				child:stop()
-				child:animate(AnimateLibrary.animate_color_lerp,nil,self._ANIM_BGBOX_FLASH_DURATION,self._TEXT_COLOR_FULL,self._BG_BOX_COLOR)
+				child:animate(AnimateLibrary.animate_color_lerp,nil,self._ANIM_BGBOX_FLASH_DURATION,self._COLOR_YELLOW,self._BG_BOX_COLOR)
 			end
 			bgbox:stop()
 			bgbox:animate(AnimateLibrary.animate_alpha_lerp,nil,self._ANIM_BGBOX_FLASH_DURATION,self._ANIM_BGBOX_ALPHA,self._BG_BOX_ALPHA)
@@ -655,7 +654,7 @@ end
 function HEVHUDWeapons:animate_flash_bgbox_main()
 	for _,child in pairs(self._main_ammo_bgbox:children()) do 
 		child:stop()
-		child:animate(AnimateLibrary.animate_color_lerp,nil,self._ANIM_BGBOX_FLASH_DURATION,self._TEXT_COLOR_FULL,self._BG_BOX_COLOR)
+		child:animate(AnimateLibrary.animate_color_lerp,nil,self._ANIM_BGBOX_FLASH_DURATION,self._COLOR_YELLOW,self._BG_BOX_COLOR)
 	end
 	self._main_ammo_bgbox:stop()
 	self._main_ammo_bgbox:animate(AnimateLibrary.animate_alpha_lerp,nil,self._ANIM_BGBOX_FLASH_DURATION,self._ANIM_BGBOX_ALPHA,self._BG_BOX_ALPHA)
@@ -664,7 +663,7 @@ end
 function HEVHUDWeapons:animate_flash_bgbox_underbarrel()
 	for _,child in pairs(self._underbarrel_ammo_bgbox:children()) do 
 		child:stop()
-		child:animate(AnimateLibrary.animate_color_lerp,nil,self._ANIM_BGBOX_FLASH_DURATION,self._TEXT_COLOR_FULL,self._BG_BOX_COLOR)
+		child:animate(AnimateLibrary.animate_color_lerp,nil,self._ANIM_BGBOX_FLASH_DURATION,self._COLOR_YELLOW,self._BG_BOX_COLOR)
 	end
 	self._underbarrel_ammo_bgbox:stop()
 	self._underbarrel_ammo_bgbox:animate(AnimateLibrary.animate_alpha_lerp,nil,self._ANIM_BGBOX_FLASH_DURATION,self._ANIM_BGBOX_ALPHA,self._BG_BOX_ALPHA)
@@ -673,7 +672,7 @@ end
 function HEVHUDWeapons:animate_flash_bgbox_grenades()
 	for _,child in pairs(self._grenades_ammo_bgbox:children()) do 
 		child:stop()
-		child:animate(AnimateLibrary.animate_color_lerp,nil,self._ANIM_BGBOX_FLASH_DURATION,self._TEXT_COLOR_FULL,self._BG_BOX_COLOR)
+		child:animate(AnimateLibrary.animate_color_lerp,nil,self._ANIM_BGBOX_FLASH_DURATION,self._COLOR_YELLOW,self._BG_BOX_COLOR)
 	end
 	self._grenades_ammo_bgbox:stop()
 	self._grenades_ammo_bgbox:animate(AnimateLibrary.animate_alpha_lerp,nil,self._ANIM_BGBOX_FLASH_DURATION,self._ANIM_BGBOX_ALPHA,self._BG_BOX_ALPHA)

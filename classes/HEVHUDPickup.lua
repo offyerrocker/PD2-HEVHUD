@@ -28,14 +28,13 @@ function HEVHUDPickup:init(panel,settings,config,...)
 	self:recreate_hud()
 end
 
+function HEVHUDPickup:setup(settings,config,...)
+	HEVHUDPickup.super.setup(self,settings,config,...)
+	self._MAX_POPUP_SLOTS = config.Pickup.PICKUP_POPUP_SLOTS_MAX
+end
+
 function HEVHUDPickup:recreate_hud()
 --	self._panel:clear()
-	local vars = self._config.Pickup
-	self._MAX_POPUP_SLOTS = vars.PICKUP_POPUP_SLOTS_MAX
-	self._TEXT_COLOR_FULL = HEVHUD.colordecimal_to_color(self._settings.color_hl2_yellow)
-	self._TEXT_COLOR_HALF = HEVHUD.colordecimal_to_color(self._settings.color_hl2_orange)
-	self._TEXT_COLOR_NONE = HEVHUD.colordecimal_to_color(self._settings.color_hl2_red)
-	
 end
 
 
@@ -114,7 +113,7 @@ function HEVHUDPickup:_add_special_equipment(id,amount,icon_id)
 			halign = "grow",
 			font = vars.AMMO_AMOUNT_LABEL_FONT_NAME,
 			font_size = vars.AMMO_AMOUNT_LABEL_FONT_SIZE,
-			color = self._TEXT_COLOR_FULL,
+			color = self._COLOR_YELLOW,
 			blend_mode = vars.AMMO_AMOUNT_BLEND_MODE,
 			layer = 2
 		})
@@ -130,7 +129,7 @@ function HEVHUDPickup:_add_special_equipment(id,amount,icon_id)
 			halign = "grow",
 			font = vars.MISSION_EQ_LABEL_FONT_NAME,
 			font_size = vars.AMMO_AMOUNT_LABEL_FONT_SIZE,
-			color = self._TEXT_COLOR_FULL,
+			color = self._COLOR_YELLOW,
 			blend_mode = vars.AMMO_AMOUNT_BLEND_MODE,
 			layer = 2
 		})
@@ -144,13 +143,13 @@ function HEVHUDPickup:_add_special_equipment(id,amount,icon_id)
 			y = vars.AMMO_ICON_Y,
 			w = vars.MISSION_EQ_ICON_W,
 			h = vars.MISSION_EQ_ICON_H,
-			color = self._TEXT_COLOR_FULL,
+			color = self._COLOR_YELLOW,
 			valign = "grow",
 			halign = "grow",
 			layer = 3
 		})
 		
-		--icon:animate(AnimateLibrary.animate_color_lerp,nil,vars.ANIM_MISSION_EQ_HIGHLIGHT_DURATION,self._TEXT_COLOR_HALF,self._TEXT_COLOR_FULL)
+		--icon:animate(AnimateLibrary.animate_color_lerp,nil,vars.ANIM_MISSION_EQ_HIGHLIGHT_DURATION,self._COLOR_ORANGE,self._COLOR_YELLOW)
 		
 		
 		self:register_popup(pickup)
@@ -273,7 +272,7 @@ function HEVHUDPickup:add_ammo_pickup(weapon_slot,amount,ammo_text,weapon_textur
 		halign = "grow",
 		font = vars.AMMO_AMOUNT_LABEL_FONT_NAME,
 		font_size = vars.AMMO_AMOUNT_LABEL_FONT_SIZE,
-		color = self._TEXT_COLOR_FULL,
+		color = self._COLOR_YELLOW,
 		blend_mode = vars.AMMO_AMOUNT_BLEND_MODE,
 		layer = 2
 	})
@@ -286,7 +285,7 @@ function HEVHUDPickup:add_ammo_pickup(weapon_slot,amount,ammo_text,weapon_textur
 		y = vars.WEAPON_ICON_Y,
 		w = vars.WEAPON_ICON_W,
 		h = vars.WEAPON_ICON_H,
-		color = self._TEXT_COLOR_FULL,
+		color = self._COLOR_YELLOW,
 		blend_mode = vars.WEAPON_ICON_BLEND_MODE,
 		layer = 3
 	})
@@ -304,7 +303,7 @@ function HEVHUDPickup:add_ammo_pickup(weapon_slot,amount,ammo_text,weapon_textur
 		halign = "grow",
 		font = ICONS_FONT_NAME,
 		font_size = vars.AMMO_ICON_FONT_SIZE,
-		color = self._TEXT_COLOR_FULL,
+		color = self._COLOR_YELLOW,
 		blend_mode = vars.AMMO_ICON_BLEND_MODE,
 		layer = 2
 	})

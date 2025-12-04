@@ -59,9 +59,6 @@ function HEVHUDTeammate:recreate_hud()
 	-- vars for layout
 	local vars = self._config.Teammate
 	self._panel:set_size(vars.TEAMMATE_W,vars.TEAMMATE_H)
-	self._TEXT_COLOR_FULL = HEVHUD.colordecimal_to_color(self._settings.color_hl2_yellow)
-	self._TEXT_COLOR_HALF = HEVHUD.colordecimal_to_color(self._settings.color_hl2_orange)
-	self._TEXT_COLOR_NONE = HEVHUD.colordecimal_to_color(self._settings.color_hl2_red)
 	
 	local panel = self._panel
 	self._bgbox = self.CreateBGBox(panel,nil,nil,self._BGBOX_PANEL_CONFIG,self._BGBOX_TILE_CONFIG)
@@ -133,7 +130,7 @@ function HEVHUDTeammate:recreate_hud()
 		h = ammo:h(),
 		halign = "left",
 		valign = "grow",
-		color = self._TEXT_COLOR_FULL,
+		color = self._COLOR_YELLOW,
 		layer = 3
 	})
 	local triangle_icon_texture,triangle_icon_rect = HEVHUD:GetIconData("triangle_line")
@@ -145,7 +142,7 @@ function HEVHUDTeammate:recreate_hud()
 		h = ammo:h(),
 		halign = "left",
 		valign = "grow",
-		color = self._TEXT_COLOR_NONE,
+		color = self._COLOR_RED,
 		blend_mode = "add",
 		layer = 2
 	})
@@ -172,7 +169,7 @@ function HEVHUDTeammate:recreate_hud()
 		y = vars.NAME_LABEL_Y,
 		valign = "grow",
 		halign = "grow",
-		color = self._TEXT_COLOR_FULL,
+		color = self._COLOR_YELLOW,
 		layer = 3
 	})
 	
@@ -196,7 +193,7 @@ function HEVHUDTeammate:recreate_hud()
 		texture_rect = vitals_icon_fill_rect,
 		w = vitals:w(),
 		h = vitals:h(),
-		color = self._TEXT_COLOR_FULL,
+		color = self._COLOR_YELLOW,
 		valign = "grow",
 		halign = "grow",
 		layer = 2
@@ -207,7 +204,7 @@ function HEVHUDTeammate:recreate_hud()
 		texture_rect = vitals_icon_line_rect,
 		w = vitals:w(),
 		h = vitals:h(),
-		color = self._TEXT_COLOR_FULL,
+		color = self._COLOR_YELLOW,
 		valign = "grow",
 		halign = "grow",
 		layer = 3
@@ -241,7 +238,7 @@ function HEVHUDTeammate:recreate_hud()
 		h = deployable_1:h(),
 		texture = deployable_texture, -- set later
 		texture_rect = deployable_rect,
-		color = self._TEXT_COLOR_FULL,
+		color = self._COLOR_YELLOW,
 		valign = "grow",
 		halign = "grow",
 		layer = 2
@@ -285,7 +282,7 @@ function HEVHUDTeammate:recreate_hud()
 		h = deployable_2:h(),
 		texture = deployable_texture, -- set later
 		texture_rect = deployable_rect,
-		color = self._TEXT_COLOR_FULL,
+		color = self._COLOR_YELLOW,
 		valign = "grow",
 		halign = "grow",
 		layer = 2
@@ -321,7 +318,7 @@ function HEVHUDTeammate:recreate_hud()
 		y = vars.GRENADES_ICON_Y,
 		w = vars.GRENADES_ICON_W,
 		h = vars.GRENADES_ICON_H,
-		color = self._TEXT_COLOR_FULL,
+		color = self._COLOR_YELLOW,
 		valign = "grow",
 		halign = "grow",
 		visible = false,
@@ -333,7 +330,7 @@ function HEVHUDTeammate:recreate_hud()
 		texture_rect = grenades_icon_rect,
 		w = grenades:w(),
 		h = grenades:h(),
-		color = self._TEXT_COLOR_FULL,
+		color = self._COLOR_YELLOW,
 		valign = "grow",
 		halign = "grow",
 		layer = 2
@@ -358,7 +355,7 @@ function HEVHUDTeammate:recreate_hud()
 		y = vars.ZIPTIES_ICON_Y,
 		w = vars.ZIPTIES_ICON_W,
 		h = vars.ZIPTIES_ICON_H,
-		color = self._TEXT_COLOR_FULL,
+		color = self._COLOR_YELLOW,
 		valign = nil,
 		halign = nil,
 		alpha = vars.ZIPTIES_EMPTY_ALPHA,
@@ -371,7 +368,7 @@ function HEVHUDTeammate:recreate_hud()
 		texture_rect = zipties_icon_rect,
 		w = zipties:w(),
 		h = zipties:h(),
-		color = self._TEXT_COLOR_FULL,
+		color = self._COLOR_YELLOW,
 		valign = "grow",
 		halign = "grow",
 		layer = 2
@@ -396,7 +393,7 @@ function HEVHUDTeammate:recreate_hud()
 		y = vars.CARRY_ICON_Y,
 		w = vars.CARRY_ICON_W,
 		h = vars.CARRY_ICON_H,
-		color = self._TEXT_COLOR_FULL,
+		color = self._COLOR_YELLOW,
 		valign = "top",
 		halign = "left",
 		visible = false,
@@ -409,7 +406,7 @@ function HEVHUDTeammate:recreate_hud()
 		texture_rect = carry_icon_rect,
 		w = carry:w(),
 		h = carry:h(),
-		color = self._TEXT_COLOR_FULL,
+		color = self._COLOR_YELLOW,
 		valign = "top",
 		halign = "left",
 		layer = 2
@@ -422,7 +419,7 @@ function HEVHUDTeammate:recreate_hud()
 		h = vars.MISSION_EQ_H,
 		x = vars.MISSION_EQ_X,
 		y = vars.MISSION_EQ_Y,
-		color = self._TEXT_COLOR_FULL,
+		color = self._COLOR_YELLOW,
 		valign = "top",
 		halign = "left",
 		layer = 2
@@ -442,7 +439,7 @@ function HEVHUDTeammate:recreate_hud()
 	-- grenades, ties
 	-- deployables
 	-- mission equipment
-	
+	self:check_panel_state()
 end
 
 function HEVHUDTeammate:add_special_equipment(data)
@@ -501,7 +498,7 @@ function HEVHUDTeammate:_add_special_equipment(id,amount,icon_id,skip_sort)
 			halign = "grow",
 			layer = 4
 		})
-		icon:animate(AnimateLibrary.animate_color_lerp,nil,self._ANIM_MISSION_EQ_HIGHLIGHT_DURATION,self._TEXT_COLOR_HALF,self._TEXT_COLOR_FULL)
+		icon:animate(AnimateLibrary.animate_color_lerp,nil,self._ANIM_MISSION_EQ_HIGHLIGHT_DURATION,self._COLOR_ORANGE,self._COLOR_YELLOW)
 		if not skip_sort then
 			self:sort_special_equipment()
 		end
@@ -707,11 +704,11 @@ function HEVHUDTeammate:set_health(data)
 	if ratio <= 0 then
 		vitals_icon_fill:set_color(Color.black)
 	elseif ratio <= self._VITALS_THRESHOLD_HEALTH_CRITICAL then
-		vitals_icon_fill:set_color(self._TEXT_COLOR_NONE)
+		vitals_icon_fill:set_color(self._COLOR_RED)
 	elseif ratio <= self._VITALS_THRESHOLD_HEALTH_LOW then
-		vitals_icon_fill:set_color(self._TEXT_COLOR_HALF)
+		vitals_icon_fill:set_color(self._COLOR_ORANGE)
 	else
-		vitals_icon_fill:set_color(self._TEXT_COLOR_FULL)
+		vitals_icon_fill:set_color(self._COLOR_YELLOW)
 	end
 	
 	local vitals_icon_fill_texture,vitals_icon_fill_rect = HEVHUD:GetIconData("teammate_vitals_fill")
@@ -734,11 +731,11 @@ function HEVHUDTeammate:_set_revives(revives)
 	if revives <= 0 then
 		vitals_icon_line:set_color(Color.black)
 	elseif revives <= self._VITALS_THRESHOLD_REVIVES_CRITICAL then
-		vitals_icon_line:set_color(self._TEXT_COLOR_NONE)
+		vitals_icon_line:set_color(self._COLOR_RED)
 	elseif revives <= self._VITALS_THRESHOLD_REVIVES_LOW then
-		vitals_icon_line:set_color(self._TEXT_COLOR_HALF)
+		vitals_icon_line:set_color(self._COLOR_ORANGE)
 	else
-		vitals_icon_line:set_color(self._TEXT_COLOR_FULL)
+		vitals_icon_line:set_color(self._COLOR_YELLOW)
 	end
 end
 
