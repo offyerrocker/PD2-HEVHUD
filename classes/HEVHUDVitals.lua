@@ -214,7 +214,8 @@ function HEVHUDVitals:recreate_hud()
 		w = vars.POWER_W,
 		h = vars.POWER_H,
 		x = vars.POWER_HOR_OFFSET,
-		y = health:y() - (vars.POWER_H + vars.POWER_VER_OFFSET)
+		y = health:y() - (vars.POWER_H + vars.POWER_VER_OFFSET),
+		alpha = 0
 	})
 	self._power = power
 	self._power_bgbox = self.CreateBGBox(power,nil,nil,self._BGBOX_PANEL_CONFIG,self._BGBOX_TILE_CONFIG)
