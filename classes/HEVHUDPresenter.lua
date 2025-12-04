@@ -184,11 +184,18 @@ end
 -- check next item in the queue
 function HEVHUDPresenter:_present_done()
 	self._presenting = false
+	local queued = table.remove(self._present_queue, 1)
+
+	if queued and queued.present_mid_text then
+		setup:add_end_frame_clbk(callback(self, self, "_do_it", queued))
+	end
+	--[[
 	if #self._present_queue > 0 then
 		local queued = table.remove(self._present_queue, 1)
 		self:_present_information(queued)
 		return
 	end
+	--]]
 --	self._present_box:hide()
 end
 
