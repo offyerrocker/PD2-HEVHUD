@@ -238,6 +238,8 @@ function HEVHUDObjectives:_activate_objective(data)
 	elseif self._config.Objectives.OBJECTIVE_LABEL_TEXT_CASE == "lower" then --lowercase
 		objective_text:set_text(utf8.to_lower(data.text))
 	else -- unchanged
+		objective_text:set_text(data.text)
+	end
 	
 	if data.amount then
 		self:update_amount_objective(data)
