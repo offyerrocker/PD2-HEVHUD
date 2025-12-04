@@ -233,9 +233,9 @@ end
 
 function HEVHUDObjectives:_activate_objective(data)
 	local objective_text = self._objective_panel:child("text")
-	if self._config.Objectives.OBJECTIVE_LABEL_TEXT_CASE == "upper" then --uppercase
+	if self._config.Objectives.OBJECTIVE_LABEL_TEXT_CASE == 1 then --uppercase
 		objective_text:set_text(utf8.to_upper(data.text))
-	elseif self._config.Objectives.OBJECTIVE_LABEL_TEXT_CASE == "lower" then --lowercase
+	elseif self._config.Objectives.OBJECTIVE_LABEL_TEXT_CASE == 2 then --lowercase
 		objective_text:set_text(utf8.to_lower(data.text))
 	else -- unchanged
 		objective_text:set_text(data.text)
