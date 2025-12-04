@@ -183,15 +183,13 @@ end
 
 -- check next item in the queue
 function HEVHUDPresenter:_present_done()
+	self._presenting = false
 	if #self._present_queue > 0 then
-		if not self._presenting then
-			local queued = table.remove(self._present_queue, 1)
-			self:_present_information(queued)
-			return
-		end
+		local queued = table.remove(self._present_queue, 1)
+		self:_present_information(queued)
+		return
 	end
 --	self._present_box:hide()
-	self._presenting = false
 end
 
 
