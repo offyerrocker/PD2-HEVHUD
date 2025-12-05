@@ -56,6 +56,7 @@ function HEVHUDTeammate:init(panel,settings,config,i,...)
 end
 
 function HEVHUDTeammate:setup(settings,config)
+	local vars = config.Teammate
 	self._VITALS_THRESHOLD_HEALTH_CRITICAL = 	vars.VITALS_THRESHOLD_HEALTH_CRITICAL
 	self._VITALS_THRESHOLD_HEALTH_LOW = 		vars.VITALS_THRESHOLD_HEALTH_LOW
 	self._VITALS_THRESHOLD_REVIVES_CRITICAL = 	vars.VITALS_THRESHOLD_REVIVES_CRITICAL
