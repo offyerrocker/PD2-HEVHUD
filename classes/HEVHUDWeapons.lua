@@ -436,6 +436,7 @@ function HEVHUDWeapons:set_main_ammo(magazine_max,magazine_current,reserves_curr
 	self._main_ammo:child("magazine"):set_color(color)
 	self._main_ammo:child("ammo_icon"):set_color(color)
 	self._main_ammo:child("ammo_name"):set_color(color)
+	self._main_ammo:child("firemode_icon"):set_color(color)
 	
 	self:_set_main_weapon_reserve(reserves_current,reserves_max)
 	self:_set_main_weapon_magazine(magazine_current,magazine_max)
