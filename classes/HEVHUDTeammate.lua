@@ -38,6 +38,14 @@ function HEVHUDTeammate:init(panel,settings,config,i,...)
 	end
 	--]]
 	
+	-- game values
+	self._peer_id = nil
+	self._ai = nil
+	
+	self._ammo_state_primary = false
+	self._ammo_state_secondary = false
+	self._condition_state = false
+	self._status_panel_state = false
 	self._deployable_state = false
 	self._secondary_deployable_state = false
 	self._grenade_state = false
@@ -47,21 +55,7 @@ function HEVHUDTeammate:init(panel,settings,config,i,...)
 	self._bag_state = false
 end
 
-function HEVHUDTeammate:recreate_hud()
-	-- game values
-	self._peer_id = nil
-	self._ai = nil
-	self._ammo_state_primary = false
-	self._ammo_state_secondary = false
-	self._condition_state = false
-	self._status_panel_state = false
-	
-	-- vars for layout
-	local vars = self._config.Teammate
-	self._panel:set_size(vars.TEAMMATE_W,vars.TEAMMATE_H)
-	
-	local panel = self._panel
-	self._bgbox = self.CreateBGBox(panel,nil,nil,self._BGBOX_PANEL_CONFIG,self._BGBOX_TILE_CONFIG)
+function HEVHUDTeammate:setup(settings,config)
 	self._VITALS_THRESHOLD_HEALTH_CRITICAL = 	vars.VITALS_THRESHOLD_HEALTH_CRITICAL
 	self._VITALS_THRESHOLD_HEALTH_LOW = 		vars.VITALS_THRESHOLD_HEALTH_LOW
 	self._VITALS_THRESHOLD_REVIVES_CRITICAL = 	vars.VITALS_THRESHOLD_REVIVES_CRITICAL
@@ -87,6 +81,17 @@ function HEVHUDTeammate:recreate_hud()
 	self._ANIM_CARRY_START_DURATION = vars.ANIM_CARRY_FADEIN_DURATION
 	self._CARRY_RIGHT = vars.CARRY_ICON_W
 	self._CARRY_W = vars.CARRY_ICON_W
+	
+end
+
+function HEVHUDTeammate:recreate_hud()
+	self._panel:clear()
+	
+	-- vars for layout
+	local vars = self._config.Teammate
+	local panel = self._panel
+	panel:set_size(vars.TEAMMATE_W,vars.TEAMMATE_H)
+	self._bgbox = self.CreateBGBox(panel,nil,nil,self._BGBOX_PANEL_CONFIG,self._BGBOX_TILE_CONFIG)
 	
 	-- shows custody/downed/tasered/low ammo
 	local status = panel:panel({

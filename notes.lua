@@ -13,14 +13,11 @@ TODO:
 		Find a font that works for small readouts eg. teammate ammo counters/equipment counter- something bold, prob.
 		Better zipties icon
 		
-	Mission text
-		ASSIGNMENT TERMINATED SUBJECT FREEMAN etc etc
 	scanline effect
 		either generic blob oval, or special special font (not recommended- prone to clipping)
 	Ammo Pickup in HUD
 		show ACTUAL amount added, rather than max added
-		show special equipment pickups too
-			- animate them going to their final position
+		show grenade pickups from fully loaded aced
 	General
 		OnSettings/Config Changed hooks
 	Vitals
