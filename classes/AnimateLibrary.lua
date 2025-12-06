@@ -121,7 +121,7 @@ function AnimateLibrary.animate_grow_w_left(o,cb,duration,from_w,to_w)
 	local t,dt = 0,0
 	while t < duration do 
 		o:set_w(from_w + dw * math.bezier({0,0,1,1}, t/duration))
-		o:set_left(right)
+		o:set_left(left)
 		dt = coroutine.yield()
 		t = t + dt
 	end
