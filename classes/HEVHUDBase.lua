@@ -45,13 +45,9 @@ function HEVHUDBase.format_amount_str(amounts,implicit_one)
 	
 	has_any = (amount_2 and amount_2 > 0) or (amount_1 and amount_1 > 0)
 	if amount_2 then
-		local str_1	
+		-- assume that secondary amount should never be alone
+		local str_1 = string.format("%i",amount_1 or 0)
 		local str_2 = string.format("%i",amount_2)
-		if amount_1 and (not implicit_one or amount_1 ~= 1) then
-			str_1 = string.format("%i",amount_1)
-		else
-			str_1 = "0"
-		end
 		return str_1 .. HEVHUD._font_icons.slash .. str_2,has_any
 	else
 		local str_1
