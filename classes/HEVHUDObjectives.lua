@@ -182,12 +182,33 @@ function HEVHUDObjectives:set_special_equipment_amount(equipment_id,amount)
 	self:_add_special_equipment(equipment_id,amount,nil)
 end
 
-function HEVHUDObjectives:remove_special_equipment(equipment_id,skip_sort)
+function HEVHUDObjectives:remove_special_equipment(equipment_id,skip_sort,instant)
 	local equipment = self._mission_equipment:child(equipment_id)
-	if alive(equipment) then 
-		self._mission_equipment:remove(equipment)
-		if not skip_sort then
-			self:sort_special_equipment()
+	if alive(equipment) then
+		
+		if instant then
+			self._mission_equipment:remove(equipment)
+			if not skip_sort then
+				self:sort_mission_equipment()
+			end
+		else
+			equipment:set_name("_REMOVED_" .. equipment_id)
+			local cb_done = function()
+				self._mission_equipment:remove(equipment)
+				self:sort_special_equipment() --todo 1 frame delay?
+			end
+			
+			equipment:animate(
+				AnimateLibrary.animate_alpha_lerp,
+				cb_done, 
+				self._config.Objectives.ANIM_REMOVE_MISSION_EQ_FADEALPHA_DURATION,
+				nil,
+				0
+			)
+			
+			local icon = equipment:child("icon")
+			icon:set_blend_mode("add")
+			icon:animate(AnimateLibrary.animate_color_lerp,nil,self._config.Objectives.ANIM_REMOVE_MISSION_EQ_FADECOLOR_DURATION,nil,self._COLOR_RED)
 		end
 	end
 end
