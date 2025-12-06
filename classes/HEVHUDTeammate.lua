@@ -890,7 +890,7 @@ function HEVHUDTeammate:check_panel_state()
 	local h = self._nameplate:bottom() -- first row h
 	
 --	self._deployable:set_visible(self._deployable_state)
---	self._grenades:set_visible(self._grenade_state or self._ability_state)
+	self._grenades:set_visible(self._grenade_state or self._ability_state)
 --	self._zipties:set_visible(self._zipties_state)
 --	self._mission_equipment:set_visible(self._equipment_state)
 --	self._carry:set_visible(self._bag_state)
