@@ -894,7 +894,7 @@ function HEVHUDTeammate:check_panel_state()
 	if self._deployable_state or self._secondary_deployable_state or self._grenade_state or self._ability_state or self._zipties_state then 
 		h = self._deployable:bottom()
 		
-		local x = self._loadout_x_1
+		local x = 0
 		if self._deployable_state then
 			self._deployable:set_x(x)
 			x = self._deployable:right()
@@ -918,13 +918,13 @@ function HEVHUDTeammate:check_panel_state()
 	if self._bag_state or self._equipment_state then
 		h = self._carry:bottom()
 		
-		local x = self._loadout_x_2
+		local x = 0
 		if self._bag_state then
-			self._carry:set_x(x)
+			self._carry:set_x(x + self._config.Teammate.CARRY_ICON_X)
 			x = self._carry:right()
 		end
 		if self._equipment_state then
-			self._mission_equipment:set_x(x)
+			self._mission_equipment:set_x(x + self._MISSION_EQ_X)
 			x = self._mission_equipment:right()
 		end
 	end
