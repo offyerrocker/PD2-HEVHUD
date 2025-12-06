@@ -51,7 +51,6 @@ function HEVHUDPickup:_add_special_equipment(id,amount,icon_id)
 	
 	local vars = self._config.Pickup
 	local panel_name = "pickup_equipment_" .. tostring(id)
-	
 	local pickup = self._panel:child(panel_name)
 	
 	if self._settings.hud_ammo_pickup_aggregate_ammopickups then

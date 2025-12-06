@@ -916,7 +916,6 @@ function HEVHUDTeammate:check_panel_state()
 			x = self._zipties:right()
 		end
 	end
-	-- todo this needs to adjust row 2 down if row 1 is nonexistent
 	
 	if self._bag_state or self._equipment_state then
 		h = self._carry:bottom()

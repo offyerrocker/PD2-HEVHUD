@@ -2,9 +2,9 @@
 TODO:
 	
 	BUGS
-		Ammo pickups for secondary weapon not showing up
-	
-	
+		need better assets for underbarrel weapons in ammo pickup hud
+		possible issue: bgbox flashing may interfere with equip/unequip alpha anim?
+		hit display lasts too long- maybe custom solution that tracks the attacker unit?
 	
 	
 	
@@ -19,17 +19,15 @@ TODO:
 		show ACTUAL amount added, rather than max added
 		show grenade pickups from fully loaded aced
 	General
-		OnSettings/Config Changed hooks
 	Vitals
 		Neater revives counter (needs design too)
 	Weapons
-		Neater firemode readout
-		possible issue: bgbox flashing may interfere with equip/unequip alpha anim?
 	Teammates
+		- down/custody timer
 		- interaction
-		- deployable
-		- throwable; cooldown?
-		- bag (needs resizing)
+		- throwable cooldown
+		- ability timer
+		- bag (needs distinction from normal mission equipment)
 		- colors need to be tweaked; white should probably be normal, instead of orange, otherwise it blends too much
 	Equipment
 		player deployable icon needs to be organized; icon and secondary amount are not centered
@@ -43,6 +41,7 @@ TODO:
 	Assault Banner
 		????
 	Hostages
+		cable ties next to hostages i guess
 		????
 		maybe in the Jokers panel? also show the following civ in "SQUAD FOLLOWING" hud 
 	Lootscreen
