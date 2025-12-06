@@ -187,7 +187,7 @@ function HEVHUDWeapons:recreate_hud()
 	local underbarrel_label = underbarrel_ammo:text({
 		name = "underbarrel_label",
 		text = "0",
-		align = "left",
+		align = "right",
 		x = vars.UNDERBARREL_LABEL_HOR_OFFSET,
 		y = vars.UNDERBARREL_LABEL_VER_OFFSET + main_ammo:h() - vars.UNDERBARREL_LABEL_FONT_SIZE,
 		font = ICONS_FONT_NAME,
