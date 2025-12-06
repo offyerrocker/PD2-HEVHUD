@@ -413,7 +413,7 @@ function HEVHUDTeammate:recreate_hud()
 		texture_rect = carry_icon_rect,
 		w = carry:w(),
 		h = carry:h(),
-		color = self._COLOR_YELLOW,
+		color = Color.white,
 		valign = "top",
 		halign = "left",
 		layer = 2
@@ -473,7 +473,7 @@ function HEVHUDTeammate:_add_special_equipment(id,amount,icon_id,skip_sort)
 			name = id,
 			w = self._MISSION_EQ_ICON_W,
 			h = self._MISSION_EQ_ICON_H,
-			x = -self._MISSION_EQ_ICON_W,
+			x = self._mission_equipment:w(),
 			y = 0,
 			valign = "grow",
 			halign = "grow",

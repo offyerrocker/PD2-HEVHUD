@@ -262,6 +262,9 @@ function HEVHUD:CreateHUD(parent_hud)
 		self._teammate_panels[i] = teammate 
 		teammate._panel:set_y(y + config.Teammate.TEAMMATE_VER_MARGIN)
 		y = teammate._panel:bottom()
+		if i == HUDManager.PLAYER_PANEL then
+			teammate:hide()
+		end
 	end
 end
 
