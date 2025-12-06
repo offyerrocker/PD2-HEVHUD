@@ -80,10 +80,9 @@ function HEVHUDBase:clbk_on_config_changed(config)
 end
 
 function HEVHUDBase.CreateBGBox(parent,w,h,panel_config,child_config)
-	local panel
 	w = w or parent:w()
 	h = h or parent:h()
-	panel = parent:panel({
+	local panel = parent:panel({
 		name = "bgbox",
 		w = w,
 		h = h,
@@ -252,7 +251,6 @@ function HEVHUDBase.CreateBGBox(parent,w,h,panel_config,child_config)
 	
 	return panel
 end
-
 
 function HEVHUDBase.animate_inactive_fadeout(o,anim_timeout_duration,anim_alpha_duration,alpha_min,alpha_max)
 	o:set_alpha(alpha_max)

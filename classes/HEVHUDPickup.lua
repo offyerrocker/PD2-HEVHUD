@@ -312,5 +312,48 @@ function HEVHUDPickup:add_ammo_pickup(weapon_slot,amount,ammo_text,weapon_textur
 	self:register_popup(pickup)
 end
 
+function HEVHUDPickup:add_hint(params)
+	local text = params.text
+	local duration = params.time or 3
+	
+	local vars = self._config.Pickup
+	local popup = self._panel:panel({
+		name = "hint_" .. tostring(params),
+		w = vars.PICKUP_W,
+		h = vars.PICKUP_H,
+		x = 0,
+		y = 0,
+		alpha = 1,
+		visible = false,
+		layer = 2
+	})
+	
+	self.CreateBGBox(popup,nil,nil,self._BGBOX_PANEL_CONFIG,self._BGBOX_ITEM_CONFIG)
+	
+	local desc_label = popup:text({
+		name = "desc_label",
+		text = text,
+		align = vars.HINT_LABEL_ALIGN,
+		vertical = vars.HINT_LABEL_VERTICAL,
+		x = vars.HINT_LABEL_X,
+		y = vars.HINT_LABEL_Y,
+		valign = "grow",
+		halign = "grow",
+		font = vars.HINT_LABEL_FONT_NAME,
+		font_size = vars.HINT_LABEL_FONT_SIZE,
+		color = self._COLOR_YELLOW,
+		blend_mode = vars.HINT_LABEL_BLEND_MODE,
+		layer = 2
+	})
+	
+	local tx,ty,tw,th = desc_label:text_rect()
+	popup:set_w(vars.HINT_LABEL_X + vars.HINT_LABEL_X + tw)
+	
+	self:register_popup(popup)
+end
+
+function HEVHUDPickup:stop_hint()
+	
+end
 
 return HEVHUDPickup

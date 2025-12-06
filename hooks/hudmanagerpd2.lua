@@ -17,6 +17,18 @@ Hooks:PostHook(HUDManager,"set_enabled","hevhud_hudmanager_showhud",function(sel
 	HEVHUD._panel:show()
 end)
 
+-- HINT
+Hooks:OverrideFunction(HUDManager,"show_hint",function(self,params)
+--	if params.event then
+--		self._sound_source:post_event(params.event)
+--	end
+	HEVHUD._hud_pickup:add_hint(params)
+end)
+
+Hooks:OverrideFunction(HUDManager,"stop_hint",function(self)
+	HEVHUD._hud_pickup:stop_hint()
+end)
+
 -- TEAMMATES
 Hooks:PostHook(HUDManager,"set_teammate_name","hevhud_hudmanager_set_teammate_name",function(self,i,name)
 	HEVHUD:SetTeammateName(i,name)
