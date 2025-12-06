@@ -2,10 +2,11 @@
 TODO:
 	
 	BUGS
+		hudpresenter is getting clogged again
 		need better assets for underbarrel weapons in ammo pickup hud
 		possible issue: bgbox flashing may interfere with equip/unequip alpha anim?
 		hit display lasts too long- maybe custom solution that tracks the attacker unit?
-	
+		
 	
 	
 	Assets
