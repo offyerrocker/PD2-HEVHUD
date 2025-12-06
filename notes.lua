@@ -93,4 +93,10 @@ TODO:
 --[[ SNIPPETS
 foobar = HEVHUDCore:require("classes/LIP").load(HEVHUDCore.USER_CONFIG_PATH)
 
+BeardLib:AddUpdater("hevhud_test",function(t,dt)
+	if HEVHUD and HEVHUD._hud_presenter then
+		Console:SetTracker(tostring(HEVHUD._hud_presenter._presenting) .. string.format("%0.2f",t),1)
+	end
+end)
+
 --]]

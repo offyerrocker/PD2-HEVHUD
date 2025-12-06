@@ -69,7 +69,14 @@ function HEVHUDPresenter:present(params)
 	if self._presenting then
 		table.insert(self._present_queue, params)
 
+--		Print("present()... queued",#self._present_queue)
+--		logall(params)
+--		Print("-")
 		return
+	else
+--		Print("present()... go") 
+--		logall(params)
+--		Print("-")
 	end
 
 	if params.present_mid_text then
@@ -78,16 +85,16 @@ function HEVHUDPresenter:present(params)
 end
 
 function HEVHUDPresenter:_present_information(params)
+--	Print("_present_information()")
 	self:animate_show_text(params)
 	self._presenting = true
 end
 
 function HEVHUDPresenter:animate_show_text(params)
+--	Print("animate_show_text()")
 	if params.event then
 		managers.hud._sound_source:post_event(params.event)
 	end
-	
-	
 	
 	local duration = params.time or 4
 	
@@ -126,7 +133,7 @@ function HEVHUDPresenter:animate_show_text(params)
 				self._desc:animate(AnimateLibrary.animate_text_mission,
 					function(_desc)
 						-- hold
-						_desc:animate(AnimateLibrary.animate_wait,params.time,
+						_desc:animate(AnimateLibrary.animate_wait,duration,
 							function()
 								-- fadeout both
 								cb_animate_fadeout(_title)
@@ -145,11 +152,10 @@ function HEVHUDPresenter:animate_show_text(params)
 			end,utf8.to_upper(title),nil,col_1,col_2,nil
 		)
 	else
-		local duration = params.time
 		self._title:clear_range_color(0,1)
 		
 		-- only animate desc, don't wait for title
-		self._desc:animate(AnimateLibrary.animate_wait,params.time,
+		self._desc:animate(AnimateLibrary.animate_wait,duration,
 			function(_desc)
 				-- fadeout both
 				cb_animate_fadeout(_desc,
@@ -165,6 +171,8 @@ end
 
 -- check next item in the queue
 function HEVHUDPresenter:_present_done()
+--	Print("_present_done()")
+
 	self._presenting = false
 	local queued = table.remove(self._present_queue, 1)
 
