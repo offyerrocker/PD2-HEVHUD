@@ -617,14 +617,23 @@ function HEVHUDTeammate:set_deployable_second_amount(data) -- only used for team
 	local deployable = self._deployable
 	
 	local has_any
-	if data.amount[1] then
-		has_any = has_any or (data.amount[1] > 0)
-		deployable:child("amount_1"):set_text(string.format("%i",data.amount[1]))
+	
+	if self._config.Teammate.DEPLOYABLE_USE_SEPARATE_SECONDARY_LABEL then
+		if data.amount[1] then
+			has_any = has_any or (data.amount[1] > 0)
+			deployable:child("amount_1"):set_text(string.format("%i",data.amount[1]))
+		end
+		if data.amount[2] then
+			has_any = has_any or (data.amount[2] > 0)
+			deployable:child("amount_2"):set_text(string.format("%i",data.amount[2]))
+		end
+	else
+		local str
+		str,has_any = self.format_amount_str(data.amount,self._config.General.DISPLAY_LABEL_USE_IMPLICIT_ONE)
+		deployable:child("amount_1"):set_text(str)
+		deployable:child("amount_2"):set_text("")
 	end
-	if data.amount[2] then
-		has_any = has_any or (data.amount[2] > 0)
-		deployable:child("amount_2"):set_text(string.format("%i",data.amount[2]))
-	end
+	
 	if data.icon then
 		local texture,rect = tweak_data.hud_icons:get_icon_data(data.icon)
 		deployable:child("icon"):set_image(texture,unpack(rect))
@@ -667,14 +676,22 @@ function HEVHUDTeammate:set_deployable_second_amount_by_index(index,data) -- onl
 	end
 	
 	local has_any
-	if data.amount[1] then
-		has_any = has_any or (data.amount[1] > 0)
-		deployable:child("amount_1"):set_text(string.format("%i",data.amount[1]))
+	if self._config.Teammate.DEPLOYABLE_USE_SEPARATE_SECONDARY_LABEL then
+		if data.amount[1] then
+			has_any = has_any or (data.amount[1] > 0)
+			deployable:child("amount_1"):set_text(string.format("%i",data.amount[1]))
+		end
+		if data.amount[2] then
+			has_any = has_any or (data.amount[2] > 0)
+			deployable:child("amount_2"):set_text(string.format("%i",data.amount[2]))
+		end
+	else
+		local str
+		str,has_any = self.format_amount_str(data.amount,self._config.General.DISPLAY_LABEL_USE_IMPLICIT_ONE)
+		deployable:child("amount_1"):set_text(str)
+		deployable:child("amount_2"):set_text("")
 	end
-	if data.amount[2] then
-		has_any = has_any or (data.amount[2] > 0)
-		deployable:child("amount_2"):set_text(string.format("%i",data.amount[2]))
-	end
+	
 	if data.icon then
 		local texture,rect = tweak_data.hud_icons:get_icon_data(data.icon)
 		deployable:child("icon"):set_image(texture,unpack(rect))

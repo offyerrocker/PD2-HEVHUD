@@ -370,8 +370,6 @@ function HEVHUDWeapons:recreate_hud()
 		layer = 3
 	})
 	
-	
-	
 end
 
 function HEVHUDWeapons:set_underbarrel_on(state)
@@ -558,15 +556,11 @@ end
 function HEVHUDWeapons:set_equipment(slot,data)
 	if data.amount then
 		-- format string
-		local amount_string = ""
+		local amounts = {}
 		for i = 1, #data.amount do
-			local amount = tostring(Application:digest_value(data.amount[i], false))
-			if i == 1 then 
-				amount_string = amount
-			else
-				amount_string = amount_string .. HEVHUD._font_icons.slash .. amount
-			end
+			amounts[i] = Application:digest_value(data.amount[i], false)
 		end
+		local amount_string,has_any = self.format_amount_str(amounts,self._config.General.DISPLAY_LABEL_USE_IMPLICIT_ONE)
 		self:_set_deployable_label(slot,amount_string)
 	end
 	

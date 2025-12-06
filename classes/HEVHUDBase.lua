@@ -32,6 +32,37 @@ function HEVHUDBase:setup(settings,config)
 	self._BGBOX_TILE_CONFIG = {color=self._BG_BOX_COLOR}
 end
 
+function HEVHUDBase.format_amount_str(amounts,implicit_one)
+	local amount_1,amount_2
+	local has_any
+	if type(amounts) == "table" then
+		amount_1 = amounts[1]
+		amount_2 = amounts[2]
+	else
+		amount_1 = amounts
+		amount_2 = nil
+	end
+	
+	has_any = (amount_2 and amount_2 > 0) or (amount_1 and amount_1 > 0)
+	if amount_2 then
+		local str_1	
+		local str_2 = string.format("%i",amount_2)
+		if amount_1 and (not implicit_one or amount_1 ~= 1) then
+			str_1 = string.format("%i",amount_1)
+		else
+			str_1 = "0"
+		end
+		return str_1 .. HEVHUD._font_icons.slash .. str_2,has_any
+	else
+		local str_1
+		if amount_1 and (not implicit_one or amount_1 ~= 1) then
+			str_1 = string.format("%i",amount_1)
+		else
+			str_1 = ""
+		end
+		return str_1,has_any
+	end
+end
 
 
 function HEVHUDBase:pre_destroy()
