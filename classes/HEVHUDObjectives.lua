@@ -120,11 +120,14 @@ function HEVHUDObjectives:_add_special_equipment(id,amount,icon_id,skip_sort)
 	if not id then return end
 	id = tostring(id)
 	local equipment = self._mission_equipment:child(id)
+	local amount_str
 	if not amount or tostring(amount) == "1" then
-		amount = ""
+		amount_str = ""
+	else
+		amount_str = string.format("%i",amount)
 	end
 	if alive(equipment) then 
-		equipment:child("label"):set_text(amount)
+		equipment:child("label"):set_text(amount_str)
 	else
 		local vars = self._config.Objectives
 		equipment = self._mission_equipment:panel({
@@ -159,7 +162,7 @@ function HEVHUDObjectives:_add_special_equipment(id,amount,icon_id,skip_sort)
 			name = "label",
 			font = vars.MISSION_EQ_LABEL_FONT_NAME,
 			font_size = vars.MISSION_EQ_LABEL_FONT_SIZE,
-			text = amount,
+			text = amount_str,
 			align = vars.MISSION_EQ_LABEL_ALIGN,
 			vertical = vars.MISSION_EQ_LABEL_VERTICAL,
 			valign = "grow",
