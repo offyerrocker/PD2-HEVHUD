@@ -554,13 +554,15 @@ function HEVHUDWeapons:set_main_ammo_icon(icon_name)
 end
 
 function HEVHUDWeapons:set_equipment(slot,data)
+	local has_any
 	if data.amount then
 		-- format string
 		local amounts = {}
 		for i = 1, #data.amount do
 			amounts[i] = Application:digest_value(data.amount[i], false)
 		end
-		local amount_string,has_any = self.format_amount_str(amounts,self._config.General.DISPLAY_LABEL_USE_IMPLICIT_ONE)
+		local amount_string
+		amount_string,has_any = self.format_amount_str(amounts,self._config.General.DISPLAY_LABEL_USE_IMPLICIT_ONE)
 		self:_set_deployable_label(slot,amount_string)
 	end
 	
@@ -577,7 +579,12 @@ function HEVHUDWeapons:set_equipment(slot,data)
 		local texture_path = guis_catalog .. "textures/pd2/blackmarket/icons/deployables/" .. tostring(equipment_id)
 		local texture_rect = nil
 		self:_set_deployable_icon(slot,texture_path,texture_rect)
+	end
+	
+	if has_any then
 		self:_show_deployable(slot)
+	else
+		self:_hide_deployable(slot)
 	end
 		
 	-- get name
@@ -605,6 +612,13 @@ function HEVHUDWeapons:_show_deployable(slot)
 	local panel = self._deployables:child(tostring(slot))
 	if alive(panel) then
 		panel:show()
+	end
+end
+
+function HEVHUDWeapons:_hide_deployable(slot)
+	local panel = self._deployables:child(tostring(slot))
+	if alive(panel) then
+		panel:hide()
 	end
 end
 
