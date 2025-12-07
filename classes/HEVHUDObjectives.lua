@@ -197,8 +197,11 @@ function HEVHUDObjectives:remove_special_equipment(equipment_id,skip_sort,instan
 				self._mission_equipment:remove(equipment)
 				self:sort_special_equipment() --todo 1 frame delay?
 			end
-			
-			equipment:animate(
+			equipment:child("label"):hide()
+			-- animate the icon disappearing instead of the panel,
+			-- so that it won't be stopped by sort_special_equipment()
+			local icon = equipment:child("icon")
+			icon:animate(
 				AnimateLibrary.animate_alpha_lerp,
 				cb_done, 
 				self._config.Objectives.ANIM_REMOVE_MISSION_EQ_FADEALPHA_DURATION,
@@ -206,7 +209,6 @@ function HEVHUDObjectives:remove_special_equipment(equipment_id,skip_sort,instan
 				0
 			)
 			
-			local icon = equipment:child("icon")
 			icon:set_blend_mode("add")
 			icon:animate(AnimateLibrary.animate_color_lerp,nil,self._config.Objectives.ANIM_REMOVE_MISSION_EQ_FADECOLOR_DURATION,nil,self._COLOR_RED)
 		end
