@@ -2,10 +2,12 @@
 TODO:
 	
 	BUGS
+		hudobjective equipment removal is being interrupted, leaving behind ghosts
 		hudpresenter is getting clogged again
 		need better assets for underbarrel weapons in ammo pickup hud
 		possible issue: bgbox flashing may interfere with equip/unequip alpha anim?
 		hit display lasts too long- maybe custom solution that tracks the attacker unit?
+		
 		
 	- scale bgbox
 	
@@ -23,15 +25,14 @@ TODO:
 		Maniac
 		Leech
 		
+		Swan Song
 		
 		Neater revives counter (needs design too)
 	Weapons
 	Teammates
 		- down/custody timer
 		- interaction
-		- throwable cooldown
 		- ability timer
-		- bag (needs distinction from normal mission equipment)
 		- colors need to be tweaked; white should probably be normal, instead of orange, otherwise it blends too much
 	Equipment
 		player deployable icon needs to be organized; icon and secondary amount are not centered
