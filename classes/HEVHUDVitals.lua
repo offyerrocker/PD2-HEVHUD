@@ -35,8 +35,15 @@ function HEVHUDVitals:init(panel,settings,config,...)
 	self._NUM_POWER_TICKS = 10
 	self._num_power_ticks_current = self._NUM_POWER_TICKS
 	
+	
+	
 	self:setup(settings,config)
 	self:recreate_hud()
+	
+	self._health_total = 0
+	self._stored_health = 0
+	self._max_stored_health = 0
+	self._delayed_damage = 0
 end
 
 function HEVHUDVitals:setup(settings,config,...)
@@ -108,7 +115,7 @@ function HEVHUDVitals:recreate_hud()
 	})
 	local health_label = health:text({
 		name = "health_label",
-		text = "690",
+		text = "100",
 		align = "left",
 		vertical = "bottom",
 		x = vars.LABEL_HOR_OFFSET,
@@ -121,6 +128,23 @@ function HEVHUDVitals:recreate_hud()
 		layer = 2
 	})
 	
+	local secondary_health_label = health:text({
+		name = "secondary_health_label",
+		text = "",
+		align = "left",
+		vertical = "top",
+		x = vars.SECONDARY_HEALTH_LABEL_HOR_OFFSET,
+		y = vars.SECONDARY_HEALTH_LABEL_VER_OFFSET,
+		--blend_mode = "add",
+		font = vars.SECONDARY_HEALTH_LABEL_FONT_NAME,
+		font_size = vars.SECONDARY_HEALTH_LABEL_FONT_SIZE,
+--		color = DEFAULT_COLOR,
+		alpha = LABEL_ALPHA_HIGH,
+		layer = 2
+	})
+	
+	
+	
 --ARMOR
 	local suit = self._panel:panel({
 		name = "suit",
@@ -128,7 +152,8 @@ function HEVHUDVitals:recreate_hud()
 		w = vars.SUIT_W,
 		h = vars.SUIT_H,
 		x = health:right() + vars.SUIT_HOR_OFFSET,
-		y = vars.SUIT_VER_OFFSET + self._panel:h() - vars.SUIT_H
+		y = vars.SUIT_VER_OFFSET + self._panel:h() - vars.SUIT_H,
+		visible = false -- set visible when armor is set above 0 (aka not stoic)
 	})
 	self._suit = suit
 	self._suit_bgbox = self.CreateBGBox(suit,nil,self._BGBOX_PANEL_CONFIG,self._BGBOX_TILE_CONFIG)
@@ -482,6 +507,8 @@ end
 function HEVHUDVitals:set_health(current,total,revives)
 	self._health:child("health_label"):set_text(string.format("%i",current*tweak_data.gui.stats_present_multiplier))
 	
+	self._health_total = total
+	
 	-- todo disable with berserker
 	self:set_low_health(current/total <= self._HEALTH_RATIO_LOW_THRESHOLD)
 	if revives then
@@ -489,8 +516,54 @@ function HEVHUDVitals:set_health(current,total,revives)
 	end
 end
 
+function HEVHUDVitals:set_stored_health(amount)
+	self._stored_health = amount
+	self:upd_secondary_health_label()
+end
+
+function HEVHUDVitals:set_max_stored_health(amount)
+	self._max_stored_health = amount
+end
+
+function HEVHUDVitals:upd_secondary_health_label()
+	local label = self._health:child("secondary_health_label")
+	label:clear_range_color(0,10)
+	local str = ""
+	local i,j = 0,0
+	
+	if self._stored_health > 0 then
+		local s = string.format("+%i",math.round(self._stored_health*tweak_data.gui.stats_present_multiplier*self._health_total))
+		i = utf8.len(s)
+		str = str .. s
+	end
+	if self._delayed_damage > 0 then
+		local s = string.format("-%i",math.round(self._delayed_damage*tweak_data.gui.stats_present_multiplier))
+		if i ~= 0 then
+			s = " " .. s
+		end
+		j = i + utf8.len(s)
+		str = str .. s
+	end
+
+	label:set_text(str)
+	if i ~= 0 then
+		label:set_range_color(0,i,self._COLOR_YELLOW)
+	end
+	if j ~= 0 then
+		label:set_range_color(i,j,self._COLOR_RED)
+	end
+end
+
+function HEVHUDVitals:set_delayed_damage(amount)
+	self._delayed_damage = amount
+	self:upd_secondary_health_label()
+end
+
 function HEVHUDVitals:set_armor(current,total)
-	self._suit:child("suit_label"):set_text(string.format("%i",math.round(current*tweak_data.gui.stats_present_multiplier)))
+	if total > 0 then
+		self._suit:show()
+		self._suit:child("suit_label"):set_text(string.format("%i",math.round(current*tweak_data.gui.stats_present_multiplier)))
+	end
 end
 
 return HEVHUDVitals

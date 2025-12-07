@@ -71,6 +71,22 @@ Hooks:PostHook(HUDManager,"set_teammate_armor","hevhud_hudmanager_set_teammate_a
 	HEVHUD:SetTeammateArmor(i,data)
 end)
 
+
+Hooks:PostHook(HUDManager,"set_stored_health","hevhud_hudmanager_set_player_stored_health",function(self,stored_health_ratio)
+	HEVHUD._hud_vitals:set_stored_health(stored_health_ratio)
+end)
+
+Hooks:PostHook(HUDManager,"set_stored_health_max","hevhud_hudmanager_set_player_max_stored_health",function(self,stored_health_ratio)
+	HEVHUD._hud_vitals:set_max_stored_health(stored_health_ratio)
+end)
+
+Hooks:PostHook(HUDManager,"set_teammate_delayed_damage","hevhud_hudmanager_set_player_max_stored_health",function(self,i,delayed_damage)
+	if i == HUDManager.PLAYER_PANEL then
+		HEVHUD._hud_vitals:set_delayed_damage(delayed_damage)
+	end
+end)
+
+
 -- WEAPONS
 Hooks:PostHook(HUDManager,"set_ammo_amount","hevhud_hudmanager_set_ammo_amount",function(self, index, magazine_max, magazine_current, reserves_current, reserves_max)
 	HEVHUD:SetAmmoAmount(index,magazine_max,magazine_current,reserves_current,reserves_max)
