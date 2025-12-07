@@ -257,7 +257,7 @@ function HEVHUDPickup:add_ammo_pickup(weapon_slot,amount,ammo_text,weapon_textur
 	self._BG_BOX_ALPHA = BG_BOX_ALPHA
 	local bgbox_panel_config = {alpha=BG_BOX_ALPHA,valign="grow",halign="grow"}
 	local bgbox_item_config = {color=self._BG_BOX_COLOR}
-	local bgbox = self.CreateBGBox(pickup,nil,nil,bgbox_panel_config,bgbox_item_config)
+	local bgbox = self.CreateBGBox(pickup,nil,bgbox_panel_config,bgbox_item_config)
 	--]]
 	
 	local amount_label = pickup:text({
@@ -328,7 +328,7 @@ function HEVHUDPickup:add_hint(params)
 		layer = 2
 	})
 	
-	self.CreateBGBox(popup,nil,nil,self._BGBOX_PANEL_CONFIG,self._BGBOX_ITEM_CONFIG)
+	self.CreateBGBox(popup,nil,self._BGBOX_PANEL_CONFIG,self._BGBOX_ITEM_CONFIG)
 	
 	local desc_label = popup:text({
 		name = "desc_label",

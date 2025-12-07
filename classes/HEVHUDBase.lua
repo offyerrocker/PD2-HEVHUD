@@ -79,9 +79,9 @@ function HEVHUDBase:clbk_on_config_changed(config)
 	self:setup(self._settings,config)
 end
 
-function HEVHUDBase.CreateBGBox(parent,w,h,panel_config,child_config)
-	w = w or parent:w()
-	h = h or parent:h()
+function HEVHUDBase.CreateBGBox(parent,bgbox_config,panel_config,child_config)
+	local w = (bgbox_config and bgbox_config.w) or parent:w()
+	local h = (bgbox_config and bgbox_config.h) or parent:h()
 	local panel = parent:panel({
 		name = "bgbox",
 		w = w,
@@ -93,10 +93,18 @@ function HEVHUDBase.CreateBGBox(parent,w,h,panel_config,child_config)
 		panel:configure(panel_config)
 	end
 	
-	local hor_size = w - 32
-	local ver_size = h - 32
-	local bitmap_w = 16
-	local bitmap_h = 16
+	--local tile_w_scale = bgbox_config and (bgbox_config.w_scale or bgbox_config.scale) or 1
+	--local tile_h_scale = bgbox_config and (bgbox_config.h_scale or bgbox_config.scale) or 1
+	
+	-- individual tile sizes in texture file
+	local RAW_BITMAP_W = 16
+	local RAW_BITMAP_H = 16
+	
+	local tile_w = bgbox_config and (bgbox_config.w or bgbox_config.tile_size) or RAW_BITMAP_W -- or (tile_w_scale * RAW_BITMAP_W)
+	local tile_h = bgbox_config and (bgbox_config.h or bgbox_config.tile_size) or RAW_BITMAP_H -- or (tile_h_scale * RAW_BITMAP_H)
+	
+	local hor_size = w - (tile_w + tile_w)
+	local ver_size = h - (tile_h + tile_h)
 	
 	local color = Color.black
 	local texture = "guis/textures/hevhud_bgbox_atlas"
@@ -104,127 +112,127 @@ function HEVHUDBase.CreateBGBox(parent,w,h,panel_config,child_config)
 		name = "corner_topleft",
 		x = 0,
 		y = 0,
-		w = bitmap_w,
-		h = bitmap_h,
+		w = tile_w,
+		h = tile_h,
 		valign = "top",
 		halign = "left",
 		color = color,
 		texture = texture,
 		texture_rect = {
 			0,0,
-			bitmap_w,bitmap_h
+			RAW_BITMAP_W,RAW_BITMAP_H
 		}
 	})
 	local corner_bottomleft = panel:bitmap({
-		name = "corner_topleft",
+		name = "corner_bottomleft",
 		x = 0,
-		y = h - bitmap_h,
-		w = bitmap_w,
-		h = bitmap_h,
+		y = h - tile_h,
+		w = tile_w,
+		h = tile_h,
 		valign = "bottom",
 		halign = "left",
 		color = color,
 		texture = texture,
 		texture_rect = {
-			0,bitmap_h,
-			bitmap_w,-bitmap_h
+			0,RAW_BITMAP_H,
+			RAW_BITMAP_W,-RAW_BITMAP_H
 		}
 	})
 	local corner_topright = panel:bitmap({
 		name = "corner_topright",
-		x = w - bitmap_w,
+		x = w - tile_w,
 		y = 0,
-		w = bitmap_w,
-		h = bitmap_h,
+		w = tile_w,
+		h = tile_h,
 		valign = "top",
 		halign = "right",
 		color = color,
 		texture = texture,
 		texture_rect = {
-			bitmap_w,0,
-			-bitmap_w,bitmap_h
+			RAW_BITMAP_W,0,
+			-RAW_BITMAP_W,RAW_BITMAP_H
 		}
 	})
 	local corner_bottomright = panel:bitmap({
 		name = "corner_bottomright",
-		x = w - bitmap_w,
-		y = h - bitmap_h,
-		w = bitmap_w,
-		h = bitmap_h,
+		x = w - tile_w,
+		y = h - tile_h,
+		w = tile_w,
+		h = tile_h,
 		valign = "bottom",
 		halign = "right",
 		color = color,
 		texture = texture,
 		texture_rect = {
-			bitmap_w,bitmap_h,
-			-bitmap_w,-bitmap_h
+			RAW_BITMAP_W,RAW_BITMAP_H,
+			-RAW_BITMAP_W,-RAW_BITMAP_H
 		}
 	})
 	local edge_left = panel:bitmap({
 		name = "edge_left",
 		x = 0,
-		y = bitmap_h,
-		w = bitmap_w,
+		y = tile_h,
+		w = tile_w,
 		h = ver_size,
 		valign = "grow",
 		halign = "left",
 		color = color,
 		texture = texture,
 		texture_rect = {
-			0,bitmap_h,
-			bitmap_w,bitmap_h
+			0,RAW_BITMAP_H,
+			RAW_BITMAP_W,RAW_BITMAP_H
 		}
 	})
 	local edge_right = panel:bitmap({
 		name = "edge_right",
-		x = w - bitmap_w,
-		y = bitmap_h,
-		w = bitmap_w,
+		x = w - tile_w,
+		y = tile_h,
+		w = tile_w,
 		h = ver_size,
 		valign = "grow",
 		halign = "right",
 		texture = texture,
 		color = color,
 		texture_rect = {
-			bitmap_w,bitmap_h,
-			-bitmap_w,bitmap_h
+			RAW_BITMAP_W,RAW_BITMAP_H,
+			-RAW_BITMAP_W,RAW_BITMAP_H
 		}
 	})
 	local edge_top = panel:bitmap({
 		name = "edge_top",
-		x = bitmap_w,
+		x = tile_w,
 		y = 0,
 		w = hor_size,
-		h = bitmap_h,
+		h = tile_h,
 		valign = "top",
 		halign = "grow",
 		color = color,
 		texture = texture,
 		texture_rect = {
-			bitmap_w,0,
-			bitmap_w,bitmap_h
+			RAW_BITMAP_W,0,
+			RAW_BITMAP_W,RAW_BITMAP_H
 		}
 	})
 	local edge_bottom = panel:bitmap({
 		name = "edge_bottom",
-		x = bitmap_w,
-		y = h - bitmap_h,
+		x = tile_w,
+		y = h - tile_h,
 		w = hor_size,
-		h = bitmap_h,
+		h = tile_h,
 		valign = "bottom",
 		halign = "grow",
 		color = color,
 		texture = texture,
 		texture_rect = {
-			bitmap_w,bitmap_h,
-			bitmap_w,-bitmap_h
+			RAW_BITMAP_W,RAW_BITMAP_H,
+			RAW_BITMAP_W,-RAW_BITMAP_H
 		}
 	})
 	
 	local center = panel:bitmap({
 		name = "center",
-		x = bitmap_w,
-		y = bitmap_h,
+		x = tile_w,
+		y = tile_h,
 		w = hor_size,
 		h = ver_size,
 		valign = "grow",
@@ -232,8 +240,8 @@ function HEVHUDBase.CreateBGBox(parent,w,h,panel_config,child_config)
 		color = color,
 		texture = texture,
 		texture_rect = {
-			bitmap_w,bitmap_h,
-			bitmap_w,-bitmap_h
+			RAW_BITMAP_W,RAW_BITMAP_H,
+			RAW_BITMAP_W,-RAW_BITMAP_H
 		}
 	})
 	

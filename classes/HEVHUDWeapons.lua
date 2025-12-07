@@ -86,7 +86,7 @@ function HEVHUDWeapons:recreate_hud()
 	self._main_ammo = main_ammo
 	
 	-- deal with placement later
-	self._main_ammo_bgbox = self.CreateBGBox(main_ammo,nil,nil,self._BGBOX_PANEL_CONFIG,self._BGBOX_TILE_CONFIG)
+	self._main_ammo_bgbox = self.CreateBGBox(main_ammo,nil,self._BGBOX_PANEL_CONFIG,self._BGBOX_TILE_CONFIG)
 	local ammo_name = main_ammo:text({
 		name = "ammo_name",
 		text = managers.localization:text("hevhud_hud_ammo"),
@@ -160,7 +160,7 @@ function HEVHUDWeapons:recreate_hud()
 		layer = 1
 	})
 	self._underbarrel_ammo = underbarrel_ammo
-	self._underbarrel_ammo_bgbox = self.CreateBGBox(underbarrel_ammo,nil,nil,self._BGBOX_PANEL_CONFIG,self._BGBOX_TILE_CONFIG)
+	self._underbarrel_ammo_bgbox = self.CreateBGBox(underbarrel_ammo,nil,self._BGBOX_PANEL_CONFIG,self._BGBOX_TILE_CONFIG)
 
 	local underbarrel_icon = underbarrel_ammo:text({
 		name = "underbarrel_icon",
@@ -212,7 +212,7 @@ function HEVHUDWeapons:recreate_hud()
 	
 	self._grenades = grenades
 	
-	self._grenades_ammo_bgbox = self.CreateBGBox(grenades,nil,nil,self._BGBOX_PANEL_CONFIG,self._BGBOX_TILE_CONFIG)
+	self._grenades_ammo_bgbox = self.CreateBGBox(grenades,nil,self._BGBOX_PANEL_CONFIG,self._BGBOX_TILE_CONFIG)
 	
 	grenades:bitmap({
 		name = "icon",
@@ -303,7 +303,7 @@ function HEVHUDWeapons:recreate_hud()
 		layer = 1,
 		visible = false
 	})
-	self.CreateBGBox(deployable_1,nil,nil,self._BGBOX_PANEL_CONFIG,self._BGBOX_TILE_CONFIG)
+	self.CreateBGBox(deployable_1,nil,self._BGBOX_PANEL_CONFIG,self._BGBOX_TILE_CONFIG)
 	
 	deployable_1:bitmap({
 		name = "icon",
@@ -344,7 +344,7 @@ function HEVHUDWeapons:recreate_hud()
 		visible = false
 	})
 	deployable_2:set_right(deployable_1:left() + vars.DEPLOYABLE_HOR_MARGIN)
-	self.CreateBGBox(deployable_2,nil,nil,self._BGBOX_PANEL_CONFIG,self._BGBOX_TILE_CONFIG)
+	self.CreateBGBox(deployable_2,nil,self._BGBOX_PANEL_CONFIG,self._BGBOX_TILE_CONFIG)
 	deployable_2:bitmap({
 		name = "icon",
 		texture = "guis/textures/hevhud_icons", -- placeholder image

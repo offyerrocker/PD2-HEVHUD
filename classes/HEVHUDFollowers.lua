@@ -44,7 +44,7 @@ function HEVHUDFollowers:recreate_hud()
 		h = vars.FOLLOWERS_H
 	})
 	
-	self._bgbox = self.CreateBGBox(self._panel,nil,nil,self._BGBOX_PANEL_CONFIG,self._BGBOX_TILE_CONFIG)
+	self._bgbox = self.CreateBGBox(self._panel,nil,self._BGBOX_PANEL_CONFIG,self._BGBOX_TILE_CONFIG)
 	
 	self._panel:text({
 		name = "name",

@@ -248,6 +248,7 @@ function HEVHUD:CreateHUD(parent_hud)
 	self._hud_pickup = HEVHUDCore:require("classes/HEVHUDPickup"):new(hl2,settings,config) -- special equipment and ammo pickups
 	self._hud_presenter = HEVHUDCore:require("classes/HEVHUDPresenter"):new(hl2,settings,config)
 	self._hud_objectives = HEVHUDCore:require("classes/HEVHUDObjectives"):new(hl2,settings,config)
+	self._hud_ability = HEVHUDCore:require("classes/HEVHUDAbility"):new(hl2,settings,config)
 	self._teammate_panels = {}
 	
 	self:CreateTeammatesPanel(hl2) -- create separate panel to hold each individual teammate panel

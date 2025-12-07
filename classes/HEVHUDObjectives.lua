@@ -37,7 +37,7 @@ function HEVHUDObjectives:recreate_hud()
 		layer = 1
 	})
 	self._corner_panel = corner_panel
-	self._corner_bgbox = self.CreateBGBox(corner_panel,nil,nil,self._BGBOX_PANEL_CONFIG,self._BGBOX_TILE_CONFIG)
+	self._corner_bgbox = self.CreateBGBox(corner_panel,nil,self._BGBOX_PANEL_CONFIG,self._BGBOX_TILE_CONFIG)
 	
 	local objective_panel = corner_panel:panel({
 		name = "objective_panel",

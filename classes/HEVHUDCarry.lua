@@ -47,7 +47,7 @@ function HEVHUDCarry:recreate_hud()
 		visible = false
 	})
 	self._bag = bag
-	self._bag_bgbox = self.CreateBGBox(bag,nil,nil,self._BGBOX_PANEL_CONFIG,self._BGBOX_TILE_CONFIG)
+	self._bag_bgbox = self.CreateBGBox(bag,nil,self._BGBOX_PANEL_CONFIG,self._BGBOX_TILE_CONFIG)
 	
 	local texture,texture_rect = tweak_data.hud_icons:get_icon_data("pd2_loot")
 	local bag_icon = bag:bitmap({

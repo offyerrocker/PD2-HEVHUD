@@ -93,7 +93,7 @@ function HEVHUDTeammate:recreate_hud()
 	local vars = self._config.Teammate
 	local panel = self._panel
 	panel:set_size(vars.TEAMMATE_W,vars.TEAMMATE_H)
-	self._bgbox = self.CreateBGBox(panel,nil,nil,self._BGBOX_PANEL_CONFIG,self._BGBOX_TILE_CONFIG)
+	self._bgbox = self.CreateBGBox(panel,nil,self._BGBOX_PANEL_CONFIG,self._BGBOX_TILE_CONFIG)
 	
 	-- shows custody/downed/tasered/low ammo
 	local status = panel:panel({
