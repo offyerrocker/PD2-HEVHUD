@@ -121,7 +121,7 @@ function HEVHUDObjectives:_add_special_equipment(id,amount,icon_id,skip_sort)
 	id = tostring(id)
 	local equipment = self._mission_equipment:child(id)
 	local amount_str
-	if not amount or tostring(amount) == "1" then
+	if not amount or (amount == 1 and self._config.General.DISPLAY_LABEL_USE_IMPLICIT_ONE) then -- or amount == 0
 		amount_str = ""
 	else
 		amount_str = string.format("%i",amount)
