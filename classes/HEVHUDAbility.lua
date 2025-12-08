@@ -142,7 +142,7 @@ function HEVHUDAbility:set_ability_timer(time_left,time_total)
 	time_total = time_total or time_left
 	self._ability_box:show()
 	
-	local duration = 0.5
+	local duration = self._config.Ability.ANIM_ABILITY_HIDE_DURATION
 	
 	local function cb_done()
 		self._ability_box:animate(AnimateLibrary.animate_alpha_lerp,function(o)
