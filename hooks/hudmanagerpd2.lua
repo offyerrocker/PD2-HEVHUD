@@ -127,6 +127,9 @@ Hooks:PostHook(HUDManager,"set_player_grenade_cooldown","hevhud_hudmanager_set_g
 	HEVHUD._hud_weapons:set_grenades_cooldown(data)
 end)
 
+Hooks:PostHook(HUDManager,"set_player_ability_radial","hevhud_hudmanager_player_set_ability_radial",function(self,data)
+	HEVHUD._hud_ability:set_ability_timer(data.current,data.total)
+end)
 Hooks:PostHook(HUDManager,"activate_teammate_ability_radial","hevhud_hudmanager_teammate_activate_ability_radial",function(self,i,time_left,time_total)
 	-- throwable ability (kingpin, pecm, etc)
 	if i == HUDManager.PLAYER_PANEL then
