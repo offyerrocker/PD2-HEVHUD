@@ -567,6 +567,19 @@ function HEVHUD:SetTeammateDeployableAmountFromString(id,index,data)
 	self._teammate_panels[id]:set_deployable_second_amount_by_index(index,data)
 end
 
+function HEVHUD:SetTeammateTimer(i,timer)
+	self._teammate_panels[i]:start_status_timer(timer)
+end
+function HEVHUD:PauseTeammateTimer(i,is_paused)
+	self._teammate_panels[i]:pause_status_timer(is_paused)
+end
+function HEVHUD:StopTeammateTimer(i)
+	self._teammate_panels[i]:stop_status_timer()
+end
+function HEVHUD:IsTeammateTimerRunning(i)
+	return self._teammate_panels[i]:is_timer_running()
+end
+
 function HEVHUD:AddMinion(ukey,unit)
 	self._hud_followers:add_follower(ukey)
 	if alive(unit) then

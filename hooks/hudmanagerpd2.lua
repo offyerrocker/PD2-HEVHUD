@@ -34,6 +34,21 @@ Hooks:PostHook(HUDManager,"set_teammate_name","hevhud_hudmanager_set_teammate_na
 	HEVHUD:SetTeammateName(i,name)
 end)
 
+
+Hooks:OverrideFunction(HUDManager,"start_teammate_timer",function(self,i,t)
+	HEVHUD:SetTeammateTimer(i,t)
+end)
+Hooks:OverrideFunction(HUDManager,"pause_teammate_timer",function(self,i,is_paused)
+	HEVHUD:PauseTeammateTimer(i,is_paused)
+end)
+Hooks:OverrideFunction(HUDManager,"stop_teammate_timer",function(self,i)
+	HEVHUD:StopTeammateTimer(i)
+end)
+Hooks:OverrideFunction(HUDManager,"is_teammate_timer_running",function(self,i)
+	HEVHUD:IsTeammateTimerRunning(i)
+end)
+
+
 -- VITALS
 Hooks:PostHook(HUDManager,"set_player_health","hevhud_hudmanager_set_player_health",function(self,data)
 	HEVHUD._hud_vitals:set_health(data.current,data.total,data.revives)

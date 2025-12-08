@@ -105,6 +105,26 @@ function HEVHUDTeammate:recreate_hud()
 		visible = false,
 		layer = 3
 	})
+	
+	local status_timer = status:text({
+		name = "status_timer",
+		text = "30",
+		font = vars.STATUS_TIMER_FONT_NAME,
+		font_size = vars.STATUS_TIMER_FONT_SIZE,
+		x = vars.STATUS_TIMER_X,
+		y = vars.STATUS_TIMER_Y + vars.STATUS_TIMER_FONT_SIZE/2,
+		w = vars.STATUS_ICON_W,
+		h = vars.STATUS_ICON_H,
+		blend_mode = "subtract",
+--		vertical = "center",
+		align = "center",
+--		valign = "grow",
+--		halign = "grow",
+		color = Color.black,
+--		color = self._COLOR_YELLOW,
+		layer = 4
+	})
+	
 	local state_icon_texture,state_icon_rect = HEVHUD:GetIconData("triangle_line")
 	status:bitmap({
 		name = "status_icon",
@@ -125,7 +145,7 @@ function HEVHUDTeammate:recreate_hud()
 		h = status:h(),
 		halign = "grow",
 		valign = "grow",
-		layer = 3,
+		layer = 2,
 		visible = false
 	})
 	local ammo_icon_texture,ammo_icon_rect = HEVHUD:GetIconData("teammate_ammo")
@@ -708,6 +728,54 @@ function HEVHUDTeammate:set_deployable_second_amount_by_index(index,data) -- onl
 		deployable:set_visible(self._deployable_state)
 	end
 	self:check_panel_state()
+end
+
+function HEVHUDTeammate:clear_status_timer_thread()
+	self._status_timer_thread = nil
+end
+
+function HEVHUDTeammate:start_status_timer(timer)
+	-- note: assumes that timer is always preceded by a condition icon,
+	-- so setting the timer alone will not trigger the status panel showing
+	local status_timer = self._status_panel:child("status_timer")
+	status_timer:stop()
+	status_timer:show()
+--	self._status:child("status_timer"):animate(AnimateLibrary.animate_timer,nil,timer,"%02i")
+	self._status_timer_thread = status_timer:animate(
+		function(o,cb,duration,format_str)
+			format_str = format_str or "%i"
+			repeat
+				if not self._status_timer_paused then
+					o:set_text(string.format(format_str,math.round(duration)))
+					duration = duration - coroutine.yield()
+				else
+					coroutine.yield()
+				end
+			until duration <= 0
+			o:set_text(string.format(format_str,0))
+			if cb then
+				cb(o)
+			end
+		end,
+		callback(self,self,"clear_status_timer_thread"),
+		timer,
+		"%02i"
+	)
+end
+
+function HEVHUDTeammate:stop_status_timer()
+	self:clear_status_timer_thread()
+	local status_timer = self._status_panel:child("status_timer")
+	status_timer:stop()
+	status_timer:hide()
+end
+
+function HEVHUDTeammate:pause_status_timer(is_paused)
+	self._status_timer_paused = is_paused
+end
+
+function HEVHUDTeammate:is_timer_running()
+	return self._status_timer_thread and true or false
 end
 
 function HEVHUDTeammate:set_name(name)

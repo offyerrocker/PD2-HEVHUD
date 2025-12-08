@@ -252,4 +252,16 @@ function AnimateLibrary.animate_text_mission(o,cb,text,total_duration,col_1,col_
 end
 
 
+function AnimateLibrary.animate_timer(o,cb,duration,format_str)
+	format_str = format_str or "%i"
+	repeat
+		o:set_text(string.format(format_str,duration))
+		duration = duration - coroutine.yield()
+	until duration <= 0
+	o:set_text(string.format(format_str,0))
+	if cb then
+		cb(o)
+	end
+end
+
 return AnimateLibrary
