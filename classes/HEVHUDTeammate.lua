@@ -746,7 +746,9 @@ function HEVHUDTeammate:set_health(data)
 	vitals_icon_fill:set_image(vitals_icon_fill_texture,unpack(vitals_icon_fill_rect))
 	vitals_icon_fill:set_bottom(self._vitals:h())
 	
-	self:_set_revives(data.revives)
+	if data.revives then
+		self:_set_revives(data.revives)
+	end
 end
 
 function HEVHUDTeammate:set_armor(data)
