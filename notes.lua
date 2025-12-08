@@ -2,6 +2,12 @@
 TODO:
 	
 	BUGS
+		Realign teammates on expand
+		firemode reappearing
+		mission text overflow
+		mission eq not sorting
+		incorrect teammate eq amounts
+		
 		hudobjective equipment removal is being interrupted, leaving behind ghosts
 		hudpresenter is getting clogged again
 		need better assets for underbarrel weapons in ammo pickup hud
