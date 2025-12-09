@@ -158,13 +158,13 @@ end)
 -- SPECIAL EQUIPMENT (aka MISSION EQUIPMENT)
 Hooks:PostHook(HUDManager,"add_special_equipment","hevhud_hudmanager_set_special_equipment",function(self,data)
 	HEVHUD._hud_objectives:add_special_equipment(data)
-	if HEVHUDCore.config.Pickup.MISSION_EQ_ENABLED then
+	if HEVHUDCore.config.Hint.MISSION_EQ_ENABLED then
 		HEVHUD._hud_hint:add_special_equipment(data)
 	end
 end)
 Hooks:PostHook(HUDManager,"set_special_equipment_amount","hevhud_hudmanager_set_special_equipment_amount",function(self,equipment_id,amount)
 	HEVHUD._hud_objectives:set_special_equipment_amount(equipment_id,amount)
-	if HEVHUDCore.config.Pickup.MISSION_EQ_ENABLED then
+	if HEVHUDCore.config.Hint.MISSION_EQ_ENABLED then
 		HEVHUD._hud_hint:set_special_equipment_amount(equipment_id,amount)
 	end
 end)
