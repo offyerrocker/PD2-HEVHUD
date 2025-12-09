@@ -314,7 +314,9 @@ function HEVHUDObjectives:check_resize_corner()
 		if amount_text:visible() then
 			h = h + vars.OBJECTIVE_AMOUNT_LABEL_FONT_SIZE
 			margin = vars.OBJECTIVE_AMOUNT_LABEL_VER_MARGIN -- + vars.OBJECTIVE_AMOUNT_LABEL_Y
---			local tx,ty,tw,th = amount_text:text_rect()
+
+			local tx,ty,tw,th = amount_text:text_rect()
+			
 --			h = ty + th + vars.OBJECTIVE_AMOUNT_LABEL_VER_MARGIN
 --			Print("amount visible",ty,th,h)
 		else
