@@ -317,6 +317,7 @@ function HEVHUDObjectives:check_resize_corner()
 
 			local tx,ty,tw,th = amount_text:text_rect()
 			
+			self._corner_panel:set_w(vars.OBJECTIVES_W,math.max(tx + tw + vars.OBJECTIVE_AMOUNT_LABEL_HOR_MARGIN))
 --			h = ty + th + vars.OBJECTIVE_AMOUNT_LABEL_VER_MARGIN
 --			Print("amount visible",ty,th,h)
 		else
