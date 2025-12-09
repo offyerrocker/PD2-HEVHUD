@@ -253,20 +253,17 @@ function HEVHUD:CreateHUD(parent_hud)
 	
 	self:CreateTeammatesPanel(hl2) -- create separate panel to hold each individual teammate panel
 	
-	--self._hud_hint = HEVHUDCore:require("classes/HEVHUDHint"):new(hl2,settings,config)
 	--self._hud_objectives = HEVHUDCore:require("classes/HEVHUDObjectives"):new(hl2,settings,config)
 	
 	local HEVHUDTeammate = HEVHUDCore:require("classes/HEVHUDTeammate")
-	local y = config.Teammate.TEAMMATE_Y
 	for i=1,4 do 
 		local teammate = HEVHUDTeammate:new(hl2,settings,config,i)
 		self._teammate_panels[i] = teammate 
-		teammate._panel:set_y(y + config.Teammate.TEAMMATE_VER_MARGIN)
-		y = teammate._panel:bottom()
 		if i == HUDManager.PLAYER_PANEL then
 			teammate:hide()
 		end
 	end
+	self:SortTeammatesPanels()
 end
 
 function HEVHUD:CreateTeammatesPanel(parent)
@@ -290,6 +287,20 @@ end
 function HEVHUD:RemoveTeammatePanel(character_name,player_name,ai,peer_id)
 end
 --]]
+
+-- move teammates panels (triggered when teammate h changes)
+function HEVHUD:SortTeammatesPanels()
+	local AnimateLibrary = HEVHUDCore:require("classes/AnimateLibrary")
+	
+	local config = HEVHUDCore.config
+	local y = config.Teammate.TEAMMATE_Y
+	for id,teammate in ipairs(self._teammate_panels) do
+		teammate._panel:stop()
+		teammate._panel:animate(AnimateLibrary.animate_move_lerp,nil,0.5,nil,y,nil,nil)
+--		teammate._panel:set_y(y)
+		y = y + teammate:panel_height() + config.Teammate.TEAMMATE_VER_MARGIN
+	end
+end
 
 function HEVHUD:UpdateGame(t,dt)
 	-- game update

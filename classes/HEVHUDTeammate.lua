@@ -12,6 +12,7 @@ function HEVHUDTeammate:init(panel,settings,config,i,...)
 		layer = 1,
 		visible = true
 	})
+	self._panel_height = 0
 --	self._panel:rect({color=Color.red,alpha=0.1,name="debug"})
 	self._id = i
 	
@@ -467,6 +468,10 @@ function HEVHUDTeammate:recreate_hud()
 	-- deployables
 	-- mission equipment
 	self:check_panel_state()
+end
+
+function HEVHUDTeammate:panel_height()
+	return self._panel_height
 end
 
 function HEVHUDTeammate:add_special_equipment(data)
@@ -1000,7 +1005,10 @@ function HEVHUDTeammate:check_panel_state()
 			x = self._mission_equipment:right()
 		end
 	end
-	
+	if self._panel_height ~= h then
+		self._panel_height = h
+		HEVHUD:SortTeammatesPanels()
+	end
 	self._panel:set_h(h)
 end
 

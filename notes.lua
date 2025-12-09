@@ -2,17 +2,12 @@
 TODO:
 	
 	BUGS
-		Realign teammates on expand
-		firemode reappearing
-		mission text overflow
-		mission eq not sorting
-		incorrect teammate eq amounts
+		firemode reappearing (as client)
+		mission eq not sorting (fixed?)
 		
-		hudobjective equipment removal is being interrupted, leaving behind ghosts
-		hudpresenter is getting clogged again
 		need better assets for underbarrel weapons in ammo pickup hud
 		possible issue: bgbox flashing may interfere with equip/unequip alpha anim?
-		hit display lasts too long- maybe custom solution that tracks the attacker unit?
+		
 		
 		
 	- scale bgbox
@@ -21,12 +16,11 @@ TODO:
 		Find a font that works for teammate names (support wide variety of characters)
 		Find a font that works for small readouts eg. teammate ammo counters/equipment counter- something bold, prob.
 		Better zipties icon
-		
 	scanline effect
 		either generic blob oval, or special special font (not recommended- prone to clipping)
 	Ammo Pickup in HUD
-		show grenade pickups from fully loaded aced
 	General
+		pager counter in stealth?
 	Vitals
 		Maniac
 		Leech
@@ -36,12 +30,14 @@ TODO:
 		Neater revives counter (needs design too)
 	Weapons
 	Teammates
-		- down/custody timer
+		- maybe another text entry for interacting or bag carry name?
+		- waiting
 		- interaction
-		- ability timer
+		- ability/swansong timer
 		- colors need to be tweaked; white should probably be normal, instead of orange, otherwise it blends too much
 	Equipment
 		player deployable icon needs to be organized; icon and secondary amount are not centered
+			tripmine dual amount is hard to read
 		Cable Ties
 	Special crosshair (customizable target)
 		needs menu options
@@ -58,6 +54,8 @@ TODO:
 		???
 	Custom drag+drop?
 	HUDHitDamage
+		hit display lasts too long- maybe custom solution that tracks the attacker unit?
+		maybe need a minimum display instead of just hiding it so it doesn't "reappear" as a new hit when you look away and back
 		* simple radial red line to show hit direction?
 			tf2 style
 
