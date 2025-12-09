@@ -32,6 +32,7 @@ HEVHUDCore.config = { -- Loaded from hevhud_vars.ini
 	--Player = {},
 	General = {},
 	Teammate = {},
+	Waiting = {},
 	Vitals = {},
 	Ability = {},
 	Weapons = {},
@@ -49,6 +50,7 @@ HEVHUDCore.config = { -- Loaded from hevhud_vars.ini
 HEVHUDCore._sort_config = { -- order to sort ini file during write
 	"General",
 	"Teammate",
+	"Waiting",
 	"Vitals",
 	"Ability",
 	"Weapons",

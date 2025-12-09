@@ -29,6 +29,7 @@
 		<texture path="guis/textures/hevhud_hitdirection" />
 		<texture path="guis/textures/hevhud_icons" />
 		<texture path="guis/textures/hevhud_bgbox_atlas" />
+		<texture path="guis/textures/hevhud_waiting_legend" />
 		
 	</AddFiles>
 	<!--

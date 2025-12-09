@@ -56,6 +56,18 @@ function AnimateLibrary.animate_color_oscillate(o,speed,color_1,color_2)
 --	o:set_color(color_2)
 end
 
+-- pulses forever, until stopped
+function AnimateLibrary.animate_alpha_oscillate(o,speed,alpha_1,alpha_2)
+	local d_alpha = alpha_2 - alpha_1
+	local t = 0
+	speed = speed * 180 -- speed becomes seconds/period
+	while true do 
+		local s = math.sin(speed*t)
+		o:set_color(alpha_1 + d_alpha*s*s)
+		t = t + coroutine.yield()
+	end
+end
+
 -- grow height, align to bottom
 function AnimateLibrary.animate_grow_h_bottom(o,cb,duration,from_h,to_h)
 	local bottom = o:bottom()

@@ -54,6 +54,7 @@ function HEVHUDTeammate:init(panel,settings,config,i,...)
 	self._zipties_state = false
 	self._equipment_state = false
 	self._bag_state = false
+	self._waiting_state = false
 end
 
 function HEVHUDTeammate:setup(settings,config,...)
@@ -462,12 +463,67 @@ function HEVHUDTeammate:recreate_hud()
 	self._mission_equipment = mission_equipment_bar
 	
 	
-	-- vitals icon (w/ visual shield/health/revives indicator)
-	-- weapons ammo visual indicator (conditional)
-	-- grenades, ties
-	-- deployables
-	-- mission equipment
+	-- waiting panel
+	--[[
+	local waiting_panel = panel:panel({
+		name = "waiting_panel",
+		w = vars.MISSION_EQ_W,
+		h = vars.MISSION_EQ_H,
+		x = 0,
+		y = vars.MISSION_EQ_Y,
+		valign = "grow",
+		halign = "grow",
+		layer = 10,
+		visible = false
+	})
+	self._waiting_panel = waiting_panel
+	
+	waiting_panel:rect({
+		name = "bg",
+		valign = "grow",
+		halign = "grow",
+		color = Color.white,
+		blend_mode = "sub",
+		layer = 10
+	})
+	
+	waiting_panel:text({
+		name = "waiting_text",
+		text = "WWWWWWWWWWWWQWWW",
+		font = vars.NAME_LABEL_FONT_NAME,
+		font_size = vars.NAME_LABEL_FONT_SIZE,
+		x = vars.NAME_LABEL_X,
+		y = vars.NAME_LABEL_Y,
+		valign = "grow",
+		halign = "grow",
+		color = self._COLOR_YELLOW,
+		layer = 3
+	})
+	--]]
+	
+	
+	
 	self:check_panel_state()
+end
+
+function HEVHUDTeammate:set_waiting(is_waiting,peer)
+	self._waiting_state = is_waiting
+	--[[
+	waiting_panel:set_visible(is_waiting)
+	
+	
+	peer = peer or managers.network:session():peer(self._peer_id)
+	
+	local experience, color_ranges = managers.experience:gui_string(peer:level(), peer:rank(), color_range_offset)
+
+	local peer_name_string = " " .. peer:name()
+	local color_range_offset = utf8.len(peer_name_string) + 2
+	waiting_panel:child("waiting_text"):set_text(peer_name_string .. " (" .. experience .. ")")
+	--]]
+end
+
+function HEVHUDTeammate:is_waiting()
+	return self._waiting_state
 end
 
 function HEVHUDTeammate:panel_height()
@@ -1009,7 +1065,7 @@ function HEVHUDTeammate:check_panel_state()
 		end
 	end
 	
-	if self._bag_state or self._equipment_state then
+	if self._bag_state or self._equipment_state or self._waiting_state then
 		h = self._carry:bottom()
 		
 		local x = 0

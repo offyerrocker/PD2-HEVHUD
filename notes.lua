@@ -8,6 +8,7 @@ TODO:
 		need better assets for underbarrel weapons in ammo pickup hud
 		possible issue: bgbox flashing may interfere with equip/unequip alpha anim?
 		
+		mask up text clipping
 		
 		
 	- scale bgbox
@@ -43,7 +44,8 @@ TODO:
 		needs menu options
 	HL2 style loadout
 	Hints/Popups
-		ez
+		vertical margin
+		reduce h
 	Assault Banner
 		????
 	Hostages

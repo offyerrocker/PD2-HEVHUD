@@ -266,3 +266,52 @@ end)
 Hooks:OverrideFunction(HUDManager,"complete_objective",function(self,data)
 	HEVHUD._hud_objectives:complete_objective(data)
 end)
+
+
+-- WAITING LEGEND
+Hooks:OverrideFunction(HUDManager,"add_waiting",function(self, peer_id, override_index)
+	if not Network:is_server() then
+		return
+	end
+
+	local peer = managers.network:session():peer(peer_id)
+
+	if override_index then
+		self._waiting_index[peer_id] = override_index
+	end
+
+	local index = self:get_waiting_index(peer_id)
+	local panel = HEVHUD._teammate_panels[index]
+
+	if panel and peer then
+		--panel:set_waiting(true, peer)
+
+		if not HEVHUD._hud_waiting:is_set() then 
+			HEVHUD._hud_waiting:show_on(panel, peer)
+		end
+	end
+end)
+
+Hooks:OverrideFunction(HUDManager,"remove_waiting",function(self, peer_id)
+	if not Network:is_server() then
+		return
+	end
+	local index = self:get_waiting_index(peer_id)
+	self._waiting_index[peer_id] = nil
+--	local _ = self._teammate_panels[index] and self._teammate_panels[index]:set_waiting(false)
+
+	if HEVHUD._hud_waiting:peer() and peer_id == HEVHUD._hud_waiting:peer():id() then
+		HEVHUD._hud_waiting:turn_off()
+
+		for id, index in pairs(self._waiting_index) do
+			local panel = HEVHUD._teammate_panels[index]
+			local peer = managers.network:session():peer(id)
+
+			if panel then
+				HEVHUD._hud_waiting:show_on(panel, peer)
+
+				break
+			end
+		end
+	end
+end)
