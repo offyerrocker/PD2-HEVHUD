@@ -624,7 +624,7 @@ function HEVHUD:ShowAmmoPickup(slot,weapon_id,amount,override_ammo_char,override
 		weapon_texture,weapon_rect = self.GetWeaponBlackmarketIcon(weapon_id)
 	end
 	
-	self._hud_pickup:add_ammo_pickup(slot,amount,ammo_text,weapon_texture,weapon_rect)
+	self._hud_hint:add_ammo_pickup(slot,amount,ammo_text,weapon_texture,weapon_rect)
 end
 
 --[[
