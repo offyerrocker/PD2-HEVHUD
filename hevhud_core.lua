@@ -43,7 +43,6 @@ HEVHUDCore.config = { -- Loaded from hevhud_vars.ini
 	Assault = {},
 	TabScreen = {},
 	HitDirection = {},
-	Pickup = {},
 	Objectives = {},
 	Presenter = {}
 }
@@ -61,7 +60,6 @@ HEVHUDCore._sort_config = { -- order to sort ini file during write
 	"Assault",
 	"TabScreen",
 	"HitDirection",
-	"Pickup",
 	"Objectives",
 	"Presenter"
 }

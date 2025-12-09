@@ -30,7 +30,7 @@ end
 
 function HEVHUDPickup:setup(settings,config,...)
 	HEVHUDPickup.super.setup(self,settings,config,...)
-	self._MAX_POPUP_SLOTS = config.Pickup.PICKUP_POPUP_SLOTS_MAX
+	self._MAX_POPUP_SLOTS = config.Hint.PICKUP_POPUP_SLOTS_MAX
 end
 
 function HEVHUDPickup:recreate_hud()
@@ -49,7 +49,7 @@ end
 function HEVHUDPickup:_add_special_equipment(id,amount,icon_id)
 	if not id then return end
 	
-	local vars = self._config.Pickup
+	local vars = self._config.Hint
 	local panel_name = "pickup_equipment_" .. tostring(id)
 	local pickup = self._panel:child(panel_name)
 	
@@ -157,7 +157,7 @@ end
 
 
 function HEVHUDPickup:animate_pickup(panel,i)
-	local vars = self._config.Pickup
+	local vars = self._config.Hint
 	panel:stop()
 	panel:set_alpha(1)
 	panel:set_right(vars.PICKUPS_X + self._panel:w())
@@ -203,7 +203,7 @@ end
 
 -- weapon slot is not the same as anim slot
 function HEVHUDPickup:add_ammo_pickup(weapon_slot,amount,ammo_text,weapon_texture,weapon_rect)
-	local vars = self._config.Pickup
+	local vars = self._config.Hint
 	
 	local ICONS_FONT_NAME = self._config.General.ICONS_FONT_NAME
 	
@@ -316,7 +316,7 @@ function HEVHUDPickup:add_hint(params)
 	local text = params.text
 	local duration = params.time or 3
 	
-	local vars = self._config.Pickup
+	local vars = self._config.Hint
 	local popup = self._panel:panel({
 		name = "hint_" .. tostring(params),
 		w = vars.PICKUP_W,

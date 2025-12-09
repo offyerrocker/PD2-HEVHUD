@@ -22,11 +22,11 @@ Hooks:OverrideFunction(HUDManager,"show_hint",function(self,params)
 --	if params.event then
 --		self._sound_source:post_event(params.event)
 --	end
-	HEVHUD._hud_pickup:add_hint(params)
+	HEVHUD._hud_hint:add_hint(params)
 end)
 
 Hooks:OverrideFunction(HUDManager,"stop_hint",function(self)
-	HEVHUD._hud_pickup:stop_hint()
+	HEVHUD._hud_hint:stop_hint()
 end)
 
 -- TEAMMATES
@@ -159,13 +159,13 @@ end)
 Hooks:PostHook(HUDManager,"add_special_equipment","hevhud_hudmanager_set_special_equipment",function(self,data)
 	HEVHUD._hud_objectives:add_special_equipment(data)
 	if HEVHUDCore.config.Pickup.MISSION_EQ_ENABLED then
-		HEVHUD._hud_pickup:add_special_equipment(data)
+		HEVHUD._hud_hint:add_special_equipment(data)
 	end
 end)
 Hooks:PostHook(HUDManager,"set_special_equipment_amount","hevhud_hudmanager_set_special_equipment_amount",function(self,equipment_id,amount)
 	HEVHUD._hud_objectives:set_special_equipment_amount(equipment_id,amount)
 	if HEVHUDCore.config.Pickup.MISSION_EQ_ENABLED then
-		HEVHUD._hud_pickup:set_special_equipment_amount(equipment_id,amount)
+		HEVHUD._hud_hint:set_special_equipment_amount(equipment_id,amount)
 	end
 end)
 Hooks:PostHook(HUDManager,"remove_special_equipment","hevhud_hudmanager_remove_special_equipment",function(self,equipment_id)
