@@ -768,6 +768,14 @@ function HEVHUDTeammate:start_status_timer(timer)
 	)
 end
 
+-- manual per-frame status timer feed;
+-- like downed timer, also assume the condition is set separately before this call
+function HEVHUDTeammate:feed_status_timer(timer)
+	local status_timer = self._status_panel:child("status_timer")
+	status_timer:set_visible(timer > 0)
+	status_timer:set_text(string.format("%02i",math.round(timer)))
+end
+
 function HEVHUDTeammate:stop_status_timer()
 	self:clear_status_timer_thread()
 	local status_timer = self._status_panel:child("status_timer")
@@ -961,6 +969,15 @@ function HEVHUDTeammate:set_peer_color(color)
 	end
 end
 
+function HEVHUDTeammate:animate_move_y(y)
+	if self._anim_thread_teammate_panel_sort_y then
+		self._panel:stop(self._anim_thread_teammate_panel_sort_y)
+		self._anim_thread_teammate_panel_sort_y = nil
+	end
+	
+	self._anim_thread_teammate_panel_sort_y = self._panel:animate(AnimateLibrary.animate_move_lerp,function() self._anim_thread_teammate_panel_sort_y = nil end,self._config.Teammate.ANIM_TEAMMATE_SORT_Y_DURATION,nil,y,nil,nil)
+end
+
 function HEVHUDTeammate:check_panel_state()
 	local h = self._nameplate:bottom() -- first row h
 	
@@ -1007,9 +1024,14 @@ function HEVHUDTeammate:check_panel_state()
 	end
 	if self._panel_height ~= h then
 		self._panel_height = h
+		
+		if self._anim_thread_panel_h then
+			self._panel:stop(self._anim_thread_panel_h)
+		end
+		self._anim_thread_panel_h = self._panel:animate(AnimateLibrary.animate_grow_h_top,function() self._anim_thread_panel_h = nil end,self._config.Teammate.ANIM_TEAMMATE_GROW_H_DURATION,nil,h)
+		
 		HEVHUD:SortTeammatesPanels()
 	end
-	self._panel:set_h(h)
 end
 
 return HEVHUDTeammate

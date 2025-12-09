@@ -295,9 +295,7 @@ function HEVHUD:SortTeammatesPanels()
 	local config = HEVHUDCore.config
 	local y = config.Teammate.TEAMMATE_Y
 	for id,teammate in ipairs(self._teammate_panels) do
-		teammate._panel:stop()
-		teammate._panel:animate(AnimateLibrary.animate_move_lerp,nil,0.5,nil,y,nil,nil)
---		teammate._panel:set_y(y)
+		teammate:animate_move_y(y)
 		y = y + teammate:panel_height() + config.Teammate.TEAMMATE_VER_MARGIN
 	end
 end
