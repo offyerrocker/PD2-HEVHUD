@@ -237,7 +237,7 @@ function HEVHUDWaiting:recreate_hud()
 		y = vars.EQBOX_LABEL_Y,
 		font = vars.LABEL_FONT_NAME,
 		font_size = vars.LABEL_FONT_SIZE,
-		color = Color.black,
+		color = Color("ababab"),
 		layer = 3
 	})
 	
@@ -278,7 +278,7 @@ function HEVHUDWaiting:recreate_hud()
 		y = vars.EQBOX_LABEL_Y,
 		font = vars.LABEL_FONT_NAME,
 		font_size = vars.LABEL_FONT_SIZE,
-		color = Color.black,
+		color = Color("ababab"),
 		layer = 3
 	})
 	
@@ -318,7 +318,7 @@ function HEVHUDWaiting:recreate_hud()
 		y = vars.EQBOX_LABEL_Y,
 		font = vars.LABEL_FONT_NAME,
 		font_size = vars.LABEL_FONT_SIZE,
-		color = Color.black,
+		color = Color("ababab"),
 		layer = 3
 	})
 	
@@ -358,7 +358,7 @@ function HEVHUDWaiting:recreate_hud()
 		y = vars.EQBOX_LABEL_Y,
 		font = vars.LABEL_FONT_NAME,
 		font_size = vars.LABEL_FONT_SIZE,
-		color = Color.black,
+		color = Color("ababab"),
 		layer = 3
 	})
 end

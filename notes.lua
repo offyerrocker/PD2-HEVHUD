@@ -13,6 +13,18 @@ TODO:
 		
 	- scale bgbox
 	
+	
+	FINAL STRETCH!
+		- Cable Ties
+		- Hostages
+		- Teammate interaction
+		- Teammate ability/swansong
+		
+		- Readability pass
+	
+	
+	
+	
 	Assets
 		Find a font that works for teammate names (support wide variety of characters)
 		Find a font that works for small readouts eg. teammate ammo counters/equipment counter- something bold, prob.
@@ -32,7 +44,6 @@ TODO:
 	Weapons
 	Teammates
 		- maybe another text entry for interacting or bag carry name?
-		- waiting
 		- interaction
 		- ability/swansong timer
 		- colors need to be tweaked; white should probably be normal, instead of orange, otherwise it blends too much
