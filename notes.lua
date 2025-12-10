@@ -3,8 +3,8 @@ TODO:
 	
 	BUGS
 		
-		prompted drop-in clients do not have their equipment amounts set properly
-		
+		prompted drop-in clients do not have their loadout amounts set properly
+		eq not sorting properly after use [index 1 used, index 2 not sorted]
 		firemode reappearing (as client)
 		
 		need better assets for underbarrel weapons in ammo pickup hud
@@ -13,7 +13,6 @@ TODO:
 	
 	FINAL STRETCH!
 		- Cable Ties
-		- Hostages
 		- Teammate interaction
 		- Teammate ability/swansong
 		
