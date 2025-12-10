@@ -2,6 +2,9 @@
 TODO:
 	
 	BUGS
+		
+		prompted drop-in clients do not have their equipment amounts set properly
+		
 		firemode reappearing (as client)
 		
 		need better assets for underbarrel weapons in ammo pickup hud
