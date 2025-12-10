@@ -312,13 +312,16 @@ function HEVHUDObjectives:check_resize_corner()
 	if self._active_objective_id then
 		local amount_text = self._objective_panel:child("amount")
 --		Print("obj id",self._active_objective_id)
+		if objective_text:visible() then
+			local tx,ty,tw,th = objective_text:text_rect()
+			
+			self._corner_panel:set_w(math.max(vars.OBJECTIVES_W,tx + tw + vars.OBJECTIVE_AMOUNT_LABEL_HOR_MARGIN))
+		end
+		
 		if amount_text:visible() then
 			h = h + vars.OBJECTIVE_AMOUNT_LABEL_FONT_SIZE
 			margin = vars.OBJECTIVE_AMOUNT_LABEL_VER_MARGIN -- + vars.OBJECTIVE_AMOUNT_LABEL_Y
 
-			local tx,ty,tw,th = amount_text:text_rect()
-			
-			self._corner_panel:set_w(vars.OBJECTIVES_W,math.max(tx + tw + vars.OBJECTIVE_AMOUNT_LABEL_HOR_MARGIN))
 --			h = ty + th + vars.OBJECTIVE_AMOUNT_LABEL_VER_MARGIN
 --			Print("amount visible",ty,th,h)
 		else
