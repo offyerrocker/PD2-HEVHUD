@@ -35,6 +35,54 @@ end
 
 function HEVHUDPickup:recreate_hud()
 --	self._panel:clear()
+	local vars = self._config.Hint
+	local maskon_panel = self._panel:panel({
+		name = "maskon_panel",
+		x = self._panel:w() + vars.MASKPROMPT_X,
+		y = self._panel:h() + vars.MASKPROMPT_Y,
+		w = vars.MASKPROMPT_W,
+		h = vars.MASKPROMPT_H,
+		layer = 4
+	})
+	self.CreateBGBox(maskon_panel,nil,self._BGBOX_PANEL_CONFIG,self._BGBOX_ITEM_CONFIG)
+	
+	maskon_panel:text({
+		name = "maskon_text",
+		text = "press x to pay maskspects",
+		align = "left", -- set to left to measure w; set to config align later
+		vertical = vars.MASKPROMPT_LABEL_VERTICAL,
+		x = vars.MASKPROMPT_LABEL_X,
+		y = vars.MASKPROMPT_LABEL_Y,
+		valign = "grow",
+		halign = "grow",
+		font = vars.MASKPROMPT_LABEL_FONT_NAME,
+		font_size = vars.MASKPROMPT_LABEL_FONT_SIZE,
+		color = self._COLOR_YELLOW,
+		blend_mode = vars.AMMO_AMOUNT_BLEND_MODE,
+		layer = 2
+	})
+end
+
+function HEVHUDPickup:show_mask_prompt()
+	local vars = self._config.Hint
+	local maskon_panel = self._panel:child("maskon_panel")
+	maskon_panel:stop()
+	maskon_panel:set_alpha(1)
+	maskon_panel:show()
+	local maskon_text = maskon_panel:child("maskon_text")
+	local maskon_string = utf8.to_upper(managers.localization:text("hevhud_hud_maskon_prompt",{BTN_USE_ITEM=managers.localization:btn_macro("use_item")})) 
+	-- utf8.to_upper(managers.localization:text("hud_instruct_mask_on",{BTN_USE_ITEM=managers.localization:btn_macro("use_item")})) 
+	maskon_text:set_text(maskon_string)
+	maskon_text:set_align(vars.MASKPROMPT_LABEL_ALIGN)
+	
+	local tx,ty,tw,th = maskon_text:text_rect()
+	maskon_panel:set_w(math.max(vars.MASKPROMPT_W,tw+vars.MASKPROMPT_LABEL_HOR_MARGIN))
+	
+end
+
+function HEVHUDPickup:hide_mask_prompt()
+	local maskon_panel = self._panel:child("maskon_panel")
+	maskon_panel:animate(AnimateLibrary.animate_alpha_lerp,function(o) o:hide() o:set_alpha(1) end,self._config.Hint.ANIM_MASKON_FADE_DURATION,nil,0)
 end
 
 
@@ -251,14 +299,6 @@ function HEVHUDPickup:add_ammo_pickup(weapon_slot,amount,ammo_text,weapon_textur
 		visible = false,
 		layer = 2
 	})
-	--[[
-	self._BG_BOX_COLOR = HEVHUD.colordecimal_to_color(self._config.General.BG_BOX_COLOR)
-	local BG_BOX_ALPHA = self._config.General.BG_BOX_ALPHA
-	self._BG_BOX_ALPHA = BG_BOX_ALPHA
-	local bgbox_panel_config = {alpha=BG_BOX_ALPHA,valign="grow",halign="grow"}
-	local bgbox_item_config = {color=self._BG_BOX_COLOR}
-	local bgbox = self.CreateBGBox(pickup,nil,bgbox_panel_config,bgbox_item_config)
-	--]]
 	
 	local amount_label = pickup:text({
 		name = "amount_label",

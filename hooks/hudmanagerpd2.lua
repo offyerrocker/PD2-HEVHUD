@@ -1,5 +1,6 @@
 Hooks:PostHook(HUDManager,"_setup_player_info_hud_pd2","hevhud_hudmanager_create_hud",function(self)
 	local hm = managers.hud:script(PlayerBase.PLAYER_INFO_HUD_PD2)
+
 	local parent_panel = hm and hm.panel
 	if alive(parent_panel) then 
 		HEVHUD:CreateHUD(parent_panel)
@@ -7,7 +8,11 @@ Hooks:PostHook(HUDManager,"_setup_player_info_hud_pd2","hevhud_hudmanager_create
 	end
 end)
 
-
+--Hooks:PostHook(HUDManager,"controller_mod_changed","hevhud_hudmanager_controllermodchanged",function(self)
+--	if self:alive("guis/mask_off_hud") then
+--		self:script("guis/mask_off_hud").panel:hide()
+--	end
+--end)
 
 -- GENERAL
 Hooks:PostHook(HUDManager,"set_disabled","hevhud_hudmanager_hidehud",function(self)

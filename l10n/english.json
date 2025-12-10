@@ -24,5 +24,7 @@
 	"hevhud_hud_health" : "HEALTH",
 	"hevhud_hud_suit" : "SUIT",
 	"hevhud_hud_alt" : "ALT",
-	"hevhud_hud_ammo" : "AMMO"
+	"hevhud_hud_ammo" : "AMMO",
+	
+	"hevhud_hud_maskon_prompt" : "$BTN_USE_ITEM Mask Up"
 }

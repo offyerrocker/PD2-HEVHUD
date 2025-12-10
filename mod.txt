@@ -30,6 +30,10 @@
 			"script_path" : "hooks/playerstandard.lua"
 		},
 		{
+			"hook_id" : "lib/states/ingamemaskoff",
+			"script_path" : "hooks/ingamemaskoff.lua"
+		},
+		{
 			"hook_id" : "lib/units/beings/player/playerinventory",
 			"script_path" : "hooks/playerinventory.lua"
 		},
