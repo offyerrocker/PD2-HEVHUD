@@ -284,7 +284,8 @@ function HEVHUDObjectives:complete_objective(data)
 	if data.id == self._active_objective_id then
 --		Print("complete")
 --		logall(data)
-
+		self._objective_panel:child("text"):set_text("")
+		self._objective_panel:child("amount"):hide()
 	end
 	self:check_resize_corner()
 end
