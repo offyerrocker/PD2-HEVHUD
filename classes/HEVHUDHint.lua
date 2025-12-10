@@ -13,7 +13,6 @@ function HEVHUDPickup:init(panel,settings,config,...)
 		alpha = 1
 	})
 	
-	--hud_ammo_pickup_enabled
 	--hud_missioneq_enabled
 	
 	
@@ -42,6 +41,7 @@ function HEVHUDPickup:recreate_hud()
 		y = self._panel:h() + vars.MASKPROMPT_Y,
 		w = vars.MASKPROMPT_W,
 		h = vars.MASKPROMPT_H,
+		visible = false,
 		layer = 4
 	})
 	self.CreateBGBox(maskon_panel,nil,self._BGBOX_PANEL_CONFIG,self._BGBOX_ITEM_CONFIG)
