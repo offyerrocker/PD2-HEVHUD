@@ -87,11 +87,15 @@ end
 
 
 function HEVHUDPickup:add_special_equipment(data)
-	self:_add_special_equipment(data.id,data.amount,data.icon)
+	if self._config.Hint.MISSION_EQ_ENABLED then
+		self:_add_special_equipment(data.id,data.amount,data.icon)
+	end
 end
 
 function HEVHUDPickup:set_special_equipment_amount(equipment_id,amount)
-	self:_add_special_equipment(equipment_id,amount,nil)
+	if self._config.Hint.MISSION_EQ_ENABLED then
+		self:_add_special_equipment(equipment_id,amount,nil)
+	end
 end
 
 function HEVHUDPickup:_add_special_equipment(id,amount,icon_id)

@@ -221,73 +221,154 @@ function HEVHUD.colordecimal_to_color(n)
 	return Color(string.format("%06x",n))
 end
 
-function HEVHUD:CreateHUD(parent_hud)
-	self._ws = managers.hud._workspace --managers.gui_data:create_fullscreen_workspace()
-	if not parent_hud then 
-		return
-	end
+function HEVHUD:CreateParentHUD(parent)
+	local parent_hud
+	
 	if alive(self._panel) then
 		self._panel:parent():remove(self._panel)
 		self._panel = nil
 	end
 	
-	local hl2 = parent_hud:panel({--self._ws:panel():panel({
+	if parent.panel and alive(parent.panel) and not HEVHUDCore.config.General.USE_SEPARATE_HUD_PANEL then
+		parent_hud = parent.panel
+	else
+		parent_hud = managers.hud._workspace:panel()
+	end
+	
+	self._panel = parent_hud:panel({--self._ws:panel():panel({
 		name = "hevhud"
 	})
-	self._panel = hl2
+	return self._panel
+end
+
+-- create misc hud elements that have no corresponding vanilla constructor hook
+function HEVHUD:CreateHUD(parent)
 	
 	local settings = HEVHUDCore.settings
 	local config = HEVHUDCore.config
 	
-	self._hud_vitals = HEVHUDCore:require("classes/HEVHUDVitals"):new(hl2,settings,config)
-	self._hud_weapons = HEVHUDCore:require("classes/HEVHUDWeapons"):new(hl2,settings,config)
-	self._hud_carry = HEVHUDCore:require("classes/HEVHUDCarry"):new(hl2,settings,config)
-	self._hud_followers = HEVHUDCore:require("classes/HEVHUDFollowers"):new(hl2,settings,config)
-	self._hud_crosshair = HEVHUDCore:require("classes/HEVHUDCrosshair"):new(hl2,settings,config)
-	self._hud_hitdirection = HEVHUDCore:require("classes/HEVHUDHitDirection"):new(hl2,settings,config)
-	self._hud_hint = HEVHUDCore:require("classes/HEVHUDHint"):new(hl2,settings,config) -- hints and ammo pickups (and optionally, redundant mission eq pickups)
-	self._hud_presenter = HEVHUDCore:require("classes/HEVHUDPresenter"):new(hl2,settings,config)
-	self._hud_objectives = HEVHUDCore:require("classes/HEVHUDObjectives"):new(hl2,settings,config)
-	self._hud_ability = HEVHUDCore:require("classes/HEVHUDAbility"):new(hl2,settings,config)
-	self._hud_waiting = HEVHUDCore:require("classes/HEVHUDWaiting"):new(hl2,settings,config)
-	self._teammate_panels = {}
+	local panel = self:GetPanel(parent)
 	
-	self:CreateTeammatesPanel(hl2) -- create separate panel to hold each individual teammate panel
-	
-	--self._hud_objectives = HEVHUDCore:require("classes/HEVHUDObjectives"):new(hl2,settings,config)
-	
-	local HEVHUDTeammate = HEVHUDCore:require("classes/HEVHUDTeammate")
-	for i=1,4 do 
-		local teammate = HEVHUDTeammate:new(hl2,settings,config,i)
-		self._teammate_panels[i] = teammate 
-		if i == HUDManager.PLAYER_PANEL then
-			teammate:hide()
-		end
+	if HEVHUDCore.session_settings.hud_followers_enabled then
+		self._hud_followers = HEVHUDCore:require("classes/HEVHUDFollowers"):new(panel,settings,config)
 	end
-	self:SortTeammatesPanels()
+	
+	if HEVHUDCore.session_settings.hud_crosshair_enabled then
+		self._hud_crosshair = HEVHUDCore:require("classes/HEVHUDCrosshair"):new(panel,settings,config)
+	end
 end
 
-function HEVHUD:CreateTeammatesPanel(parent)
+function HEVHUD:GetPanel(parent)
+	if alive(self._panel) then
+		return self._panel
+	end
+	
+	return self:CreateParentHUD(parent)
+end
+
+function HEVHUD:CreateHUDPlayer(hudmgr,hudscript)
+	local panel = self:GetPanel(hudscript)
+	local settings = HEVHUDCore.settings
+	local config = HEVHUDCore.config
+	
+	
+	-- game update
+	local function upd_stamina(t,dt)
+		local player = managers.player:local_player()
+		if alive(player) then
+			local mov_ext = player:movement()
+			local state = mov_ext and mov_ext:current_state()
+			self._hud_vitals:set_sprint_on(state and state.running and state:running())
+		end
+	end
+	hudmgr:add_updator("hevhud_update_stamina",upd_stamina)
+	
+	self._hud_vitals = HEVHUDCore:require("classes/HEVHUDVitals"):new(panel,settings,config)
+	self._hud_weapons = HEVHUDCore:require("classes/HEVHUDWeapons"):new(panel,settings,config)
+	self._hud_carry = HEVHUDCore:require("classes/HEVHUDCarry"):new(panel,settings,config)
+	self._hud_ability = HEVHUDCore:require("classes/HEVHUDAbility"):new(panel,settings,config)
+end
+
+function HEVHUD:CreateHUDTeammates(hudmgr,hudscript)
+	local HUD_PLAYER_ENABLED = HEVHUDCore.session_settings.hud_player_enabled
+	local settings = HEVHUDCore.settings
+	local config = HEVHUDCore.config
+	local panel = self:GetPanel(hudscript)
+	
+	-- empty table
+	self._teammate_panels = self._teammate_panels or {}
+	for k,_ in pairs(self._teammate_panels) do
+		self._teammate_panels[k] = nil
+	end
 	if alive(self._teammates_panel) then
 		self._teammates_panel:parent():remove(self._teammates_panel)
 		self._teammates_panel = nil
 	end
-	self._teammates_panel = parent:panel({
+	
+	 -- create separate panel to hold each individual teammate panel
+	local teammates = panel:panel({
 		name = "teammates",
 		valign = "grow",
 		halign = "grow",
 		layer = 1
 	})
-end
---[[
-function HEVHUD:AddTeammatePanel(character_name,player_name,ai,peer_id)
-	local HUDTeammateClass = HEVHUDCore:require("classes/HEVHUDTeammate")
+	self._teammates_panel = teammates
+	
+	local HEVHUDTeammate = HEVHUDCore:require("classes/HEVHUDTeammate")
+	for i=1,4 do 
+		local teammate = HEVHUDTeammate:new(teammates,settings,config,i)
+		self._teammate_panels[i] = teammate 
+		if HUD_PLAYER_ENABLED and i == HUDManager.PLAYER_PANEL then
+			teammate:hide()
+		end
+	end
+	self:SortTeammatesPanels()
 	
 end
 
-function HEVHUD:RemoveTeammatePanel(character_name,player_name,ai,peer_id)
+function HEVHUD:CreateHUDHint(hudmgr,hudscript)
+	self._hud_hint = HEVHUDCore:require("classes/HEVHUDHint"):new(self:GetPanel(hudscript),HEVHUDCore.settings,HEVHUDCore.config) -- hints and ammo pickups (and optionally, redundant mission eq pickups)
+	return self._hud_hint
 end
---]]
+
+function HEVHUD:CreateHUDWaiting(hudmgr,hudscript)
+	self._hud_waiting = HEVHUDCore:require("classes/HEVHUDWaiting"):new(self:GetPanel(hudscript),HEVHUDCore.settings,HEVHUDCore.config)
+	return self._hud_waiting
+end
+
+function HEVHUD:CreateHUDObjectives(hudmgr,hudscript)
+	self._hud_objectives = HEVHUDCore:require("classes/HEVHUDObjectives"):new(self:GetPanel(hudscript),HEVHUDCore.settings,HEVHUDCore.config)
+	return self._hud_objectives
+end
+
+function HEVHUD:CreateHUDHitDirection(hudmgr,hudscript)
+	self._hud_hitdirection = HEVHUDCore:require("classes/HEVHUDHitDirection"):new(self:GetPanel(hudscript),HEVHUDCore.settings,HEVHUDCore.config)
+	return self._hud_hitdirection
+end
+
+function HEVHUD:CreateHUDPresenter(hudmgr,hudscript)
+	self._hud_presenter = HEVHUDCore:require("classes/HEVHUDPresenter"):new(self:GetPanel(hudscript),HEVHUDCore.settings,HEVHUDCore.config)
+	return self._hud_presenter
+end
+
+function HEVHUD:OnHitDirection(dir, unit_type_hit, fixed_angle, ...)
+	if self._hud_hitdirection then
+		self._hud_hitdirection:on_hit_direction(dir, unit_type_hit, fixed_angle,...)
+	end
+end
+
+function HEVHUD:ShowHint(params)
+	if self._hud_hint then 
+		self._hud_hint:add_hint(params)
+	end
+end
+
+function HEVHUD:StopHint()
+	if self._hud_hint then 
+		self._hud_hint:stop_hint()
+	end
+end
+
 
 -- move teammates panels (triggered when teammate h changes)
 function HEVHUD:SortTeammatesPanels()
@@ -301,14 +382,7 @@ function HEVHUD:SortTeammatesPanels()
 	end
 end
 
-function HEVHUD:UpdateGame(t,dt)
-	-- game update
-	local player = managers.player:local_player()
-	if player then
-		self._hud_vitals:set_sprint_on(player:movement():current_state():running())
-	end
-end
-Hooks:Add("GameSetupUpdate","hevhud_updategame",callback(HEVHUD,HEVHUD,"UpdateGame"))
+--function HEVHUD:UpdateGame(t,dt) end; Hooks:Add("GameSetupUpdate","hevhud_updategame",callback(HEVHUD,HEVHUD,"UpdateGame"))
 
 function HEVHUD:OnSwitchWeapon(weap_base) -- called when swapping weapons or when swapping underbarrel
 	self:CheckWeaponUnderbarrelActive(weap_base)
@@ -318,7 +392,7 @@ end
 
 function HEVHUD:CheckWeaponFiremode(weap_base)
 	local firemode = self:GetFiremodeName(weap_base._fire_mode)
-	if firemode then
+	if firemode and self._hud_weapons then
 		self._hud_weapons:set_main_weapon_firemode(firemode,not weap_base._locked_fire_mode and weap_base:can_toggle_firemode())
 	end
 end
@@ -348,7 +422,9 @@ function HEVHUD:CheckWeaponGadgets(weap_base)
 end
 
 function HEVHUD:SetFlashlightState(state)
-	self._hud_vitals:set_flashlight_on(state)
+	if self._hud_vitals then
+		self._hud_vitals:set_flashlight_on(state)
+	end
 	return state
 end
 
@@ -364,43 +440,49 @@ end
 
 -- also checks underbarrel firemode
 function HEVHUD:CheckUnderbarrelAmmo(weap_base)
-	for _,underbarrel_base in pairs(weap_base:get_all_override_weapon_gadgets()) do 
-		local magazine_max,magazine_current,reserves_current,reserves_max = RaycastWeaponBase.ammo_info(underbarrel_base)
-		
-		self._hud_weapons:set_underbarrel_ammo(magazine_max,magazine_current,reserves_current,reserves_max)
-		
-		local underbarrel_icon = self.GetHL2WeaponIcons(underbarrel_base.name_id)
-		if underbarrel_icon then
-			self._hud_weapons:set_underbarrel_ammo_icon(self._font_icons[underbarrel_icon])
+	if self._hud_weapons then
+		for _,underbarrel_base in pairs(weap_base:get_all_override_weapon_gadgets()) do 
+			local magazine_max,magazine_current,reserves_current,reserves_max = RaycastWeaponBase.ammo_info(underbarrel_base)
+			
+			self._hud_weapons:set_underbarrel_ammo(magazine_max,magazine_current,reserves_current,reserves_max)
+			
+			local underbarrel_icon = self.GetHL2WeaponIcons(underbarrel_base.name_id)
+			if underbarrel_icon then
+				self._hud_weapons:set_underbarrel_ammo_icon(self._font_icons[underbarrel_icon])
+			end
+			
+	--		local firemode = weap_base:gadget_function_override("fire_mode") -- only works if the underbarrel is active
+			local firemode = self:GetFiremodeName(underbarrel_base._fire_mode)
+			if firemode then 
+				self._hud_weapons:set_underbarrel_weapon_firemode(firemode,false) -- i actually don't know if underbarrels are allowed to toggle firemodes, or what that check looks like
+			end
+			
+			-- only perform this check for the "first" of the underbarrels;
+			-- assume there is only one underbarrel per weapon
+			-- (i hope.)
+			break
 		end
-		
---		local firemode = weap_base:gadget_function_override("fire_mode") -- only works if the underbarrel is active
-		local firemode = self:GetFiremodeName(underbarrel_base._fire_mode)
-		if firemode then 
-			self._hud_weapons:set_underbarrel_weapon_firemode(firemode,false) -- i actually don't know if underbarrels are allowed to toggle firemodes, or what that check looks like
-		end
-		
-		-- only perform this check for the "first" of the underbarrels;
-		-- assume there is only one underbarrel per weapon
-		-- (i hope.)
-		break
 	end
 end
 
 function HEVHUD:CheckWeaponUnderbarrelActive(weap_base)
-	local underbarrel_base = weap_base and weap_base:gadget_overrides_weapon_functions()
-	if underbarrel_base then
-		return self._hud_weapons:set_underbarrel_on(true)
+	if self._hud_weapons then
+		local underbarrel_base = weap_base and weap_base:gadget_overrides_weapon_functions()
+		if underbarrel_base then
+			return self._hud_weapons:set_underbarrel_on(true)
+		end
+		return self._hud_weapons:set_underbarrel_on(false)
 	end
-	return self._hud_weapons:set_underbarrel_on(false)
 end
 
 -- check whether there is an underbarrel on this weapon at all, regardless of active state
 function HEVHUD:CheckWeaponHasUnderbarrel(weap_base)
-	for _,underbarrel_base in pairs(weap_base:get_all_override_weapon_gadgets()) do
-		return self._hud_weapons:set_underbarrel_visible(true)
+	if self._hud_weapons then
+		for _,underbarrel_base in pairs(weap_base:get_all_override_weapon_gadgets()) do
+			return self._hud_weapons:set_underbarrel_visible(true)
+		end
+		return self._hud_weapons:set_underbarrel_visible(false)
 	end
-	return self._hud_weapons:set_underbarrel_visible(false)
 end
 
 function HEVHUD:SetAmmoAmount(index,magazine_max,magazine_current,reserves_current,reserves_max)
@@ -453,7 +535,7 @@ function HEVHUD:SetAmmoAmount(index,magazine_max,magazine_current,reserves_curre
 			local categories = weap_base.categories and weap_base:categories()
 			local weapon_id = weap_base.get_name_id and weap_base:get_name_id()
 			local icon = self.GetHL2WeaponIcons(weapon_id,categories,nil)
-			if icon then
+			if icon and self._hud_weapons then
 				self._hud_weapons:set_main_ammo_icon(self._font_icons[icon])
 			end
 		end
@@ -471,16 +553,45 @@ function HEVHUD:SetAmmoAmount(index,magazine_max,magazine_current,reserves_curre
 	})
 	
 	
-	
-	self._hud_weapons:set_main_ammo(magazine_max,magazine_current,reserves_current,reserves_max)
+	if self._hud_weapons then
+		self._hud_weapons:set_main_ammo(magazine_max,magazine_current,reserves_current,reserves_max)
+	end
 end
 
 function HEVHUD:ShowCarry(carry_id,value,...)
-	self._hud_carry:show_carry_bag(carry_id,value,...)
+	if self._hud_carry then
+		self._hud_carry:show_carry_bag(carry_id,value,...)
+	end
 end
 
 function HEVHUD:HideCarry(...)
-	self._hud_carry:hide_carry_bag(...)
+	if self._hud_carry then
+		self._hud_carry:hide_carry_bag(...)
+	end
+end
+
+function HEVHUD:AddSpecialEquipment(data)
+	if self._hud_hint then
+		self._hud_hint:add_special_equipment(data)
+	end
+	
+	if self._hud_objectives then
+		self._hud_objectives:add_special_equipment(data)
+	end
+end
+
+function HEVHUD:SetSpecialEquipmentAmount(equipment_id,amount)
+	if self._hud_hint then
+		self._hud_hint:set_special_equipment_amount(equipment_id,amount)
+	end
+	if self._hud_objectives then
+		self._hud_objectives:set_special_equipment_amount(equipment_id,amount)
+	end
+end
+function HEVHUD:RemoveSpecialEquipment(equipment_id)
+	if self._hud_objectives then
+		self._hud_objectives:remove_special_equipment(equipment_id)
+	end
 end
 
 function HEVHUD:SetTeammateName(id,name)

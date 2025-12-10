@@ -3,16 +3,10 @@ TODO:
 	
 	BUGS
 		firemode reappearing (as client)
-		mission eq not sorting (fixed?)
 		
 		need better assets for underbarrel weapons in ammo pickup hud
 		possible issue: bgbox flashing may interfere with equip/unequip alpha anim?
 		
-		mask up text clipping
-		
-		
-	- scale bgbox
-	
 	
 	FINAL STRETCH!
 		- Cable Ties
@@ -47,6 +41,7 @@ TODO:
 		- interaction
 		- ability/swansong timer
 		- colors need to be tweaked; white should probably be normal, instead of orange, otherwise it blends too much
+		- detect ai carry state
 	Equipment
 		player deployable icon needs to be organized; icon and secondary amount are not centered
 			tripmine dual amount is hard to read

@@ -17,17 +17,26 @@ HEVHUDCore.default_settings = {
 	sounds_enabled = true,
 	language_name = "english.json",	 	-- The name of the localization file being used
 	_language_index = 1, 			-- Internally used to display the current language option; do not change
+	hud_player_enabled = true,
 	hud_teammate_enabled = true,
+	hud_objective_enabled = true,
+	hud_hint_enabled = true,
+	hud_presenter_enabled = true,
 	hud_crosshair_enabled = true,
 	hud_hitdirection_enabled = true,
-	hud_ammo_pickup_enabled = true,
+	hud_waiting_enabled = true,
+	hud_followers_enabled = true,
+	--hud_assaultcorner_enabled = true,
+	--hud_chat_enabled = true,
 	hud_missioneq_enabled = true,
+	
 	hud_ammo_pickup_aggregate_ammopickups = true,
 	crosshair_indicator_left_tracker = 1, -- health
 	crosshair_indicator_right_tracker = 3 -- mag
 }
 HEVHUDCore.MOD_PATH = HEVHUDCore.GetPath and HEVHUDCore:GetPath() or ModPath
 HEVHUDCore.settings = table.deep_map_copy(HEVHUDCore.default_settings)
+HEVHUDCore.session_settings = HEVHUDCore.settings -- for settings that require a game restart or state refresh to take effect
 HEVHUDCore.config = { -- Loaded from hevhud_vars.ini
 	--Player = {},
 	General = {},
@@ -142,11 +151,15 @@ function HEVHUDCore:SaveConfig() -- this is not used anywhere (and honestly it s
 	LIP.save(self.USER_CONFIG_PATH,self.config,self._sort_config)
 end
 
-function HEVHUDCore:LoadSettings()
+function HEVHUDCore:LoadSettings(to_session)
 	local file = io.open(self.USER_SETTINGS_PATH, "r")
 	if file then
 		for k, v in pairs(json.decode(file:read("*all"))) do
 			self.settings[k] = v
+			
+			if to_session then
+				self.session_settings[k] = v
+			end
 		end
 	end
 	
@@ -443,10 +456,7 @@ Hooks:Add("MenuManagerInitialize", "hevhud_initmenu", function(menu_manager)
 end)
 
 
-
-
-
-
+HEVHUDCore:LoadSettings(true)
 HEVHUDCore:LoadConfig(HEVHUDCore.DEFAULT_USER_CONFIG_PATH)
 HEVHUDCore:LoadLanguageFiles()
 _G.HEVHUD = HEVHUDCore:require("HEVHUD")
