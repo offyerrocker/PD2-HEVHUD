@@ -157,6 +157,7 @@ end
 
 -- WAITING LEGEND
 if HUD_WAITING_ENABLED then
+	-- hevhudwaiting is a mimic class
 	Hooks:OverrideFunction(HUDManager,"_create_waiting_legend",function(self, hud)
 		HEVHUD:CreateHUDWaiting(self,hud)
 	end)
@@ -341,9 +342,14 @@ end
 -- PRESENTER
 if HUD_PRESENTER_ENABLED then
 	-- hevhudpresenter is a mimic class
-	Hooks:OverrideFunction(HUDManager,"_create_present_panel",function(self,hud)
+	Hooks:PostHook(HUDManager,"_create_present_panel",function(self,hud)
 		self._hud_presenter = HEVHUD:CreateHUDPresenter(self,hud)
 	end)
+	Hooks:OverrideFunction(HUDManager,"present",function(self,params)
+		HEVHUD:DoPresent(params)
+	end)
+	Hooks:OverrideFunction(HUDManager,"present_done",function(self) end)
+	
 end
 
 -- HIT DIRECTION
@@ -361,9 +367,23 @@ end
 -- OBJECTIVES
 if HUD_OBJECTIVE_ENABLED then
 	-- hevhudobjectives is a mimic class
-	Hooks:OverrideFunction(HUDManager,"_create_objectives",function(self,hud)
-		self._hud_objectives = HEVHUD:CreateHUDObjectives(self,hud)
+	Hooks:PostHook(HUDManager,"_create_objectives","hevhud_hudmanager_create_objectives",function(self,hud)
+		HEVHUD:CreateHUDObjectives(self,hud)
 	end)
+	
+	Hooks:OverrideFunction(HUDManager,"activate_objective",function(self,data)
+		HEVHUD._hud_objectives:activate_objective(data)
+	end)
+	Hooks:OverrideFunction(HUDManager,"update_amount_objective",function(self,data)
+		HEVHUD._hud_objectives:update_amount_objective(data)
+	end)
+	Hooks:OverrideFunction(HUDManager,"remind_objective",function(self,id)
+		HEVHUD._hud_objectives:remind_objective(id)
+	end)
+	Hooks:OverrideFunction(HUDManager,"complete_objective",function(self,data)
+		HEVHUD._hud_objectives:complete_objective(data)
+	end)
+	
 end
 
 

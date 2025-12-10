@@ -368,6 +368,11 @@ function HEVHUD:StopHint()
 		self._hud_hint:stop_hint()
 	end
 end
+function HEVHUD:DoPresent(params)
+	if self._hud_presenter then 
+		self._hud_presenter:preset(params)
+	end
+end
 
 
 -- move teammates panels (triggered when teammate h changes)
