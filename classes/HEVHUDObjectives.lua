@@ -312,6 +312,7 @@ function HEVHUDObjectives:check_resize_corner()
 	if self._active_objective_id then
 		local amount_text = self._objective_panel:child("amount")
 --		Print("obj id",self._active_objective_id)
+		local objective_text = self._objective_panel:child("text")
 		if objective_text:visible() then
 			local tx,ty,tw,th = objective_text:text_rect()
 			
