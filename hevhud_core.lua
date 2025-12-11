@@ -83,6 +83,32 @@ HEVHUDCore.USER_CONFIG_PATH = SavePath .. "hevhud_vars.ini"			-- Path to the adv
 HEVHUDCore.DEFAULT_USER_CONFIG_PATH = HEVHUDCore.MOD_PATH .. "hevhud_vars.ini"	-- Path to the defaults for the advanced config file
 HEVHUDCore.LOCALIZATION_DIRECTORY_PATH = HEVHUDCore.MOD_PATH .. "l10n/" 		-- Path to the folder containing localization files
 
+HEVHUDCore._manual_load_assets = {
+	texture = {
+		"guis/textures/hl2_crosshair_empty_left",
+		"guis/textures/hl2_crosshair_empty_right",
+		"guis/textures/hl2_crosshair_fill_left",
+		"guis/textures/hl2_crosshair_fill_right",
+		"guis/textures/hl2_crosshair_fivedot",
+		
+		"guis/textures/hevhud_hitdirection",
+		"guis/textures/hevhud_icons",
+		"guis/textures/hevhud_bgbox_atlas",
+		"guis/textures/hevhud_waiting_legend",
+		
+		"fonts/halflife2",
+		"fonts/trebuchet",
+		"fonts/tahoma_24",
+		"fonts/tahoma_bold"
+	},
+	font = {
+		"fonts/halflife2",
+		"fonts/trebuchet",
+		"fonts/tahoma_24",
+		"fonts/tahoma_bold"
+	}
+}
+
 HEVHUDCore.menu_data = {
 	populated_languages_menu = false,
 	menu_ids = {
@@ -176,26 +202,19 @@ end
 
 	--Registers assets into the game's db so that they can be loaded later 
 function HEVHUDCore:CheckResourcesAdded(skip_load)
-	local font_ids = Idstring("font")
-	local texture_ids = Idstring("texture")
-	
-	local fonts = {
-		hl2_icons = "fonts/halflife2", 
-		hl2_text = "fonts/trebuchet",
-		hl2_chat = "fonts/tahoma_24",
-		hl2_vitals = "fonts/tahoma_bold"
-	}
-	
-	for font_id,font_path in pairs(fonts) do 
-		if DB:has(font_ids, font_path) then 
-			self:Log("Font " .. font_id .. " at path " .. font_path .. " is verified.")
-		else
-			--assume that if the .font is not loaded, then the .texture is not either (both are needed anyway)
-			self:Log("Font " .. font_id .. " at path " .. font_path .. " is not created!")
-			if not skip_load then 
-				local full_asset_path = self.ASSETS_PATH .. font_path
-				BLT.AssetManager:CreateEntry(Idstring(font_path),font_ids,full_asset_path .. ".font")
-				BLT.AssetManager:CreateEntry(Idstring(font_path),texture_ids,full_asset_path .. ".texture")
+	local assets = self._manual_load_assets
+	for asset_type_str,data in pairs(assets) do
+		local asset_type_ids = Idstring(asset_type_str)
+		for _,path in pairs(data) do
+			
+			if DB:has(asset_type_ids, path) then 
+				self:Log("Asset " .. asset_type_str .. " at path " .. path .. " is verified.")
+			else
+				self:Log("Asset " .. asset_type_str .. " at path " .. path .. " is not created!")
+				if not skip_load then 
+					local full_asset_path = self.ASSETS_PATH .. path
+					BLT.AssetManager:CreateEntry(Idstring(path),asset_type_ids,full_asset_path .. "." .. asset_type_str)
+				end
 			end
 		end
 	end
@@ -212,8 +231,8 @@ end
 --Loads assets into memory so that they can be used in-game
 function HEVHUDCore:CheckResourcesReady(skip_load,done_loading_cb)
 	self:Log("Checking font assets...")
-	local font_ids = Idstring("font")
-	local texture_ids = Idstring("texture")
+	
+	local assets = self._manual_load_assets
 	
 	local dyn_pkg = DynamicResourceManager.DYN_RESOURCES_PACKAGE
 
@@ -227,29 +246,22 @@ function HEVHUDCore:CheckResourcesReady(skip_load,done_loading_cb)
 		
 	end
 	
-	local fonts = {
-		hl2_icons = "fonts/halflife2", 
-		hl2_text = "fonts/trebuchet",
-		hl2_chat = "fonts/tahoma_24",
-		hl2_vitals = "fonts/tahoma_bold"
-	}
-	
-	local font_resources_ready = true
-	for font_id,font_path in pairs(fonts) do 
-		if not managers.dyn_resource:is_resource_ready(font_ids,Idstring(font_path),dyn_pkg) then 
-			if not skip_load then 
-				--register_loading(font_path)
-
-				self:Log("Creating DB entry for " .. tostring(font_ids) .. ", " .. tostring(font_path) .. ", " .. tostring(self.ASSETS_PATH .. font_path .. ".font"))
-				
-				managers.dyn_resource:load(font_ids, Idstring(font_path), dyn_pkg, done_loading_cb)
-				managers.dyn_resource:load(texture_ids, Idstring(font_path), dyn_pkg, done_loading_cb)
-				
+	local resources_ready = true
+	for asset_type_str,data in pairs(assets) do
+		local asset_type_ids = Idstring(asset_type_str)
+		for _,path in pairs(data) do
+			if not managers.dyn_resource:is_resource_ready(asset_type_ids,Idstring(path),dyn_pkg) then 
+				if not skip_load then 
+					--register_loading(path)
+					self:Log("Creating DB entry for " .. tostring(asset_type_ids) .. ", " .. tostring(path) .. ", " .. tostring(self.ASSETS_PATH .. path .. "." .. asset_type_str))
+					managers.dyn_resource:load(asset_type_ids, Idstring(path), dyn_pkg, done_loading_cb)
+				end
+				self:Log("Asset " .. tostring(asset_type_str) .. " at path " .. path .. " is not ready!" .. (skip_load and " Skipped loading for " or " Started manual load for ") .. path)
+				resources_ready = false
+			else
+				self:Log("Asset " .. tostring(asset_type_str) .. " at path " .. path .. " is ready.")
 			end
-			self:Log("Font " .. tostring(font_id) .. " is not ready!" .. (skip_load and " Skipped loading for " or " Started manual load for ") .. font_path)
-			font_resources_ready = false
-		else
-			self:Log("Font asset " .. font_id .. " at path " .. font_path .. " is ready.")
+			
 		end
 	end
 	
@@ -262,7 +274,7 @@ function HEVHUDCore:CheckResourcesReady(skip_load,done_loading_cb)
 	end
 	--]]
 	
-	return font_resources_ready
+	return resources_ready
 end
 
 
