@@ -83,7 +83,7 @@ HEVHUDCore.USER_CONFIG_PATH = SavePath .. "hevhud_vars.ini"			-- Path to the adv
 HEVHUDCore.DEFAULT_USER_CONFIG_PATH = HEVHUDCore.MOD_PATH .. "hevhud_vars.ini"	-- Path to the defaults for the advanced config file
 HEVHUDCore.LOCALIZATION_DIRECTORY_PATH = HEVHUDCore.MOD_PATH .. "l10n/" 		-- Path to the folder containing localization files
 
-HEVHUDCore._manual_load_assets = {
+HEVHUDCore._MANUAL_LOAD_ASSETS = {
 	texture = {
 		"guis/textures/hl2_crosshair_empty_left",
 		"guis/textures/hl2_crosshair_empty_right",
@@ -202,7 +202,7 @@ end
 
 	--Registers assets into the game's db so that they can be loaded later 
 function HEVHUDCore:CheckResourcesAdded(skip_load)
-	local assets = self._manual_load_assets
+	local assets = self._MANUAL_LOAD_ASSETS
 	for asset_type_str,data in pairs(assets) do
 		local asset_type_ids = Idstring(asset_type_str)
 		for _,path in pairs(data) do
@@ -232,7 +232,7 @@ end
 function HEVHUDCore:CheckResourcesReady(skip_load,done_loading_cb)
 	self:Log("Checking font assets...")
 	
-	local assets = self._manual_load_assets
+	local assets = self._MANUAL_LOAD_ASSETS
 	
 	local dyn_pkg = DynamicResourceManager.DYN_RESOURCES_PACKAGE
 
