@@ -1090,6 +1090,7 @@ function HEVHUDTeammate:check_panel_state()
 	end
 end
 
+
 return HEVHUDTeammate
 
 

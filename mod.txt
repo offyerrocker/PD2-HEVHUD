@@ -49,16 +49,5 @@
 			"hook_id" : "lib/managers/group_ai_states/groupaistatebase",
 			"script_path" : "hooks/groupaistatebase.lua"
 		}
-	],
-	"keybinds" : [
-		{
-            "keybind_id" : "HEVHUD_ToggleLoadoutView",
-            "name" : "hevhud_menu_toggle_loadout_title",
-            "description" : "hevhud_menu_toggle_loadout_desc",
-            "localized" : true,
-			"run_in_menu" : false,
-			"run_in_game" : true,
-			"script_path" : "TEMP_KEYBIND_SHOW_EQ.lua"
-        }
-	]	
+	]
 }

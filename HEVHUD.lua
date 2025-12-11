@@ -149,7 +149,6 @@ function HEVHUD:GetIconData(icon_id)
 end
 
 --- returns string ammo_char,string empty_weapon_char,string full_weapon_char
-
 function HEVHUD.GetHL2WeaponIcons(weapon_id,categories)
 	local overrides = {
 		rpg7 = {"rpg_ammo","rpg_full","rpg_empty"}, --rocket launchers in pd2 don't have a separate category; they're all classed as grenade_launcher
