@@ -175,7 +175,7 @@ function HEVHUDCore:SaveSettings()
 end
 
 	--Registers assets into the game's db so that they can be loaded later 
-function HEVHUDCore:CheckFontResourcesAdded(skip_load)
+function HEVHUDCore:CheckResourcesAdded(skip_load)
 	local font_ids = Idstring("font")
 	local texture_ids = Idstring("texture")
 	
@@ -210,7 +210,7 @@ function HEVHUDCore:CheckFontResourcesAdded(skip_load)
 end
 
 --Loads assets into memory so that they can be used in-game
-function HEVHUDCore:CheckFontResourcesReady(skip_load,done_loading_cb)
+function HEVHUDCore:CheckResourcesReady(skip_load,done_loading_cb)
 	self:Log("Checking font assets...")
 	local font_ids = Idstring("font")
 	local texture_ids = Idstring("texture")
@@ -454,7 +454,7 @@ Hooks:Add("MenuManagerInitialize", "hevhud_initmenu", function(menu_manager)
 	--]]
 	--MenuHelper:LoadFromJsonFile(AdvancedCrosshair.path .. "menu/menu_compat.json", AdvancedCrosshair, AdvancedCrosshair.settings)
 	
-	HEVHUDCore:CheckFontResourcesReady()
+	HEVHUDCore:CheckResourcesReady()
 end)
 
 
@@ -462,6 +462,6 @@ HEVHUDCore:LoadSettings(true)
 HEVHUDCore:LoadConfig(HEVHUDCore.DEFAULT_USER_CONFIG_PATH)
 HEVHUDCore:LoadLanguageFiles()
 _G.HEVHUD = HEVHUDCore:require("HEVHUD")
-HEVHUDCore:CheckFontResourcesAdded()
+HEVHUDCore:CheckResourcesAdded()
 HEVHUDCore.setup_load_done = true
 
