@@ -332,6 +332,7 @@ Hooks:Add("LocalizationManagerPostInit", "hevhud_LocalizationManagerPostInit",
 	end
 )
 
+--[[
 Hooks:Add("MenuManagerSetupCustomMenus", "hevhud_MenuManagerSetupCustomMenus", function(menu_manager, nodes)
 	for _,menu_id in pairs(HEVHUDCore.menu_data.menu_ids) do 
 		MenuHelper:NewMenu(menu_id)
@@ -387,6 +388,7 @@ Hooks:Add("MenuManagerBuildCustomMenus", "hevhud_MenuManagerBuildCustomMenus", f
 	MenuHelper:AddMenuItem(menu_main,general_menu_id,"menu_hevhud_general_title","menu_hevhud_general_desc")
 	
 end)
+--]]
 
 Hooks:Add("MenuManagerInitialize", "hevhud_initmenu", function(menu_manager)
 	-- anything that changes settings should then call:
