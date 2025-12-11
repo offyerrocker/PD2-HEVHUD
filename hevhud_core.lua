@@ -404,7 +404,8 @@ end)
 
 Hooks:Add("MenuManagerInitialize", "hevhud_initmenu", function(menu_manager)
 	-- anything that changes settings should then call:
-	-- Hooks:Add("hevhud_on_config_changed",self.settings)
+	-- Hooks:Call("hevhud_on_config_changed",self.config)
+	-- Hooks:Call("hevhud_on_settings_changed",self.settings)
 	
 	
 	MenuCallbackHandler.callback_hevhud_menu_general_focus = function(self,focus)
